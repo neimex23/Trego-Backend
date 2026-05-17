@@ -10,13 +10,13 @@ import java.util.List;
 public class DTOOrden {
     private Integer idCliente;
     private Integer idRestaurante;
-    private DTDireccion direccionEntrega;
+    private DTODireccion direccionEntrega;
     private List<DTOProductoOrden> productos = new ArrayList<>();
 
     public DTOOrden() {
     }
 
-    public DTOOrden(Integer idCliente, Integer idRestaurante, DTDireccion direccionEntrega,
+    public DTOOrden(Integer idCliente, Integer idRestaurante, DTODireccion direccionEntrega,
                     List<DTOProductoOrden> productos) {
         this.idCliente = idCliente;
         this.idRestaurante = idRestaurante;
@@ -42,11 +42,11 @@ public class DTOOrden {
         this.idRestaurante = idRestaurante;
     }
 
-    public DTDireccion getDireccionEntrega() {
+    public DTODireccion getDireccionEntrega() {
         return direccionEntrega;
     }
 
-    public void setDireccionEntrega(DTDireccion direccionEntrega) {
+    public void setDireccionEntrega(DTODireccion direccionEntrega) {
         this.direccionEntrega = direccionEntrega;
     }
 

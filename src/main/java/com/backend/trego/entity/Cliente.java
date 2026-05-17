@@ -3,7 +3,7 @@ package com.backend.trego.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.backend.trego.entity.DTOs.DTDireccion;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.Enums.EnumRoles;
 
 import jakarta.persistence.CascadeType;
@@ -17,7 +17,7 @@ public class Cliente extends Usuario {
     private String telefono;
 
     @ElementCollection
-    private List<DTDireccion> direcciones = new ArrayList<>();
+    private List<DTODireccion> direcciones = new ArrayList<>();
 
     private boolean habilitado = true;
 
@@ -28,7 +28,7 @@ public class Cliente extends Usuario {
     }
 
     public Cliente(String nombre, String email, String urlImagen, EnumRoles rol, String uidCliente,
-            String telefono, List<DTDireccion> direcciones) {
+            String telefono, List<DTODireccion> direcciones) {
         super(nombre, email, urlImagen, rol);
         this.uidCliente = uidCliente;
         this.telefono = telefono;
@@ -46,7 +46,7 @@ public class Cliente extends Usuario {
         this.comentarios.add(comentario);
     }
 
-    public void addDireccion(DTDireccion direccion) {
+    public void addDireccion(DTODireccion direccion) {
         this.direcciones.add(direccion);
     }
 
@@ -66,11 +66,11 @@ public class Cliente extends Usuario {
         this.telefono = telefono;
     }
 
-    public List<DTDireccion> getDirecciones() {
+    public List<DTODireccion> getDirecciones() {
         return direcciones;
     }
 
-    public void setDirecciones(List<DTDireccion> direcciones) {
+    public void setDirecciones(List<DTODireccion> direcciones) {
         this.direcciones = direcciones;
     }
 
