@@ -12,7 +12,7 @@ public class Administrador extends Usuario {
     }
 
     public Administrador(String nombre, String email, String urlImagen, EnumRoles rol, String password) {
-        super(nombre, email, urlImagen, rol, null);
+        super(nombre, email, urlImagen, rol);
         this.password = password;
     }
 

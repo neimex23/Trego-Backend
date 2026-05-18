@@ -4,17 +4,17 @@ package com.backend.trego.entity.DTOs;
  * DTO de respuesta para un inicio de sesión exitoso.
  * Contiene el token JWT y datos básicos del usuario autenticado.
  */
-public class LoginResponseDTO {
+public class DTOLoginResponse {
 
     private String jwtToken;
     private String rol;
     private String nombre;
     private String email;
 
-    public LoginResponseDTO() {
+    public DTOLoginResponse() {
     }
 
-    public LoginResponseDTO(String jwtToken, String rol, String nombre, String email) {
+    public DTOLoginResponse(String jwtToken, String rol, String nombre, String email) {
         this.jwtToken = jwtToken;
         this.rol = rol;
         this.nombre = nombre;

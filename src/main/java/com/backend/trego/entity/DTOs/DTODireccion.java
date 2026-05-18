@@ -3,7 +3,7 @@ package com.backend.trego.entity.DTOs;
 import jakarta.persistence.Embeddable;
 
 @Embeddable
-public class DTDireccion {
+public class DTODireccion {
     private String calle;
     private int numero;
     private int apartamento;
@@ -11,10 +11,10 @@ public class DTDireccion {
     private double latitud;
     private double longitud;
 
-    protected DTDireccion() {
+    protected DTODireccion() {
     }
 
-    public DTDireccion(String calle, int numero, int apartamento, String esquina, double latitud, double longitud) {
+    public DTODireccion(String calle, int numero, int apartamento, String esquina, double latitud, double longitud) {
         this.calle = calle;
         this.numero = numero;
         this.apartamento = apartamento;
