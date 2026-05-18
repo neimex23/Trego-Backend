@@ -74,7 +74,7 @@ public class UsuarioService {
         }
         // Generamos el código y enviamos el correo electrónico usando tu servicio de
         // notificaciones
-        String codigo = notificacionesService.codigoVerificacionEmail(email);
+        String codigo = this.enviarCodigoVerificacion(email);
 
         // Guardamos los datos de forma temporal hasta que introduzca el código
         RegistroTemporal registro = new RegistroTemporal(email, password, codigo);
@@ -112,24 +112,48 @@ public class UsuarioService {
     /**
      * Envía un código de verificación al correo electrónico indicado.
      */
-    public Boolean enviarCodigoVerificacion(String email) {
-        // TODO: implementar
-        return false;
+    public String enviarCodigoVerificacion(String email) {
+        return notificacionesService.codigoVerificacionEmail(email);
     }
 
     /**
-     * Verifica un código de verificación previamente enviado al usuario.
+     * CU-RES-01 Caso 7: Verifica un código de verificación previamente enviado al
+     * usuario.
      */
     public DTOUsuario verificarCodigo(String email, String codigo) {
         RegistroTemporal pendiente = registrosPendientes.get(email);
 
         // Flujo Alternativo 7.1: Código incorrecto o expirado
-        if (pendiente == null || pendiente.estaExpirado() || !pendiente.getCodigoVerificacion().equals(codigo)) {
+        if (pendiente == null || pendiente.estaExpiradoCodigo() || !pendiente.getCodigoVerificacion().equals(codigo)) {
             throw new IllegalArgumentException("Código inválido o expirado");
         }
 
         return registrarRestaurante(pendiente.getEmail(), pendiente.getPassword());
 
+    }
+
+    /**
+     * Flujo Alternativo 7.1 - Paso 7.1.3: Reenvía un nuevo código de verificación
+     * utilizando los datos que ya tenemos retenidos en la caché temporal.
+     */
+    public void reenviarCodigoVerificacion(String email) {
+        RegistroTemporal pendiente = registrosPendientes.get(email);
+
+        // Si el registro ya no existe en el mapa (ej: expiró por completo y el
+        // @Scheduled lo borró)
+        if (pendiente == null) {
+            throw new IllegalArgumentException(
+                    "El tiempo de registro ha expirado por completo. Por favor, vuelve a ingresar tus datos.");
+        }
+
+        // Generamos un nuevo código y enviamos el correo electrónico
+        String nuevoCodigo = this.enviarCodigoVerificacion(email);
+
+        // Reemplazamos el registro viejo por uno nuevo con el código actualizado
+        RegistroTemporal registroActualizado = new RegistroTemporal(email, pendiente.getPassword(), nuevoCodigo);
+        registrosPendientes.put(email, registroActualizado);
+
+        System.out.println("[Caché] Nuevo código generado y guardado para: " + email);
     }
 
     /**
@@ -144,19 +168,19 @@ public class UsuarioService {
         }
 
         System.out.println("[Caché] Iniciando limpieza automática de registros expirados...");
-        int tamañoInicial = registrosPendientes.size();
+        int sizeInitial = registrosPendientes.size();
 
         // Removemos de forma segura todas las entradas del mapa que cumplan la
-        // condición 'estaExpirado()'
+        // condición 'estaExpiradoCacheReenvio()'
         registrosPendientes.entrySet().removeIf(entry -> {
-            boolean expirado = entry.getValue().estaExpirado();
+            boolean expirado = entry.getValue().estaExpiradoCacheReenvio();
             if (expirado) {
                 System.out.println("[Caché] Removiendo registro colgado del email: " + entry.getKey());
             }
             return expirado;
         });
 
-        int eliminados = tamañoInicial - registrosPendientes.size();
+        int eliminados = sizeInitial - registrosPendientes.size();
         if (eliminados > 0) {
             System.out.println("[Caché] Limpieza terminada. Se eliminaron " + eliminados + " registros colgados.");
         }

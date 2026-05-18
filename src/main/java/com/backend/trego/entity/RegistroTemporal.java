@@ -6,17 +6,23 @@ public class RegistroTemporal {
     private String email;
     private String password;
     private String codigoVerificacion;
-    private LocalDateTime fechaExpiracion;
+    private LocalDateTime fechaExpiracionCodigo;
+    private LocalDateTime fechaExpiracionCacheReenvio;
 
     public RegistroTemporal(String email, String password, String codigoVerificacion) {
         this.email = email;
         this.password = password;
         this.codigoVerificacion = codigoVerificacion;
-        this.fechaExpiracion = LocalDateTime.now().plusMinutes(10); // Código válido por 10 minutos
+        this.fechaExpiracionCodigo = LocalDateTime.now().plusMinutes(10); // Código válido por 10 minutos
+        this.fechaExpiracionCacheReenvio = LocalDateTime.now().plusHours(12); // Cache de reenvío por 12 horas
     }
 
-    public boolean estaExpirado() {
-        return LocalDateTime.now().isAfter(this.fechaExpiracion);
+    public boolean estaExpiradoCodigo() {
+        return LocalDateTime.now().isAfter(this.fechaExpiracionCodigo);
+    }
+
+    public boolean estaExpiradoCacheReenvio() {
+        return LocalDateTime.now().isAfter(this.fechaExpiracionCacheReenvio);
     }
 
     // Getters
@@ -32,12 +38,20 @@ public class RegistroTemporal {
         return codigoVerificacion;
     }
 
-    public LocalDateTime getFechaExpiracion() {
-        return fechaExpiracion;
+    public LocalDateTime getFechaExpiracionCodigo() {
+        return fechaExpiracionCodigo;
     }
 
-    public void setFechaExpiracion(LocalDateTime fechaExpiracion) {
-        this.fechaExpiracion = fechaExpiracion;
+    public LocalDateTime getFechaExpiracionCacheReenvio() {
+        return fechaExpiracionCacheReenvio;
+    }
+
+    public void setFechaExpiracionCodigo(LocalDateTime fechaExpiracionCodigo) {
+        this.fechaExpiracionCodigo = fechaExpiracionCodigo;
+    }
+
+    public void setFechaExpiracionCacheReenvio(LocalDateTime fechaExpiracionCacheReenvio) {
+        this.fechaExpiracionCacheReenvio = fechaExpiracionCacheReenvio;
     }
 
     public void setEmail(String email) {
