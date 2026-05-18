@@ -62,4 +62,21 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Flujo Alternativo 7.1: El usuario solicita reenviar el
+     * código de verificación porque el anterior era inválido o caducó.
+     */
+    @PostMapping("/registrar-restaurante/reenviar-codigo")
+    @Operation(summary = "Reenviar Código", description = "Envía un nuevo código de verificación si el anterior expiró o es incorrecto")
+    @ApiResponse(responseCode = "200", description = "Código reenviado exitosamente")
+    @ApiResponse(responseCode = "400", description = "El tiempo de registro ha expirado o datos inválidos")
+    public ResponseEntity<String> reenviarCodigo(@RequestParam String email) {
+        try {
+            usuarioService.reenviarCodigoVerificacion(email);
+            return ResponseEntity.ok("Se ha enviado un nuevo código de verificación a tu correo electrónico.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }
