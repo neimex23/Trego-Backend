@@ -47,6 +47,11 @@ public class Restaurante extends Usuario {
     protected Restaurante() {
     }
 
+    public Restaurante(String email, String password) {
+        super(email, EnumRoles.Restaurante);
+        this.password = password;
+    }
+
     public Restaurante(String nombre, String email, String urlImagen, String password, String rut,
             String telefono, DTODireccion direccion, String descripcion, float calificacionProm,
             EnumCategoriaRestaurante categoria, LocalTime apertura, LocalTime cierre, int radioEntrega) {

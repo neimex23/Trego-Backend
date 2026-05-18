@@ -14,19 +14,24 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public PasswordEncoder passwordEncoder() { //Se encargará de comprobar que la contraseña en texto plano ingresada en el login coincida matemáticamente con el hash seguro que guardaste en la base de datos MySQL.
+    public PasswordEncoder passwordEncoder() { // Se encargará de comprobar que la contraseña en texto plano ingresada
+                                               // en el login coincida matemáticamente con el hash seguro que guardaste
+                                               // en la base de datos MySQL.
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception { //Registra la cadena de filtros encargada de interceptar todas las peticiones HTTP entrantes.
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception { // Registra la cadena de filtros
+                                                                                 // encargada de interceptar todas las
+                                                                                 // peticiones HTTP entrantes.
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login/**").permitAll()
-                .anyRequest().authenticated()
-            );
-        
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/auth/login/**").permitAll()
+                        .anyRequest().permitAll());
+        // .anyRequest().authenticated());
+
         return http.build();
     }
 }

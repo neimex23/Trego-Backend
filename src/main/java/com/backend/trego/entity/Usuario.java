@@ -28,6 +28,11 @@ public abstract class Usuario {
     protected Usuario() {
     }
 
+    public Usuario(String email, EnumRoles rol) {
+        this.email = email;
+        this.rol = rol;
+    }
+
     public Usuario(String nombre, String email, String urlImagen, EnumRoles rol) {
         this.nombre = nombre;
         this.email = email;
