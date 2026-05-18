@@ -29,6 +29,11 @@ public abstract class Usuario {
     protected Usuario() {
     }
 
+    public Usuario(String email, EnumRoles rol) {
+        this.email = email;
+        this.rol = rol;
+    }
+
     public Usuario(String nombre, String email, String urlImagen, EnumRoles rol, String firebaseUid) {
         this.nombre = nombre;
         this.email = email;
@@ -72,6 +77,7 @@ public abstract class Usuario {
     public void setRol(EnumRoles rol) {
         this.rol = rol;
     }
+
     public String getFirebaseUid() {
         return firebaseUid;
     }

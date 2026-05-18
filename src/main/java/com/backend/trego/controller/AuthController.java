@@ -16,12 +16,13 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AuthService authService;
+
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
-    
+
     // FLUJO 1 Administrador/Restaurante
-     
+
     @PostMapping("/login/admin")
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
         try {
@@ -38,7 +39,7 @@ public class AuthController {
     }
 
     // FLUJO 2 Cliente mediante Google
-     
+
     @PostMapping("/google")
     public ResponseEntity<?> loginConFirebase(@RequestBody Map<String, String> body) {
         String idToken = body.get("idToken");
@@ -51,14 +52,14 @@ public class AuthController {
 
         } catch (DisabledException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Usuario Deshabilitado");
-            
+
         } catch (UnsupportedOperationException e) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(e.getMessage());
         }
     }
-    
-    //FLUJO 3: Cliente mediante SMS
-    
+
+    // FLUJO 3: Cliente mediante SMS
+
     @PostMapping("/sms")
     public ResponseEntity<?> loginConSMS(@RequestBody Map<String, String> body) {
         String firebaseToken = body.get("firebaseToken");
@@ -69,7 +70,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error de autenticación");
         } catch (DisabledException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Usuario Deshabilitado");
-       } catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(e.getMessage());
         }
     }

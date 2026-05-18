@@ -9,6 +9,10 @@ import com.backend.trego.entity.Usuario;
 
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
-// Metodo clave para mapear el UID que nos da el token de Firebase
+    // Metodo clave para mapear el UID que nos da el token de Firebase
     Optional<Usuario> findByFirebaseUid(String firebaseUid);
+
+    boolean existsByEmail(String email);
+
+    Optional<Usuario> findByEmail(String email);
 }
