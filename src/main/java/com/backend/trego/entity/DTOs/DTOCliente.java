@@ -3,20 +3,23 @@ package com.backend.trego.entity.DTOs;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * DTO de entrada para crear o actualizar un Cliente.
+ * No expone campos internos como rol o habilitado.
+ */
 public class DTOCliente {
     private String nombre;
     private String email;
     private String urlImagen;
     private String telefono;
     private String uidCliente;
-    private List<DTODireccion> direcciones = new ArrayList<>();
+    private List<DTDireccion> direcciones = new ArrayList<>();
 
     public DTOCliente() {
     }
 
     public DTOCliente(String nombre, String email, String urlImagen, String telefono,
-                      String uidCliente, List<DTODireccion> direcciones) {
+                      String uidCliente, List<DTDireccion> direcciones) {
         this.nombre = nombre;
         this.email = email;
         this.urlImagen = urlImagen;
@@ -67,11 +70,11 @@ public class DTOCliente {
         this.uidCliente = uidCliente;
     }
 
-    public List<DTODireccion> getDirecciones() {
+    public List<DTDireccion> getDirecciones() {
         return direcciones;
     }
 
-    public void setDirecciones(List<DTODireccion> direcciones) {
+    public void setDirecciones(List<DTDireccion> direcciones) {
         this.direcciones = direcciones;
     }
 }

@@ -1,6 +1,9 @@
 package com.backend.trego.controller;
 
+import com.backend.trego.entity.DTOs.LoginDTO;
+import com.backend.trego.entity.DTOs.LoginResponseDTO;
 import com.backend.trego.service.AuthService;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -23,10 +26,7 @@ public class AuthController {
     // FLUJO 1: Administrador / Restaurante
     // Le agregamos la anotación @PostMapping correspondiente que le faltaba al método viejo
     @PostMapping("/login/admin")
-    public ResponseEntity<?> loginAdmin(@RequestBody Map<String, String> credentials) {
-        String email = credentials.get("email");
-        String password = credentials.get("password");
-
+    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
         try {
             // Llamamos a la lógica que reestructuramos de forma segura en el Service
             LoginResponseDTO response = authService.login(loginDTO);

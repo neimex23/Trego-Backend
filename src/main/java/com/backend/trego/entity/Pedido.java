@@ -1,6 +1,6 @@
 package com.backend.trego.entity;
 
-import com.backend.trego.entity.DTOs.DTODireccion;
+import com.backend.trego.entity.DTOs.DTDireccion;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.entity.Enums.EnumRazonCancelacion;
 
@@ -35,7 +35,7 @@ public class Pedido {
     private EnumEstadoPedido estado;
 
     @Embedded
-    private DTODireccion direccionEntrega;
+    private DTDireccion direccionEntrega;
 
     private LocalDateTime horarioEntrega;
 
@@ -68,7 +68,7 @@ public class Pedido {
     protected Pedido() {
     }
 
-    public Pedido(float total, EnumEstadoPedido estado, DTODireccion direccionEntrega, LocalDateTime horarioEntrega) {
+    public Pedido(float total, EnumEstadoPedido estado, DTDireccion direccionEntrega, LocalDateTime horarioEntrega) {
         this.total = total;
         this.estado = estado;
         this.direccionEntrega = direccionEntrega;
@@ -157,11 +157,11 @@ public class Pedido {
         this.estado = estado;
     }
 
-    public DTODireccion getDireccionEntrega() {
+    public DTDireccion getDireccionEntrega() {
         return direccionEntrega;
     }
 
-    public void setDireccionEntrega(DTODireccion direccionEntrega) {
+    public void setDireccionEntrega(DTDireccion direccionEntrega) {
         this.direccionEntrega = direccionEntrega;
     }
 

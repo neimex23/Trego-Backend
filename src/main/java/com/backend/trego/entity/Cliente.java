@@ -3,7 +3,7 @@ package com.backend.trego.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.backend.trego.entity.DTOs.DTODireccion;
+import com.backend.trego.entity.DTOs.DTDireccion;
 import com.backend.trego.entity.Enums.EnumRoles;
 
 import jakarta.persistence.CascadeType;
@@ -17,20 +17,37 @@ public class Cliente extends Usuario {
     private String telefono;
 
     @ElementCollection
-    private List<DTODireccion> direcciones = new ArrayList<>();
+    private List<DTDireccion> direcciones = new ArrayList<>();
 
     private boolean habilitado = true;
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comentario> comentarios = new ArrayList<>();
 
+    protected Cliente(String nombre, String email, String foto, EnumRoles cliente, String uid, Object object, List<DTDireccion> direccionesVaciasGoogle) {
+    }
+// Constructor requerido por JPA/Hibernate
     protected Cliente() {
     }
 
-    public Cliente(String nombre, String email, String urlImagen, EnumRoles rol, String uidCliente,
-            String telefono, List<DTODireccion> direcciones) {
-        super(nombre, email, urlImagen, rol);
-        this.uidCliente = uidCliente;
+    // ==========================================
+    // CONSTRUCTOR 1: Para Flujos de Firebase (Google/SMS) - 7 Parámetros
+    // ==========================================
+    public Cliente(String nombre, String email, String urlImagen, EnumRoles rol, String firebaseUid,
+            String telefono, List<DTDireccion> direcciones) {
+        super(nombre, email, urlImagen, rol, firebaseUid);
+        this.telefono = telefono;
+        if (direcciones != null) {
+            this.direcciones = direcciones;
+        }
+    }
+
+    // ==========================================
+    // CONSTRUCTOR 2: Para Registro Clásico (Formulario/Controlador) - 6 Parámetros
+    // ==========================================
+    public Cliente(String nombre, String email, String urlImagen, EnumRoles rol,
+            String telefono, List<DTDireccion> direcciones) {
+        super(nombre, email, urlImagen, rol, null);
         this.telefono = telefono;
         if (direcciones != null) {
             this.direcciones = direcciones;
@@ -46,7 +63,7 @@ public class Cliente extends Usuario {
         this.comentarios.add(comentario);
     }
 
-    public void addDireccion(DTODireccion direccion) {
+    public void addDireccion(DTDireccion direccion) {
         this.direcciones.add(direccion);
     }
 
@@ -66,11 +83,11 @@ public class Cliente extends Usuario {
         this.telefono = telefono;
     }
 
-    public List<DTODireccion> getDirecciones() {
+    public List<DTDireccion> getDirecciones() {
         return direcciones;
     }
 
-    public void setDirecciones(List<DTODireccion> direcciones) {
+    public void setDirecciones(List<DTDireccion> direcciones) {
         this.direcciones = direcciones;
     }
 
