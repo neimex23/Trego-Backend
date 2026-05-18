@@ -3,15 +3,15 @@ package com.backend.trego.entity.DTOs;
 /**
  * DTO de entrada para el inicio de sesión clásico (email + contraseña).
  */
-public class LoginDTO {
+public class DTOLogin {
 
     private String email;
     private String password;
 
-    public LoginDTO() {
+    public DTOLogin() {
     }
 
-    public LoginDTO(String email, String password) {
+    public DTOLogin(String email, String password) {
         this.email = email;
         this.password = password;
     }
