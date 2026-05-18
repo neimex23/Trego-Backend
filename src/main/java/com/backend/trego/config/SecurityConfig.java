@@ -13,24 +13,38 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        // Se encarga de comprobar que la contraseña en texto plano coincida con el hash
-        // de MySQL.
+    public PasswordEncoder passwordEncoder() { 
         return new BCryptPasswordEncoder();
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // Registra la cadena de filtros encargada de interceptar todas las peticiones
-        // HTTP entrantes.
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/auth/login/**").permitAll()
-                        .anyRequest().permitAll());
-        // .anyRequest().authenticated());
+            // Deshabilitamos CSRF explícitamente usando la nueva API
+            .csrf(AbstractHttpConfigurer::disable)
+
+            // API stateless (JWT, tokens, etc.)
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+
+            // Configuración de permisos
+            .authorizeHttpRequests(auth -> auth
+                // Swagger / OpenAPI
+                .requestMatchers(
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html"
+                ).permitAll()
+
+                // Endpoints de autenticación
+                .requestMatchers("/api/auth/**").permitAll()
+
+                // El resto requiere autenticación
+                .anyRequest().authenticated()
+            );
 
         return http.build();
     }

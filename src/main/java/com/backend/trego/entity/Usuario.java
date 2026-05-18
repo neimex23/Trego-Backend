@@ -87,7 +87,6 @@ public abstract class Usuario {
     }
 
     public String getTelefono() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getTelefono'");
     }
 }
