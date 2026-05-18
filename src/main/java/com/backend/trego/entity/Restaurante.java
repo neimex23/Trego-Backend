@@ -4,7 +4,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.backend.trego.entity.DTOs.DTODireccion;
+import com.backend.trego.entity.DTOs.DTDireccion;
 import com.backend.trego.entity.Enums.EnumCategoriaRestaurante;
 import com.backend.trego.entity.Enums.EnumRoles;
 
@@ -24,7 +24,7 @@ public class Restaurante extends Usuario {
     private String telefono;
 
     @Embedded
-    private DTODireccion direccion;
+    private DTDireccion direccion;
 
     private String descripcion;
     private float calificacionProm;
@@ -48,9 +48,9 @@ public class Restaurante extends Usuario {
     }
 
     public Restaurante(String nombre, String email, String urlImagen, String password, String rut,
-            String telefono, DTODireccion direccion, String descripcion, float calificacionProm,
+            String telefono, DTDireccion direccion, String descripcion, float calificacionProm,
             EnumCategoriaRestaurante categoria, LocalTime apertura, LocalTime cierre, int radioEntrega) {
-        super(nombre, email, urlImagen, EnumRoles.Restaurante);
+        super(nombre, email, urlImagen, EnumRoles.Restaurante, null);
         this.password = password;
         this.rut = rut;
         this.telefono = telefono;
@@ -99,11 +99,11 @@ public class Restaurante extends Usuario {
         this.telefono = telefono;
     }
 
-    public DTODireccion getDireccion() {
+    public DTDireccion getDireccion() {
         return direccion;
     }
 
-    public void setDireccion(DTODireccion direccion) {
+    public void setDireccion(DTDireccion direccion) {
         this.direccion = direccion;
     }
 

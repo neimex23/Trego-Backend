@@ -21,6 +21,7 @@ public abstract class Usuario {
     private String nombre;
     private String email;
     private String urlImagen;
+    private String firebaseUid;
 
     @Enumerated(EnumType.STRING)
     private EnumRoles rol = EnumRoles.Cliente;
@@ -28,11 +29,12 @@ public abstract class Usuario {
     protected Usuario() {
     }
 
-    public Usuario(String nombre, String email, String urlImagen, EnumRoles rol) {
+    public Usuario(String nombre, String email, String urlImagen, EnumRoles rol, String firebaseUid) {
         this.nombre = nombre;
         this.email = email;
         this.urlImagen = urlImagen;
         this.rol = rol;
+        this.firebaseUid = firebaseUid;
     }
 
     public int getIdUsuario() {
@@ -69,5 +71,17 @@ public abstract class Usuario {
 
     public void setRol(EnumRoles rol) {
         this.rol = rol;
+    }
+    public String getFirebaseUid() {
+        return firebaseUid;
+    }
+
+    public void setFirebaseUid(String firebaseUid) {
+        this.firebaseUid = firebaseUid;
+    }
+
+    public String getTelefono() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getTelefono'");
     }
 }

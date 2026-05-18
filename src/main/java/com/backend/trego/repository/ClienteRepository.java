@@ -9,7 +9,7 @@ import com.backend.trego.entity.Cliente;
 
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
+    // Hereda los métodos ABM estándar (save, findById, etc.)
     Optional<Cliente> findByEmail(String email);
-
     Optional<Cliente> findByUidCliente(String uidCliente);
 }
