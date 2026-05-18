@@ -20,6 +20,12 @@ public class DTOUsuario {
     public DTOUsuario() {
     }
 
+    public DTOUsuario(String email, String password, EnumRoles rol) {
+        this.email = email;
+        this.password = password;
+        this.rol = rol;
+    }
+
     public Integer getIdUsuario() {
         return idUsuario;
     }

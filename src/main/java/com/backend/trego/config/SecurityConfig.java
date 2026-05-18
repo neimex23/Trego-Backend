@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,20 +20,32 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception { 
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             // Deshabilitamos CSRF explícitamente usando la nueva API
-            .csrf(csrf -> csrf.disable()) 
-            
-            // Forzamos a que no use sesiones en memoria (apaga la generación de contraseña por consola)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            
-            // Abrimos los endpoints de autenticación
+            .csrf(AbstractHttpConfigurer::disable)
+
+            // API stateless (JWT, tokens, etc.)
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+
+            // Configuración de permisos
             .authorizeHttpRequests(auth -> auth
+                // Swagger / OpenAPI
+                .requestMatchers(
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html"
+                ).permitAll()
+
+                // Endpoints de autenticación
                 .requestMatchers("/api/auth/**").permitAll()
+
+                // El resto requiere autenticación
                 .anyRequest().authenticated()
             );
-        
+
         return http.build();
     }
 }
