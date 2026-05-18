@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -14,16 +14,22 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public PasswordEncoder passwordEncoder() { //Se encargará de comprobar que la contraseña en texto plano ingresada en el login coincida matemáticamente con el hash seguro que guardaste en la base de datos MySQL.
+    public PasswordEncoder passwordEncoder() { 
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception { //Registra la cadena de filtros encargada de interceptar todas las peticiones HTTP entrantes.
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception { 
         http
-            .csrf(AbstractHttpConfigurer::disable)
+            // Deshabilitamos CSRF explícitamente usando la nueva API
+            .csrf(csrf -> csrf.disable()) 
+            
+            // Forzamos a que no use sesiones en memoria (apaga la generación de contraseña por consola)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            
+            // Abrimos los endpoints de autenticación
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
                 .anyRequest().authenticated()
             );
         
