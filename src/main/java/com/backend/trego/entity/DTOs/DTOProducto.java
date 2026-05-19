@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public  abstract class DTOProducto {
+public class DTOProducto {
 
     private Integer idProducto;
     private String nombre;
@@ -19,6 +19,12 @@ public  abstract class DTOProducto {
     private Integer idRestaurante;
     private List<DTOIngrediente> ingredientes = new ArrayList<>();
     private Boolean disponible;
+
+    private EnumtipoProducto tipo;
+    private DTOPlato plato;
+    private DTOArticulo articulo;
+    private DTOCombo combo;
+
 
     public DTOProducto(Integer idProducto, String nombre, String descripcion, Double precio, String urlImagen,
             EnumCategoriaProducto categoria, Integer idRestaurante, List<DTOIngrediente> ingredientes,
@@ -34,9 +40,39 @@ public  abstract class DTOProducto {
         this.disponible = disponible;
     }
 
-    private EnumTipoProducto tipo;
-
     public DTOProducto() {
+    }
+
+    public DTOPlato getPlato() {
+        return plato;
+    }
+
+    public void setPlato(DTOPlato plato) {
+        this.plato = plato;
+    }
+
+    public DTOArticulo getArticulo() {
+        return articulo;
+    }
+
+    public void setArticulo(DTOArticulo articulo) {
+        this.articulo = articulo;
+    }
+
+    public DTOCombo getCombo() {
+        return combo;
+    }
+
+    public void setCombo(DTOCombo combo) {
+        this.combo = combo;
+    }
+
+    public EnumtipoProducto getTipoProducto() {
+        return tipo;
+    }
+
+    public void setTipoProducto(EnumtipoProducto tipo) {
+        this.tipo = tipo;
     }
 
     public Integer getIdProducto() {
