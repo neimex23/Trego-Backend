@@ -6,7 +6,7 @@ import java.util.List;
 public class DTOCarrito {
 
     private Integer idCarrito;
-    private Integer idCliente;
+    private String uidCliente;
     private Integer idRestaurante;
     private List<DTOProducto> productos = new ArrayList<>();
     private Double total;
@@ -22,12 +22,12 @@ public class DTOCarrito {
         this.idCarrito = idCarrito;
     }
 
-    public Integer getIdCliente() {
-        return idCliente;
+    public String getUidCliente() {
+        return uidCliente;
     }
 
-    public void setIdCliente(Integer idCliente) {
-        this.idCliente = idCliente;
+    public void setUidCliente(String uidCliente) {
+        this.uidCliente = uidCliente;
     }
 
     public Integer getIdRestaurante() {

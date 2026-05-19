@@ -64,7 +64,11 @@ public class AuthService {
                 throw new BadCredentialsException("Error de autenticación");
             }
             
-            String token = jwtUtil.generateToken(admin.getEmail(), admin.getRol().name());
+            String token = jwtUtil.generateToken(
+                    admin.getEmail(),
+                    admin.getRol().name(),
+                    admin.getFirebaseUid(),   // null para admins creados sin firebase
+                    admin.getIdUsuario());
             return new LoginResponseDTO(token, admin.getRol().name(), admin.getNombre(), admin.getEmail());
         }
 
@@ -79,7 +83,11 @@ public class AuthService {
             if (!passwordEncoder.matches(password, rest.getPassword())) {
                 throw new BadCredentialsException("Error de autenticación");
             }
-            String token = jwtUtil.generateToken(rest.getEmail(), rest.getRol().name());
+            String token = jwtUtil.generateToken(
+                    rest.getEmail(),
+                    rest.getRol().name(),
+                    rest.getFirebaseUid(),    // null para restaurantes sin firebase
+                    rest.getIdUsuario());
             return new LoginResponseDTO(token, rest.getRol().name(), rest.getNombre(), rest.getEmail());
         }
 
@@ -118,7 +126,11 @@ public class AuthService {
             }
 
             // 4. Firmar el JWT local de Trego y retornar la respuesta de sesión
-            String tokenLocal = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name());
+            String tokenLocal = jwtUtil.generateToken(
+                    usuario.getEmail(),
+                    usuario.getRol().name(),
+                    usuario.getFirebaseUid(),
+                    usuario.getIdUsuario());
             return new LoginResponseDTO(tokenLocal, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
 
         } catch (FirebaseAuthException e) {
@@ -158,8 +170,12 @@ public class AuthService {
 
             // 4. Firmar el JWT local usando el teléfono o identificador como sujeto
             String sujetoToken = (usuario.getEmail() != null) ? usuario.getEmail() : usuario.getTelefono();
-            String tokenLocal = jwtUtil.generateToken(sujetoToken, usuario.getRol().name());
-            
+            String tokenLocal = jwtUtil.generateToken(
+                    sujetoToken,
+                    usuario.getRol().name(),
+                    usuario.getFirebaseUid(),
+                    usuario.getIdUsuario());
+
             return new LoginResponseDTO(tokenLocal, usuario.getRol().name(), usuario.getNombre(), sujetoToken);
 
         } catch (FirebaseAuthException e) {
