@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource; // NECESARIO
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -14,17 +15,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Filtro que se ejecuta una vez por request.
- *
- * Si la request trae un header "Authorization: Bearer <jwt>" válido, arma un
- * AuthenticatedUser con email/uid/idUsuario/rol y lo deja disponible en
- * SecurityContextHolder. Después, cualquier controller puede obtenerlo via
- * @AuthenticationPrincipal AuthenticatedUser user.
- *
- * Si el header falta o el token es inválido, simplemente no autentica.
- * Spring Security se encargará de rechazar la request en los endpoints protegidos.
- */
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
@@ -44,9 +34,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String header = request.getHeader(AUTH_HEADER);
 
-        if (header != null && header.startsWith(BEARER_PREFIX)
-                && SecurityContextHolder.getContext().getAuthentication() == null) {
-
+        if (header != null && header.startsWith(BEARER_PREFIX)) {
             String token = header.substring(BEARER_PREFIX.length()).trim();
 
             if (jwtUtil.validateToken(token)) {
@@ -63,20 +51,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(principal, null, authorities);
+                
+                // ESTA LÍNEA ES CLAVE: Asigna los detalles de la petición web al token de autenticación
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                System.out.println("DEBUG: Usuario autenticado correctamente: " + email);
+            } else {
+                System.out.println("DEBUG: Token inválido");
             }
         }
 
         filterChain.doFilter(request, response);
-    }
-    
-    public String getCurrentUid() {
-        // Obtenemos el usuario directo del Principal de Spring Security para que no de error de compilación.
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof AuthenticatedUser) {
-            return ((AuthenticatedUser) principal).getUid();
-        }
-        return null;
     }
 }

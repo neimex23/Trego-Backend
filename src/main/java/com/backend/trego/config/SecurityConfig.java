@@ -2,6 +2,8 @@ package com.backend.trego.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager; // Import necesario
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration; // Import necesario
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -26,35 +28,22 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // Nuevo Bean para gestionar la autenticación de forma explícita
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // Deshabilitamos CSRF explícitamente usando la nueva API
             .csrf(AbstractHttpConfigurer::disable)
-
-            // API stateless (JWT, tokens, etc.)
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-
-            // Configuración de permisos
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Swagger / OpenAPI
-                .requestMatchers(
-                    "/v3/api-docs/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html"
-                ).permitAll()
-
-                // Endpoints de autenticación
-                .requestMatchers("/api/auth/**").permitAll()
-
-                // El resto requiere autenticación
+                .requestMatchers("/api/auth/**").permitAll() 
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
             )
-
-            // Filtro propio que valida el JWT y pobla SecurityContextHolder
-            // con un AuthenticatedUser (uid, idUsuario, email, rol).
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
