@@ -18,16 +18,15 @@ public class Carrito {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idCarrito;
 
-    @ManyToOne
-    @JoinColumn(name = "cliente_id") 
-    private Cliente cliente;
+	@ManyToOne
+	@JoinColumn(name = "cliente_id") // Es buena práctica usar _id para claves foráneas
+	private Cliente cliente;
 
     @ManyToOne
     @JoinColumn(name = "restaurante_id")
-    private Restaurante restaurante; 
+    private Restaurante restaurante; // Corregido: tipo Restaurante para la relación
 
-    // CORRECCIÓN: 'mappedBy' ahora apunta al campo 'carrito' definido en la clase Producto
-    @OneToMany(mappedBy = "carrito", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Producto> productos = new ArrayList<>();
 
     private Double total;
@@ -35,7 +34,7 @@ public class Carrito {
     // Constructor vacío requerido por JPA
     public Carrito() {}
 
-    public Carrito(Cliente cliente, Restaurante restaurante, List<Producto> productos, Double total) {
+	public Carrito(Cliente cliente, Restaurante restaurante, List<Producto> productos, Double total) {
         this.cliente = cliente;
         this.restaurante = restaurante;
         this.productos = productos;
@@ -46,14 +45,13 @@ public class Carrito {
         return idCarrito;
     }
 
-    public Cliente getCliente() {
-        return cliente;
-    }
+	public Cliente getCliente() {
+    	return cliente;
+	}
 
-    public void setCliente(Cliente cliente) {
-        this.cliente = cliente;
-    }
-
+	public void setCliente(Cliente cliente) {
+    	this.cliente = cliente;
+	}
     public Restaurante getRestaurante() {
         return restaurante;
     }
@@ -80,13 +78,11 @@ public class Carrito {
 
     public void addProducto(Producto producto) {
         this.productos.add(producto);
-        producto.setCarrito(this); // Importante: mantener la bidireccionalidad
         total += producto.getPrecio();
     }
 
     public void removeProducto(Producto producto) {
         if (this.productos.remove(producto)) {
-            producto.setCarrito(null); // Importante: limpiar la referencia
             total -= producto.getPrecio();
         }
     }

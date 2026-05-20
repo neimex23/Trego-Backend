@@ -30,11 +30,6 @@ public abstract class Producto {
     @JoinColumn(name = "subcategoria_id")
     private SubCategoria subCategoria;
 
-    // CORRECCIÓN: Relación bidireccional necesaria para mappedBy
-    @ManyToOne
-    @JoinColumn(name = "carrito_id")
-    private Carrito carrito;
-
     protected Producto() {
     }
 
@@ -103,14 +98,5 @@ public abstract class Producto {
 
     public void setSubCategoria(SubCategoria subCategoria) {
         this.subCategoria = subCategoria;
-    }
-
-    // Métodos getter y setter para la relación con Carrito
-    public Carrito getCarrito() {
-        return carrito;
-    }
-
-    public void setCarrito(Carrito carrito) {
-        this.carrito = carrito;
     }
 }

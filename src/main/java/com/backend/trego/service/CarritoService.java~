@@ -32,7 +32,7 @@ public class CarritoService {
 
         // Verificamos si el producto existe en la lista
         boolean existeProducto = carrito.getProductos().stream()
-            .anyMatch(p -> p.getIdProducto() == productoDTO.getIdProducto());
+            .anyMatch(p -> p.getIdProducto().equals(productoDTO.getIdProducto()));
        
         if (existeProducto) {
             modificarProductoCarrito(productoDTO);

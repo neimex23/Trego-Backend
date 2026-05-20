@@ -8,52 +8,31 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 public class JWTUtil {
 
     private final String SECRET_KEY = "UnaClaveSecretaMuyLargaParaTregoAplicacion2026!";
-    // Se define la firma secreta del backend. Es la clave matemática con la que se encriptan y desencriptan los tokens para asegurar que nadie los altere en el camino.
     private final SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-    // Convierte la cadena de texto en una clave criptográfica real basada en el algoritmo HMAC, necesaria para firmar el token de forma segura.
 
     /**
      * Genera un JWT con el email como subject y, como claims adicionales,
-     * el rol, el firebaseUid (si existe) y el idUsuario (PK en la BD).
-     * El email se mantiene como subject para mantener compatibilidad y porque es
-     * el identificador estable para flujos de admin/restaurante que no tienen uid.
+     * el rol, el uid de Firebase y el idUsuario (PK en la BD).
      */
     public String generateToken(String email, String rol, String firebaseUid, Integer idUsuario) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", rol); // Corregido: 'role' a 'rol' para que coincida con el parámetro
-        claims.put("uid", firebaseUid); // guarda el UID en los claims del token
-    
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(email) // Corregido para que respete tu comentario (email como subject)
+                .subject(email) // El email sigue siendo el protagonista principal
                 .claim("rol", rol)
                 .claim("uid", firebaseUid)       // puede ser null para admin/restaurante
                 .claim("userId", idUsuario)      // PK numérica de Usuario en la BD
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 8)) // 8 horas
-                .signWith(key) // Firma digitalmente el token usando la clave secreta.
+                .signWith(key)
                 .compact();
-    }
-    
-    public String getUidFromToken(String token) {
-        Claims claims = Jwts.parser()
-            .verifyWith(key) // Sintaxis actualizada para evitar el error de parseClaimsJws
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
-        return (String) claims.get("uid");
     }
 
     /**
-     * Overload de compatibilidad con código existente. Se conserva pero NO debe
-     * usarse en nuevos flujos porque deja el token sin uid ni userId.
+     * Overload de compatibilidad con código existente.
      */
     @Deprecated
     public String generateToken(String email, String rol) {
@@ -61,7 +40,7 @@ public class JWTUtil {
     }
 
     /**
-     * Parsea y valida el JWT. Lanza JwtException si el token es inválido o expiró.
+     * Parsea y valida el JWT usando la sintaxis moderna de la librería.
      */
     public Claims parseClaims(String token) {
         return Jwts.parser()
@@ -71,9 +50,6 @@ public class JWTUtil {
                 .getPayload();
     }
 
-    /**
-     * Devuelve true si el token es parseable, está firmado correctamente y no expiró.
-     */
     public boolean validateToken(String token) {
         try {
             parseClaims(token);
@@ -81,6 +57,11 @@ public class JWTUtil {
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+    }
+
+    // Redirigimos este método viejo a la implementación correcta
+    public String getUidFromToken(String token) {
+        return extractUid(token);
     }
 
     public String extractEmail(String token) {

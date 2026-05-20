@@ -6,7 +6,7 @@ import com.backend.trego.entity.Administrador;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.LoginDTO;
 import com.backend.trego.entity.DTOs.LoginResponseDTO;
-import com.backend.trego.entity.DTOs.DTOUsuario; 
+import com.backend.trego.entity.DTOs.DTOUsuario; // Nombre de DTO corregido a DTOUsuario
 
 import com.backend.trego.repository.UsuarioRepository;
 import com.backend.trego.repository.AdministradorRepository;
@@ -32,9 +32,11 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JWTUtil jwtUtil;
     
+    // Unificamos los nombres de los repositorios y servicios
     private final UsuarioRepository usuarioRepository; 
     private final UsuarioService usuarioService;
 
+    // UN SOLO CONSTRUCTOR con TODAS las inyecciones
     public AuthService(AdministradorRepository adminRepo, 
                        RestauranteRepository restauranteRepo, 
                        PasswordEncoder passwordEncoder, 
@@ -56,6 +58,7 @@ public class AuthService {
         String email = loginDTO.getEmail();
         String password = loginDTO.getPassword();
         
+        // 1 Intenta validar Administrador si no sale se jode todo
         Optional<Administrador> adminOpt = adminRepo.findByEmail(email);
         if (adminOpt.isPresent()) {
             Administrador admin = adminOpt.get();
@@ -68,6 +71,7 @@ public class AuthService {
             return new LoginResponseDTO(token, admin.getRol().name(), admin.getNombre(), admin.getEmail());
         }
 
+        // 2 Intenta validar a un Restaurante
         Optional<Restaurante> restOpt = restauranteRepo.findByEmail(email);
         if (restOpt.isPresent()) {
             Restaurante rest = restOpt.get();
@@ -81,6 +85,7 @@ public class AuthService {
             return new LoginResponseDTO(token, rest.getRol().name(), rest.getNombre(), rest.getEmail());
         }
 
+        // 3 Si no coincide el email lanza excepcion
         throw new BadCredentialsException("Error de autenticación");
     }
     
@@ -102,6 +107,7 @@ public class AuthService {
                 fotoPerfil = "http://imagen_de_prueba.com/foto.jpg";
                 System.out.println(">>> [BYPASS] Ejecutando login de Google simulado para: " + email);
             } else {
+                // Flujo real de producción
                 FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
                 uid = decodedToken.getUid();
                 email = decodedToken.getEmail();
@@ -118,16 +124,17 @@ public class AuthService {
                 nuevoUsuarioDTO.setUid(uid);
                 nuevoUsuarioDTO.setEmail(email);
                 nuevoUsuarioDTO.setNombre(nombre != null ? nombre : "Usuario Trego");
-                nuevoUsuarioDTO.setUrlImagen(fotoPerfil); 
-                nuevoUsuarioDTO.setRol(EnumRoles.Cliente); 
+                nuevoUsuarioDTO.setUrlImagen(fotoPerfil); // Firebase da la URL de la foto de Google
+                nuevoUsuarioDTO.setRol(EnumRoles.Cliente); // Pasa el Enum directamente
 
                 usuario = usuarioService.altaUsuario(nuevoUsuarioDTO);
             } else {
                 usuario = usuarioOpt.get();
             }
 
-            int idUsuarioInt = usuario.getIdUsuario();
-            String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), usuario.getFirebaseUid(), idUsuarioInt);
+            // Usa la firma correcta de jwtUtil de tu proyecto con sus 4 parámetros
+            Integer idUsuarioCast = usuario.getIdUsuario() != null ? usuario.getIdUsuario().intValue() : null;
+            String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), usuario.getFirebaseUid(), idUsuarioCast);
             
             return new LoginResponseDTO(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
 
@@ -160,10 +167,11 @@ public class AuthService {
                 usuario = usuarioOpt.get();
             }
 
+            // Como los usuarios por SMS pueden no tener email, le pasamos su UID o un string vacío al token
             String identificador = usuario.getEmail() != null ? usuario.getEmail() : usuario.getFirebaseUid();
-            int idUsuarioInt = usuario.getIdUsuario();
+            Integer idUsuarioCast = usuario.getIdUsuario() != null ? usuario.getIdUsuario().intValue() : null;
             
-            String jwt = jwtUtil.generateToken(identificador, usuario.getRol().name(), usuario.getFirebaseUid(), idUsuarioInt);
+            String jwt = jwtUtil.generateToken(identificador, usuario.getRol().name(), usuario.getFirebaseUid(), idUsuarioCast);
             
             return new LoginResponseDTO(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
 
