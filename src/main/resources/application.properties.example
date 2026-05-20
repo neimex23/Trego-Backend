@@ -15,6 +15,16 @@ spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 
+# --- Configuración de Correo (Necesaria para NotificacionesService) ---
+mail.from=noreply@trego.com
+mail.from.name=Equipo Trego
+# Esto evita que Spring intente conectar a un servidor real mientras desarrollas
+spring.mail.host=localhost
+spring.mail.port=25
+
 # --- MercadoPago ---
 # Obtener desde https://www.mercadopago.com.ar/developers/panel/app
 mercadopago.access.token=
+
+# Para pruebas borrar antes de la entrega 
+logging.level.org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor=TRACE
