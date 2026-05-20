@@ -79,6 +79,7 @@ public class JWTUtil {
             parseClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
+            System.out.println("DEBUG: Error al validar token: " + e.getMessage());
             return false;
         }
     }
@@ -104,6 +105,7 @@ public class JWTUtil {
         try {
             return Integer.parseInt(userId.toString());
         } catch (NumberFormatException e) {
+            System.out.println("DEBUG: Error al extraeri el Userid: " + e.getMessage());
             return null;
         }
     }
