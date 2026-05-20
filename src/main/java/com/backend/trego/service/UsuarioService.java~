@@ -5,7 +5,6 @@ import com.backend.trego.repository.UsuarioRepository;
 import com.backend.trego.entity.RegistroTemporal;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.Usuario;
-import com.backend.trego.entity.Cliente;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,19 +37,19 @@ public class UsuarioService {
 
     /**
      * Da de alta un nuevo usuario en el sistema.
-     * Corregido: Ahora instancia 'Cliente' (clase concreta) y devuelve la entidad 'Usuario'.
+     * Corregido: Ahora devuelve la entidad 'Usuario' y guarda los datos en la BD.
      */
     public Usuario altaUsuario(DTOUsuario usuarioDTO) {
-        Cliente nuevoCliente = new Cliente();
+        Usuario nuevoUsuario = new Usuario();
         
         // Mapeamos los datos del DTO a la entidad
-        nuevoCliente.setFirebaseUid(usuarioDTO.getUid()); // Si en tu entidad se llama setUid(), cambialo
-        nuevoCliente.setEmail(usuarioDTO.getEmail());
-        nuevoCliente.setNombre(usuarioDTO.getNombre());
-        nuevoCliente.setRol(usuarioDTO.getRol());
+        nuevoUsuario.setFirebaseUid(usuarioDTO.getUid()); // Si en tu entidad se llama setUid(), cambialo
+        nuevoUsuario.setEmail(usuarioDTO.getEmail());
+        nuevoUsuario.setNombre(usuarioDTO.getNombre());
+        nuevoUsuario.setRol(usuarioDTO.getRol());
         
         // Retornamos el usuario guardado (que ya vendrá con su idUsuario autogenerado)
-        return usuarioRepository.save(nuevoCliente);
+        return usuarioRepository.save(nuevoUsuario);
     }
 
     /**

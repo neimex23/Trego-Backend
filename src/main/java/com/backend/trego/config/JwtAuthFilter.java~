@@ -72,11 +72,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
     
     public String getCurrentUid() {
-        // Obtenemos el usuario directo del Principal de Spring Security para que no de error de compilación.
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof AuthenticatedUser) {
-            return ((AuthenticatedUser) principal).getUid();
-        }
-        return null;
-    }
+    	return getCurrentUser().getUid(); // Viene directo del Principal de Spring Security, 0 consultas a la BD.
+	}
 }
