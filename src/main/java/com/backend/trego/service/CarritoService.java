@@ -1,53 +1,207 @@
 package com.backend.trego.service;
 
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.backend.trego.entity.Carrito;
+import com.backend.trego.entity.LineaCarrito;
+import com.backend.trego.entity.Producto;
+import com.backend.trego.entity.DTOs.DTOAgregarAlCarritoRequest;
 import com.backend.trego.entity.DTOs.DTOCarrito;
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTORestaurante;
-import com.backend.trego.entity.Carrito;
 import com.backend.trego.repository.CarritoRepository;
-import org.springframework.stereotype.Service;
-import java.util.Optional;
+import com.backend.trego.repository.ProductoRepository;
 
+/**
+ * Servicio encargado de la gestión del Carrito de compras del cliente.
+ *
+ * Regla principal: un cliente solo puede tener un carrito activo, y todos los
+ * productos del carrito deben pertenecer al mismo restaurante. Internamente
+ * usa la entidad LineaCarrito como tabla de unión (producto + cantidad),
+ * pero el API hacia el front trabaja siempre con DTOProducto (con los
+ * campos auxiliares cantidad y observaciones cargados).
+ */
 @Service
 public class CarritoService {
 
     private final CarritoRepository carritoRepository;
+    private final ProductoRepository productoRepository;
     private final CurrentUserService currentUserService;
 
-    public CarritoService(CarritoRepository carritoRepository, CurrentUserService currentUserService) {
+    public CarritoService(CarritoRepository carritoRepository,
+                          ProductoRepository productoRepository,
+                          CurrentUserService currentUserService) {
         this.carritoRepository = carritoRepository;
+        this.productoRepository = productoRepository;
         this.currentUserService = currentUserService;
     }
 
-    public void agregarProducto(DTOProducto productoDTO, DTORestaurante restauranteDTO) {
-        String currentUid = currentUserService.getCurrentUid();
-
-        // Buscamos el carrito de forma eficiente en la DB
-        Carrito carrito = carritoRepository.findByCliente_UidCliente(currentUid)
-            .orElseGet(() -> {
-                // Aquí deberías instanciar un nuevo Carrito y asignar el Cliente
-                Carrito nuevoCarrito = new Carrito();
-                return carritoRepository.save(nuevoCarrito);
-            });
-
-        // Verificamos si el producto existe en la lista
-        boolean existeProducto = carrito.getProductos().stream()
-            .anyMatch(p -> p.getIdProducto() == productoDTO.getIdProducto());
-       
-        if (existeProducto) {
-            modificarProductoCarrito(productoDTO);
-        } else {
-            // Lógica para agregar el producto al objeto carrito
-            // carrito.addProducto(producto);
-            carritoRepository.save(carrito);
-        }
+    public DTOCarrito obtenerCarrito() {
+        String uidCliente = currentUserService.getCurrentUid();
+        return carritoRepository.findByUidCliente(uidCliente)
+                .map(Carrito::toDTO)
+                .orElse(null);
     }
 
-    // --- Métodos restantes (implementar según necesidad) ---
-    public DTOCarrito obtenerCarrito() { return null; }
-    public DTOProducto modificarProductoCarrito(DTOProducto productoDTO) { return null; }
-    public DTOCarrito actualizarTotal(DTOCarrito carritoDTO) { return null; }
-    public boolean eliminarProducto(DTOProducto productoDTO) { return false; }
-    public void limpiarCarrito() {}
-    public DTOCarrito limpiarItemsCarrito(DTOCarrito carritoDTO) { return null; }
+    public DTOCarrito agregarProducto(DTOAgregarAlCarritoRequest request) {
+        if (request == null || request.getProducto() == null) {
+            throw new IllegalArgumentException("La petición y el DTOProducto no pueden ser nulos");
+        }
+        DTOProducto productoDTO = request.getProducto();
+        DTORestaurante restauranteDTO = request.getRestaurante();
+
+        if (productoDTO.getIdProducto() == null) {
+            throw new IllegalArgumentException("DTOProducto.idProducto es obligatorio");
+        }
+        if (restauranteDTO == null || restauranteDTO.getIdRestaurante() == null) {
+            throw new IllegalArgumentException("DTORestaurante.idRestaurante es obligatorio");
+        }
+
+        int cantidad = (productoDTO.getCantidad() == null || productoDTO.getCantidad() <= 0)
+                ? 1 : productoDTO.getCantidad();
+        String observaciones = productoDTO.getObservaciones();
+
+        String uidCliente = currentUserService.getCurrentUid();
+
+        Producto producto = productoRepository.findById(productoDTO.getIdProducto())
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Producto no encontrado con id: " + productoDTO.getIdProducto()));
+
+        Integer idRestauranteSolicitado = restauranteDTO.getIdRestaurante();
+
+        // Buscar o crear carrito
+        Carrito carrito = carritoRepository.findByUidCliente(uidCliente)
+                .orElseGet(() -> new Carrito(uidCliente, idRestauranteSolicitado));
+
+        // Validar que el producto sea del mismo restaurante que el carrito
+        if (!carrito.getLineas().isEmpty()
+                && carrito.getIdRestaurante() != null
+                && !carrito.getIdRestaurante().equals(idRestauranteSolicitado)) {
+            throw new IllegalArgumentException(
+                    "No se pueden agregar productos de distintos restaurantes al carrito");
+        }
+
+        if (carrito.getIdRestaurante() == null) {
+            carrito.setIdRestaurante(idRestauranteSolicitado);
+        }
+
+        // Buscar si ya existe una línea con este producto
+        Optional<LineaCarrito> existente = carrito.getLineas().stream()
+                .filter(l -> l.getProducto() != null
+                        && l.getProducto().getIdProducto() == producto.getIdProducto())
+                .findFirst();
+
+        if (existente.isPresent()) {
+            LineaCarrito linea = existente.get();
+            linea.setCantidad(linea.getCantidad() + cantidad);
+            if (observaciones != null) {
+                linea.setObservaciones(observaciones);
+            }
+        } else {
+            LineaCarrito nuevaLinea = new LineaCarrito(carrito, producto, cantidad, observaciones);
+            carrito.addLinea(nuevaLinea);
+        }
+
+        carrito.recalcularTotal();
+        Carrito guardado = carritoRepository.save(carrito);
+        return guardado.toDTO();
+    }
+
+
+    @Transactional
+    public DTOProducto modificarProductoCarrito(DTOProducto productoDTO) {
+        if (productoDTO == null || productoDTO.getIdProducto() == null) {
+            throw new IllegalArgumentException("Debe especificarse el idProducto a modificar");
+        }
+        String uidCliente = currentUserService.getCurrentUid();
+        Carrito carrito = carritoRepository.findByUidCliente(uidCliente)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El usuario no tiene un carrito activo"));
+
+        LineaCarrito linea = carrito.getLineas().stream()
+                .filter(l -> l.getProducto() != null
+                        && l.getProducto().getIdProducto() == productoDTO.getIdProducto())
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El producto " + productoDTO.getIdProducto() + " no está en el carrito"));
+
+        Integer nuevaCantidad = productoDTO.getCantidad();
+        if (nuevaCantidad != null && nuevaCantidad <= 0) {
+            carrito.removeLinea(linea);
+            carritoRepository.save(carrito);
+            return null;
+        }
+
+        if (nuevaCantidad != null) {
+            linea.setCantidad(nuevaCantidad);
+        }
+        if (productoDTO.getObservaciones() != null) {
+            linea.setObservaciones(productoDTO.getObservaciones());
+        }
+
+        carrito.recalcularTotal();
+        carritoRepository.save(carrito);
+        return linea.toDTO();
+    }
+
+    @Transactional
+    public DTOCarrito actualizarTotal() {
+        String uidCliente = currentUserService.getCurrentUid();
+        Carrito carrito = carritoRepository.findByUidCliente(uidCliente)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El usuario no tiene un carrito activo"));
+        carrito.recalcularTotal();
+        carritoRepository.save(carrito);
+        return carrito.toDTO();
+    }
+
+    @Transactional
+    public DTOCarrito eliminarProducto(DTOProducto productoDTO) {
+        if (productoDTO == null || productoDTO.getIdProducto() == null) {
+            throw new IllegalArgumentException("DTOProducto.idProducto es obligatorio");
+        }
+        String uidCliente = currentUserService.getCurrentUid();
+        Optional<Carrito> carritoOpt = carritoRepository.findByUidCliente(uidCliente);
+        if (carritoOpt.isEmpty()) {
+            return null;
+        }
+        Carrito carrito = carritoOpt.get();
+
+        Optional<LineaCarrito> lineaOpt = carrito.getLineas().stream()
+                .filter(l -> l.getProducto() != null
+                        && l.getProducto().getIdProducto() == productoDTO.getIdProducto())
+                .findFirst();
+
+        if (lineaOpt.isEmpty()) {
+            return null;
+        }
+
+        carrito.removeLinea(lineaOpt.get());
+        Carrito guardado = carritoRepository.save(carrito);
+        return guardado.toDTO();
+    }
+
+    @Transactional
+    public void limpiarCarrito() {
+        String uidCliente = currentUserService.getCurrentUid();
+        carritoRepository.findByUidCliente(uidCliente)
+                .ifPresent(carritoRepository::delete);
+    }
+
+    @Transactional
+    public DTOCarrito limpiarItemsCarrito() {
+        String uidCliente = currentUserService.getCurrentUid();
+        Carrito carrito = carritoRepository.findByUidCliente(uidCliente)
+                .orElse(null);
+        if (carrito == null) {
+            return null;
+        }
+        carrito.vaciar();
+        carritoRepository.save(carrito);
+        return carrito.toDTO();
+    }
 }

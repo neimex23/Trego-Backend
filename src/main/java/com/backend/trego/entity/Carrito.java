@@ -3,71 +3,79 @@ package com.backend.trego.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.backend.trego.entity.DTOs.DTOCarrito;
+import com.backend.trego.entity.DTOs.DTOProducto;
+
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+
+/**
+ * Carrito de compras de un cliente. Contiene un conjunto de líneas
+ * (LineaCarrito) cada una con un producto y su cantidad. Todos los productos
+ * de un carrito deben pertenecer al mismo restaurante.
+ */
 
 @Entity
 public class Carrito {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idCarrito;
 
-    @ManyToOne
-    @JoinColumn(name = "cliente_id") 
-    private Cliente cliente;
+    /**
+     * UID de Firebase del cliente propietario del carrito.
+     */
+    @Column(name = "uid_cliente", nullable = false)
+    private String uidCliente;
 
-    @ManyToOne
-    @JoinColumn(name = "restaurante_id")
-    private Restaurante restaurante; 
+    /**
+     * Restaurante al que pertenecen los productos del carrito.
+     */
+    @Column(name = "id_restaurante")
+    private Integer idRestaurante;
 
-    // CORRECCIÓN: 'mappedBy' ahora apunta al campo 'carrito' definido en la clase Producto
     @OneToMany(mappedBy = "carrito", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Producto> productos = new ArrayList<>();
+    private List<LineaCarrito> lineas = new ArrayList<>();
 
-    private Double total;
+    private Double total = 0.0;
 
-    // Constructor vacío requerido por JPA
-    public Carrito() {}
-
-    public Carrito(Cliente cliente, Restaurante restaurante, List<Producto> productos, Double total) {
-        this.cliente = cliente;
-        this.restaurante = restaurante;
-        this.productos = productos;
-        this.total = total;
+    protected Carrito() {
     }
-    
+
+    public Carrito(String uidCliente, Integer idRestaurante) {
+        this.uidCliente = uidCliente;
+        this.idRestaurante = idRestaurante;
+        this.lineas = new ArrayList<>();
+        this.total = 0.0;
+    }
+
     public Integer getIdCarrito() {
         return idCarrito;
     }
 
-    public Cliente getCliente() {
-        return cliente;
+    public String getUidCliente() {
+        return uidCliente;
     }
 
-    public void setCliente(Cliente cliente) {
-        this.cliente = cliente;
+    public Integer getIdRestaurante() {
+        return idRestaurante;
     }
 
-    public Restaurante getRestaurante() {
-        return restaurante;
+    public void setIdRestaurante(Integer idRestaurante) {
+        this.idRestaurante = idRestaurante;
     }
 
-    public void setRestaurante(Restaurante restaurante) {
-        this.restaurante = restaurante;
+    public List<LineaCarrito> getLineas() {
+        return lineas;
     }
 
-    public List<Producto> getProductos() {
-        return productos;
-    }
-
-    public void setProductos(List<Producto> productos) {
-        this.productos = productos;
+    public void setLineas(List<LineaCarrito> lineas) {
+        this.lineas = lineas;
     }
 
     public Double getTotal() {
@@ -78,16 +86,57 @@ public class Carrito {
         this.total = total;
     }
 
-    public void addProducto(Producto producto) {
-        this.productos.add(producto);
-        producto.setCarrito(this); // Importante: mantener la bidireccionalidad
-        total += producto.getPrecio();
+    /**
+     * Agrega una línea al carrito asegurando la relación bidireccional.
+     */
+    public void addLinea(LineaCarrito linea) {
+        linea.setCarrito(this);
+        this.lineas.add(linea);
+        recalcularTotal();
     }
 
-    public void removeProducto(Producto producto) {
-        if (this.productos.remove(producto)) {
-            producto.setCarrito(null); // Importante: limpiar la referencia
-            total -= producto.getPrecio();
+    /**
+     * Quita la línea indicada del carrito.
+     */
+    public boolean removeLinea(LineaCarrito linea) {
+        boolean removed = this.lineas.remove(linea);
+        if (removed) {
+            linea.setCarrito(null);
+            recalcularTotal();
         }
+        return removed;
+    }
+
+    /**
+     * Vacía todas las líneas del carrito y deja el total en 0.
+     */
+    public void vaciar() {
+        this.lineas.clear();
+        this.total = 0.0;
+    }
+
+    /**
+     * Recalcula y actualiza el total sumando los subtotales de todas las líneas.
+     */
+    public double recalcularTotal() {
+        this.total = this.lineas.stream()
+                .mapToDouble(LineaCarrito::getSubtotal)
+                .sum();
+        return this.total;
+    }
+
+    public DTOCarrito toDTO() {
+        DTOCarrito dto = new DTOCarrito();
+        dto.setIdCarrito(this.idCarrito);
+        dto.setUidCliente(this.uidCliente);
+        dto.setIdRestaurante(this.idRestaurante);
+
+        List<DTOProducto> productosDTO = new ArrayList<>();
+        for (LineaCarrito linea : this.lineas) {
+            productosDTO.add(linea.toDTO());
+        }
+        dto.setProductos(productosDTO);
+        dto.setTotal(this.total);
+        return dto;
     }
 }
