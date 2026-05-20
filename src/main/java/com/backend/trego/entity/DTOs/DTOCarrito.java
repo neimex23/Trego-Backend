@@ -3,6 +3,11 @@ package com.backend.trego.entity.DTOs;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * DTO del carrito de compras. Contiene la lista de productos del carrito
+ * (cada DTOProducto trae su cantidad y observaciones cargadas) y el total
+ * acumulado.
+ */
 public class DTOCarrito {
 
     private Integer idCarrito;
