@@ -21,19 +21,11 @@ import java.util.List;
 public class PedidoController {
 
     private final PedidoService pedidoService;
-    private final CarritoService carritoService;
 
-    public PedidoController(PedidoService pedidoService, CarritoService carritoService) {
+    public PedidoController(PedidoService pedidoService) {
         this.pedidoService = pedidoService;
-        this.carritoService = carritoService;
     }
 
-    @PostMapping 
-    public ResponseEntity<Boolean> agregarAlCarrito(@RequestBody DTOProducto productoDTO, @RequestBody DTORestaurante restauranteDTO) {
-        productoDTO.setIdRestaurante(restauranteDTO.getIdRestaurante());
-        carritoService.agregarProducto(productoDTO,restauranteDTO);
-        return ResponseEntity.ok(true);
-    }
 
 
 }
