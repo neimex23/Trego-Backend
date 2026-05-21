@@ -16,6 +16,7 @@ import java.util.List;
 // Endpoints de pedidos.
 @RestController
 @RequestMapping("/api/pedido")
+@CrossOrigin("*")
 public class PedidoController {
 
     private final PedidoService pedidoService;

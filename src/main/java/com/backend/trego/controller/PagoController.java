@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 // Integración con la pasarela de pagos (MercadoPago).
 @RestController
 @RequestMapping("/api/pagos")
+@CrossOrigin("*")
 public class PagoController {
 
     private final PagoService pagoService;

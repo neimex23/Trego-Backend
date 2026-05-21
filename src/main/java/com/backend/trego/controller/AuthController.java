@@ -1,5 +1,7 @@
 package com.backend.trego.controller;
 
+import com.backend.trego.entity.Usuario;
+import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.entity.DTOs.LoginDTO;
 import com.backend.trego.entity.DTOs.LoginResponseDTO;
 import com.backend.trego.service.AuthService;
@@ -9,11 +11,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin("*")
 public class AuthController {
 
     private final AuthService authService;
