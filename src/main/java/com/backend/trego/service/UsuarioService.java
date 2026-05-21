@@ -1,5 +1,6 @@
 package com.backend.trego.service;
 
+import com.backend.trego.entity.DTOs.DTDireccion;
 import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.repository.UsuarioRepository;
 import com.backend.trego.entity.RegistroTemporal;
@@ -12,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,14 +28,16 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final NotificacionesService notificacionesService;
     private final PasswordEncoder passwordEncoder;
+    private final CurrentUserService currentUserService;
     // Caché temporal en memoria para asociar emails con sus códigos y contraseñas
     private final Map<String, RegistroTemporal> registrosPendientes = new ConcurrentHashMap<>();
 
     public UsuarioService(UsuarioRepository usuarioRepository, NotificacionesService notificacionesService,
-                          PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder, CurrentUserService currentUserService) {
         this.usuarioRepository = usuarioRepository;
         this.notificacionesService = notificacionesService;
         this.passwordEncoder = passwordEncoder;
+        this.currentUserService = currentUserService;
     }
 
     /**
@@ -176,4 +180,10 @@ public class UsuarioService {
             System.out.println("[Caché] Limpieza terminada. Se eliminaron " + eliminados + " registros colgados.");
         }
     }
+
+    public List<DTDireccion> obtenerDirecciones() {
+        String uid = currentUserService.getCurrentUid();
+        return usuarioRepository.findDireccionesByFirebaseUid(uid);
+    }
+
 }

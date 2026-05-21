@@ -23,6 +23,11 @@ public class DTDireccion {
         this.longitud = longitud;
     }
 
+    public DTDireccion(double latitud, double longitud) {
+        this.latitud = latitud;
+        this.longitud = longitud;
+    }
+
     public String getCalle() {
         return calle;
     }

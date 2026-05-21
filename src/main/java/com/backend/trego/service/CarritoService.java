@@ -40,6 +40,7 @@ public class CarritoService {
         this.currentUserService = currentUserService;
     }
 
+    @Transactional
     public DTOCarrito obtenerCarrito() {
         String uidCliente = currentUserService.getCurrentUid();
         return carritoRepository.findByUidCliente(uidCliente)
@@ -47,6 +48,7 @@ public class CarritoService {
                 .orElse(null);
     }
 
+    @Transactional
     public DTOCarrito agregarProducto(DTOAgregarAlCarritoRequest request) {
         if (request == null || request.getProducto() == null) {
             throw new IllegalArgumentException("La petición y el DTOProducto no pueden ser nulos");
