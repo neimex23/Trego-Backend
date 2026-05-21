@@ -68,4 +68,19 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(e.getMessage());
         }
     }
+
+    // FLUJO CU-CLI-01: Registro de Cliente (Google o SMS)
+    @PostMapping("/registro")
+    public ResponseEntity<?> registrarCliente(@RequestBody DTOUsuario dto) {
+        try {
+            Usuario usuario = authService.altaUsuario(dto);
+            URI location = URI.create("/api/auth/registro/" + usuario.getIdUsuario());
+            return ResponseEntity.created(location).build();
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al registrar cliente");
+        }
+    }
 }
