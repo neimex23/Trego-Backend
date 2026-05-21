@@ -1,25 +1,12 @@
 package com.backend.trego.config;
 
-/**
- * Representa al usuario autenticado dentro del SecurityContext.
- * Es el Principal que el JwtAuthFilter coloca en SecurityContextHolder.
- *
- * Acceso típico en un controller:
- *
- *   AuthenticatedUser user = (AuthenticatedUser) SecurityContextHolder
- *           .getContext().getAuthentication().getPrincipal();
- *   String uid = user.getUid();
- *
- * O con @AuthenticationPrincipal:
- *
- *   @GetMapping("/me")
- *   public ResponseEntity<?> me(@AuthenticationPrincipal AuthenticatedUser user) { ... }
- */
+// Principal que JwtAuthFilter mete en el SecurityContext. Se puede leer en los
+// controllers con @AuthenticationPrincipal AuthenticatedUser user.
 public class AuthenticatedUser {
 
-    private final String uid;          // firebaseUid; puede ser null para admin/restaurante
+    private final String uid;          // firebaseUid; null para admin/restaurante
     private final Integer idUsuario;   // PK en la tabla Usuario
-    private final String email;        // subject del JWT
+    private final String email;
     private final String rol;
 
     public AuthenticatedUser(String uid, Integer idUsuario, String email, String rol) {

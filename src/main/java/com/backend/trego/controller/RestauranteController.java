@@ -11,9 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Endpoints REST para la gestión de Restaurantes.
- */
+// Endpoints de restaurantes.
 @RestController
 @RequestMapping("/api/restaurantes")
 public class RestauranteController {

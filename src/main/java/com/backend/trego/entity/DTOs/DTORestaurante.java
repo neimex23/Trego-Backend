@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/**
- * DTO genérico para representar un Restaurante.
- */
+// Representa un restaurante.
 public class DTORestaurante {
 
     private Integer idRestaurante;

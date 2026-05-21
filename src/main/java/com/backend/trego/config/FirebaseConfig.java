@@ -17,16 +17,14 @@ public class FirebaseConfig {
     @PostConstruct
     public void initializeFirebase() {
         try {
-            // Lee el archivo JSON desde la carpeta src/main/resources
             ClassPathResource resource = new ClassPathResource("firebase-service-account.json");
             InputStream serviceAccount = resource.getInputStream();
 
-            // Configura las opciones de conexión con las credenciales de Google
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .build();
 
-            // Inicializa la aplicación de Firebase si no fue inicializada previamente
+            // Evitamos inicializarla dos veces
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
                 System.out.println(">>> [Firebase Admin SDK] Inicializado con éxito en Trego.");

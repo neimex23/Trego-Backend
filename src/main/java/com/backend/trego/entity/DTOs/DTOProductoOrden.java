@@ -2,10 +2,7 @@ package com.backend.trego.entity.DTOs;
 
 import java.math.BigDecimal;
 
-/**
- * DTO de un producto dentro de una orden enviada al backend
- * para construir la preferencia de MercadoPago.
- */
+// Producto dentro de una orden, usado para armar la preferencia de MercadoPago.
 public class DTOProductoOrden {
     private Integer idProducto;
     private String nombre;

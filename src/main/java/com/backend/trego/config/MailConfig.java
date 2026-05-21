@@ -9,10 +9,10 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 @Configuration
 public class MailConfig {
 
-    // Este bean solo se creará si NO tienes definido uno de correo real
+    // Solo se crea si no hay un sender de correo real configurado (sirve para desarrollo).
     @Bean
     @ConditionalOnMissingBean(JavaMailSender.class)
     public JavaMailSender javaMailSender() {
-        return new JavaMailSenderImpl(); // Retorna un sender vacío que no hace nada
+        return new JavaMailSenderImpl();
     }
 }

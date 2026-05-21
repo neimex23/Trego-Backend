@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-/**
- * Endpoints REST para el envío de notificaciones.
- */
+// Endpoints para el envío de notificaciones.
 @RestController
 @RequestMapping("/api/notificaciones")
 public class NotificacionesController {

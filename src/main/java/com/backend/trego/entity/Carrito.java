@@ -14,12 +14,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
-/**
- * Carrito de compras de un cliente. Contiene un conjunto de líneas
- * (LineaCarrito) cada una con un producto y su cantidad. Todos los productos
- * de un carrito deben pertenecer al mismo restaurante.
- */
-
+// Carrito de un cliente. Tiene varias líneas (LineaCarrito), y todos los
+// productos deben ser del mismo restaurante.
 @Entity
 public class Carrito {
 
@@ -27,15 +23,9 @@ public class Carrito {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idCarrito;
 
-    /**
-     * UID de Firebase del cliente propietario del carrito.
-     */
     @Column(name = "uid_cliente", nullable = false)
     private String uidCliente;
 
-    /**
-     * Restaurante al que pertenecen los productos del carrito.
-     */
     @Column(name = "id_restaurante")
     private Integer idRestaurante;
 
@@ -86,18 +76,12 @@ public class Carrito {
         this.total = total;
     }
 
-    /**
-     * Agrega una línea al carrito asegurando la relación bidireccional.
-     */
     public void addLinea(LineaCarrito linea) {
         linea.setCarrito(this);
         this.lineas.add(linea);
         recalcularTotal();
     }
 
-    /**
-     * Quita la línea indicada del carrito.
-     */
     public boolean removeLinea(LineaCarrito linea) {
         boolean removed = this.lineas.remove(linea);
         if (removed) {
@@ -107,17 +91,11 @@ public class Carrito {
         return removed;
     }
 
-    /**
-     * Vacía todas las líneas del carrito y deja el total en 0.
-     */
     public void vaciar() {
         this.lineas.clear();
         this.total = 0.0;
     }
 
-    /**
-     * Recalcula y actualiza el total sumando los subtotales de todas las líneas.
-     */
     public double recalcularTotal() {
         this.total = this.lineas.stream()
                 .mapToDouble(LineaCarrito::getSubtotal)

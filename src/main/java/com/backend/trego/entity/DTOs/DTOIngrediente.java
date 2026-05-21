@@ -1,8 +1,6 @@
 package com.backend.trego.entity.DTOs;
 
-/**
- * DTO para Ingredientes asociados a productos del menú.
- */
+// Ingrediente asociado a un producto del menú.
 public class DTOIngrediente {
 
     private Integer idIngrediente;

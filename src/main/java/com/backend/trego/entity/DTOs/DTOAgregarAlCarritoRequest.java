@@ -1,12 +1,7 @@
 package com.backend.trego.entity.DTOs;
 
-/**
- * Cuerpo de la petición para agregar un producto al carrito.
- *
- * El front envía un DTOProducto (con su cantidad, observaciones e
- * ingredientes ya ajustados desde la UI) junto al DTORestaurante al que
- * pertenece.
- */
+// Body para agregar un producto al carrito: el DTOProducto (con cantidad,
+// observaciones e ingredientes ya ajustados en la UI) y su DTORestaurante.
 public class DTOAgregarAlCarritoRequest {
 
     private DTOProducto producto;

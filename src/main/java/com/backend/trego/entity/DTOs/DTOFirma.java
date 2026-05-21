@@ -1,9 +1,6 @@
 package com.backend.trego.entity.DTOs;
 
-/**
- * DTO con los datos firmados para subir un archivo
- * (por ejemplo, una imagen) a un servicio externo como Cloudinary.
- */
+// Datos firmados para subir un archivo (p. ej. una imagen) a Cloudinary.
 public class DTOFirma {
 
     private String firma;

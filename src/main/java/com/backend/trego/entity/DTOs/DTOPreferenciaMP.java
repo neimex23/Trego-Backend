@@ -1,8 +1,6 @@
 package com.backend.trego.entity.DTOs;
 
-/**
- * DTO de respuesta para una Preferencia de pago de MercadoPago.
- */
+// Respuesta con una preferencia de pago de MercadoPago.
 public class DTOPreferenciaMP {
 
     private String preferenceId;

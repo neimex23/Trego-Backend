@@ -18,17 +18,14 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // Solo necesitamos acoplar el servicio. Él se encarga de hablar con la BD.
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
-    
-    // FLUJO 1: Administrador / Restaurante
-    // Le agregamos la anotación @PostMapping correspondiente que le faltaba al método viejo
+
+    // Login de admin / restaurante (usuario y contraseña)
     @PostMapping("/login/admin")
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
         try {
-            // Llamamos a la lógica que reestructuramos de forma segura en el Service
             LoginResponseDTO response = authService.login(loginDTO);
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
@@ -40,7 +37,7 @@ public class AuthController {
         }
     }
 
-    // FLUJO 2: Cliente mediante Google
+    // Login de cliente con Google
     @PostMapping("/google")
     public ResponseEntity<?> loginConFirebase(@RequestBody Map<String, String> body) {
         String idToken = body.get("idToken");
@@ -56,7 +53,7 @@ public class AuthController {
         }
     }
     
-    // FLUJO 3: Cliente mediante SMS
+    // Login de cliente por SMS
     @PostMapping("/sms")
     public ResponseEntity<?> loginConSMS(@RequestBody Map<String, String> body) {
         String firebaseToken = body.get("firebaseToken");

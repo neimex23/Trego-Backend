@@ -16,12 +16,11 @@ import java.time.format.DateTimeFormatter;
 
 @Service
 public class ManejadorPDFService {
-    // Colores
+
     private static final java.awt.Color NARANJA = new java.awt.Color(0xFF, 0x66, 0x00); // #FF6600
     private static final java.awt.Color BLANCO = java.awt.Color.WHITE;
     private static final java.awt.Color NEGRO = java.awt.Color.BLACK;
 
-    // Fuentes
     private static final Font FUENTE_TITULO = new Font(Font.HELVETICA, 9, Font.BOLD, BLANCO);
     private static final Font FUENTE_CELDA = new Font(Font.HELVETICA, 9, Font.NORMAL, NEGRO);
     private static final Font FUENTE_TOTAL = new Font(Font.HELVETICA, 9, Font.BOLD, NEGRO);
@@ -34,19 +33,18 @@ public class ManejadorPDFService {
             PdfWriter.getInstance(doc, baos);
             doc.open();
 
-            // SECCIÓN SUPERIOR: logo + tablas con informacion del pedido
+            // Parte de arriba: logo y datos del pedido
             PdfPTable seccionSuperior = new PdfPTable(2);
             seccionSuperior.setWidthPercentage(100);
             seccionSuperior.setWidths(new float[] { 40f, 60f });
 
-            // Columna izquierda: logo + datos empresa
+            // Izquierda: logo y datos de la empresa
             PdfPCell celdaIzquierda = new PdfPCell();
             celdaIzquierda.setBorder(Rectangle.NO_BORDER);
             celdaIzquierda.setPadding(4);
 
             try {
-                ClassPathResource logoResource = new ClassPathResource("static/images/logo.png"); // Ajusta tu ruta
-                                                                                                  // interna
+                ClassPathResource logoResource = new ClassPathResource("static/images/logo.png");
                 Image logo = Image.getInstance(logoResource.getURL());
                 logo.scaleToFit(120, 120);
                 celdaIzquierda.addElement(logo);
@@ -59,7 +57,7 @@ public class ManejadorPDFService {
             celdaIzquierda.addElement(new Paragraph("Montevideo", FUENTE_EMPRESA));
             seccionSuperior.addCell(celdaIzquierda);
 
-            // Columna derecha: tablas con informacion del pedido
+            // Derecha: datos del pedido
             PdfPCell celdaDerecha = new PdfPCell();
             celdaDerecha.setBorder(Rectangle.NO_BORDER);
             celdaDerecha.setPadding(4);
@@ -75,7 +73,7 @@ public class ManejadorPDFService {
             doc.add(seccionSuperior);
             doc.add(new Paragraph(" "));
 
-            // TABLA DE PRODUCTOS
+            // Tabla de productos
             PdfPTable tablaProductos = new PdfPTable(3);
             tablaProductos.setWidthPercentage(100);
             tablaProductos.setWidths(new float[] { 60f, 15f, 25f });
@@ -106,7 +104,7 @@ public class ManejadorPDFService {
 
             doc.add(new Paragraph(" "));
 
-            // TABLA NRO. DE PEDIDO / MÉTODO DE PAGO (Corrección del punto y coma aquí)
+            // Nro. de pedido y método de pago
             doc.add(crearTablaDobleColumna(
                     "NRO. DE PEDIDO", "METODO DE PAGO",
                     String.valueOf(pedido.getIdPedido()), pedido.getPago().getMetodoDePago().name()));

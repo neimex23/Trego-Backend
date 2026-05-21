@@ -49,9 +49,7 @@ public class AuthService {
         this.usuarioService = usuarioService;
     }
 
-    // =========================================================
-    // FLUJO 1: Administrador / Restaurante
-    // =========================================================
+    // Login de admin / restaurante con email y contraseña.
     public LoginResponseDTO login(LoginDTO loginDTO) {
         String email = loginDTO.getEmail();
         String password = loginDTO.getPassword();
@@ -84,9 +82,7 @@ public class AuthService {
         throw new BadCredentialsException("Error de autenticación");
     }
     
-    // =========================================================
-    // FLUJO 2: Cliente mediante Google
-    // =========================================================
+    // Login de cliente con Google: valida el token de Firebase y crea el cliente si no existe.
     public LoginResponseDTO loginConGoogle(String idToken) {
         try {
             
@@ -136,9 +132,7 @@ public class AuthService {
         }
     }
 
-    // =========================================================
-    // FLUJO 3: Cliente mediante SMS
-    // =========================================================
+    // Login de cliente por SMS: mismo esquema que Google pero usando el teléfono.
     public LoginResponseDTO loginConSMS(String firebaseToken) {
         try {
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(firebaseToken);

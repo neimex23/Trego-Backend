@@ -5,18 +5,16 @@ import com.backend.trego.entity.Enums.EnumRoles;
 public class UsuarioDTO {
 
     private Integer idUsuario;
-    private String email;      // Cambiado a String (los emails llevan letras y @)
+    private String email;
     private String nombre;
-    private String fotoPerfil; // En API REST y Firebase se maneja como String (la URL de la imagen)
-    private EnumRoles rol;     // Usamos tu Enum nativo EnumRoles
-    private String firebaseUid; // Lo necesitamos para mapear el UID de Firebase al registrar
-    private String telefono;    // Lo necesitamos para el flujo de SMS
+    private String fotoPerfil;   // URL de la imagen
+    private EnumRoles rol;
+    private String firebaseUid;  // para el registro vía Firebase
+    private String telefono;     // para el flujo de SMS
 
-    // Constructor vacío (Obligatorio para que Spring/Jackson deserialice el JSON)
     public UsuarioDTO() {
     }
 
-    // Constructor completo
     public UsuarioDTO(Integer idUsuario, String email, String nombre, String fotoPerfil, EnumRoles rol, String firebaseUid, String telefono) {
         this.idUsuario = idUsuario;
         this.email = email;
@@ -27,7 +25,6 @@ public class UsuarioDTO {
         this.telefono = telefono;
     }
 
-    // Getters y Setters
     public Integer getIdUsuario() {
         return idUsuario;
     }

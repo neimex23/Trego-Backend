@@ -20,12 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Servicio encargado del envío de notificaciones a clientes y restaurantes
- * (push, email, SMS, etc.).
- *
- * Las firmas siguen el Documento de Diseño (Tabla 5 - NotificacionesService).
- */
+// Envío de notificaciones a clientes y restaurantes (email, y a futuro push/SMS).
 @Service
 public class NotificacionesService {
 
@@ -66,33 +61,25 @@ public class NotificacionesService {
     // // TODO: implementar
     // }
 
-    /**
-     * Notifica al restaurante que su solicitud de alta fue rechazada, indicando el
-     * motivo.
-     */
     // public void solicitudRechazada(DTORestaurante restauranteDTO, String motivo)
     // {
     // // TODO: implementar
     // }
 
-    /**
-     * Envía el correo con el HTML del cuerpo y el comprobante PDF adjunto.
-     */
+    // Manda el correo de confirmación con el cuerpo HTML y el comprobante en PDF.
     public void notificarConfirmacionPedidoConPDF(Usuario usuario, List<Producto> productos, Restaurante restaurante,
             Pedido pedido) {
         try {
             MimeMessage mailConPDF = mailSender.createMimeMessage();
-            // True indica que es un mensaje multipart (permite adjuntos e imágenes inline)
+            // multipart = true para poder adjuntar el PDF
             MimeMessageHelper estructuraMail = new MimeMessageHelper(mailConPDF, true, "UTF-8");
 
             estructuraMail.setTo(usuario.getEmail());
             estructuraMail.setFrom(mailFrom, mailFromName);
             estructuraMail.setSubject("Confirmación de tu pedido #" + pedido.getIdPedido());
 
-            // Cuerpo HTML
             estructuraMail.setText(construirCuerpoHtml(usuario, productos, restaurante, pedido), true);
 
-            // Generar PDF usando el manejador inyectado
             byte[] pdf = generarPDF.generarComprobante(usuario, productos, restaurante, pedido);
             estructuraMail.addAttachment(
                     "comprobante-" + pedido.getIdPedido() + ".pdf",
@@ -106,9 +93,7 @@ public class NotificacionesService {
         }
     }
 
-    /**
-     * Envía un código de verificación por email y devuelve el código generado.
-     */
+    // Envía un código de verificación por email y devuelve el código generado.
     public String codigoVerificacionEmail(String email) {
         String codigoGenerado = String.valueOf(100000 + new Random().nextInt(900000));
         try {
@@ -125,9 +110,7 @@ public class NotificacionesService {
         }
     }
 
-    /**
-     * Método auxiliar para armar el HTML del correo
-     */
+    // Arma el HTML del correo.
     private String construirCuerpoHtml(Usuario usuario, List<Producto> productos, Restaurante restaurante,
             Pedido pedido) {
         String horaEstimada = pedido.getHorarioEntrega().format(DateTimeFormatter.ofPattern("HH:mm"));
@@ -136,8 +119,7 @@ public class NotificacionesService {
         sb.append(
                 "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        // Nota: Asegúrate de reemplazar esto por una URL pública real de tu servidor o
-        // Firebase Storage
+        // OJO: reemplazar por una URL pública real (servidor o Firebase Storage)
         sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 

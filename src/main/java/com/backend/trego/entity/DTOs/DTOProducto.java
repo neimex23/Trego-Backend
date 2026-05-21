@@ -27,11 +27,8 @@ public class DTOProducto {
     private DTOArticulo articulo;
     private DTOCombo combo;
 
-    /**
-     * Campos auxiliares usados por el flujo del Carrito. No representan estado
-     * persistido del Producto: cantidad y observaciones se guardan en la
-     * LineaCarrito correspondiente.
-     */
+    // Campos auxiliares del carrito: no se persisten en Producto,
+    // cantidad y observaciones viven en la LineaCarrito.
     private Integer cantidad;
     private String observaciones;
 

@@ -23,11 +23,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
-/**
- * Endpoints REST para la gestión del Carrito de compras del cliente
- * autenticado. Trabaja siempre con DTOProducto en la API (la cantidad y
- * observaciones viajan como campos auxiliares dentro del propio DTOProducto).
- */
+// Carrito del cliente autenticado. En la API todo viaja como DTOProducto;
+// la cantidad y las observaciones van dentro del propio DTOProducto.
 @RestController
 @RequestMapping("/api/carrito")
 public class CarritoController {

@@ -16,7 +16,6 @@ public class DTORegistroRestaurante {
     @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d).+$", message = "La contraseña debe contener al menos una letra y un número.")
     private String password;
 
-    // Getters y Setters
     public String getEmail() {
         return email;
     }

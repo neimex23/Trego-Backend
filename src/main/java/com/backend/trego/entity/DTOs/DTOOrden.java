@@ -3,10 +3,8 @@ package com.backend.trego.entity.DTOs;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DTO de entrada para crear una orden / preferencia de pago.
- * Incluye los productos del carrito y los IDs de cliente y restaurante.
- */
+// Entrada para crear una orden / preferencia de pago: productos del
+// carrito más los ids de cliente y restaurante.
 public class DTOOrden {
     private Integer idCliente;
     private Integer idRestaurante;

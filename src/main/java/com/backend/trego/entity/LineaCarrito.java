@@ -9,11 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-/**
- * Representa una línea (ítem) dentro de un Carrito. Cada línea contiene un
- * producto y la cantidad de ese producto. El subtotal se calcula como
- * cantidad * precio del producto.
- */
+// Un ítem del carrito: un producto con su cantidad. El subtotal es cantidad * precio.
 @Entity
 public class LineaCarrito {
 
@@ -85,9 +81,6 @@ public class LineaCarrito {
         this.observaciones = observaciones;
     }
 
-    /**
-     * Subtotal de la línea: precio del producto x cantidad.
-     */
     public double getSubtotal() {
         if (producto == null) {
             return 0.0;
@@ -95,12 +88,8 @@ public class LineaCarrito {
         return producto.getPrecio() * cantidad;
     }
 
-    /**
-     * Convierte esta línea a un DTOProducto poblando los campos auxiliares
-     * cantidad y observaciones del carrito. Solo se rellenan los campos
-     * básicos del producto; tipo/plato/articulo/combo quedan en null y los
-     * llenará quien lo requiera.
-     */
+    // Pasa la línea a DTOProducto. Solo llena los campos básicos del producto;
+    // tipo/plato/articulo/combo quedan en null y los completa quien lo necesite.
     public DTOProducto toDTO() {
         DTOProducto dto = new DTOProducto();
         if (this.producto != null) {

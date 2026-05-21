@@ -18,10 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Endpoints REST para la gestión de Usuarios (clientes, restaurantes y
- * administradores).
- */
+// Endpoints de usuarios: clientes, restaurantes y administradores.
 @RestController
 @RequestMapping("/api/usuarios")
 @Tag(name = "Usuarios y Restaurantes", description = "Endpoints para la gestión de cuentas y registro de locales")
@@ -33,11 +30,7 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
-    /**
-     * Endpoint 1: Recibe email y contraseña. Lanza las excepciones automáticas si
-     * no cumplen
-     * con las anotaciones de validación (Campos vacíos/Contraseña débil).
-     */
+    // Paso 1 del registro: recibe email y contraseña y dispara el código de verificación.
     @PostMapping("/registrar-restaurante/solicitar")
     @Operation(summary = "Paso 1: Solicitar Registro", description = "Recibe el correo y contraseña del restaurante. Valida que no exista el correo y despacha el código de verificación.")
     @ApiResponse(responseCode = "200", description = "Código de verificación enviado con éxito.")
@@ -52,9 +45,7 @@ public class UsuarioController {
         }
     }
 
-    /**
-     * Endpoint 2: Recibe el código y confirma el alta en la Base de Datos.
-     */
+    // Paso 2: valida el código y da de alta el restaurante.
     @PostMapping("/registrar-restaurante/confirmar")
     @Operation(summary = "Paso 2: Confirmar Código", description = "Verifica el código enviado por email. Si es correcto, registra permanentemente al restaurante deshabilitado en la base de datos.")
     @ApiResponse(responseCode = "200", description = "Usuario registrado exitosamente. Retorna el DTO de sesión.")
@@ -68,10 +59,7 @@ public class UsuarioController {
         }
     }
 
-    /**
-     * Flujo Alternativo 7.1: El usuario solicita reenviar el
-     * código de verificación porque el anterior era inválido o caducó.
-     */
+    // Reenvía el código cuando el anterior caducó o no llegó.
     @PostMapping("/registrar-restaurante/reenviar-codigo")
     @Operation(summary = "Reenviar Código", description = "Envía un nuevo código de verificación si el anterior expiró o es incorrecto")
     @ApiResponse(responseCode = "200", description = "Código reenviado exitosamente")
@@ -105,7 +93,6 @@ public class UsuarioController {
 
     @GetMapping("/perfil")
     public ResponseEntity<?> obtenerPerfil(@AuthenticationPrincipal AuthenticatedUser user) {
-        // 'user' contiene el idUsuario, email, uid y rol que extrajiste en el filtro
         return ResponseEntity.ok(user);
     }
 

@@ -7,9 +7,7 @@ import com.backend.trego.service.PagoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Endpoints REST para la integración con la pasarela de pagos..
- */
+// Integración con la pasarela de pagos (MercadoPago).
 @RestController
 @RequestMapping("/api/pagos")
 public class PagoController {

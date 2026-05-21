@@ -16,7 +16,7 @@ public class SwaggerConfig {
                         .title("Trego API - Restaurantes y Usuarios")
                         .version("1.0.0")
                         .description(
-                                "Documentación de los endpoints del backend de Trego, incluyendo el flujo crítico de registro de restaurantes CU-RES-01.")
+                                "Documentación de los endpoints del backend de Trego, incluido el registro de restaurantes.")
                         .contact(new Contact()
                                 .name("Soporte Trego")
                                 .email("soporte@trego.com")));

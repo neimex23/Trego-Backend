@@ -13,9 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Endpoints REST para la gestión de Pedidos.
- */
+// Endpoints de pedidos.
 @RestController
 @RequestMapping("/api/pedido")
 public class PedidoController {

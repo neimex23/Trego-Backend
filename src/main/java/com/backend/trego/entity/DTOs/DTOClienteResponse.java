@@ -6,11 +6,8 @@ import java.util.List;
 import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.Enums.EnumRoles;
 
-/**
- * DTO de salida para el Cliente.
- * Evita serializar la entidad JPA directamente (con sus relaciones LAZY,
- * herencia JOINED y referencias a Comentario/Pedido).
- */
+// DTO de salida del Cliente. Evita serializar la entidad JPA directa, que
+// arrastra relaciones LAZY, herencia JOINED y referencias a Comentario/Pedido.
 public class DTOClienteResponse {
     private int id;
     private String nombre;
@@ -41,9 +38,6 @@ public class DTOClienteResponse {
         }
     }
 
-    /**
-     * Mapeo Cliente -> DTOClienteResponse.
-     */
     public static DTOClienteResponse desde(Cliente c) {
         return new DTOClienteResponse(
                 c.getIdUsuario(),

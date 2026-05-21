@@ -6,34 +6,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-/**
- * Helper para obtener el usuario autenticado actual desde cualquier @Service.
- *
- * El JwtAuthFilter coloca un AuthenticatedUser como Principal dentro del
- * SecurityContextHolder. Esta clase expone accesos cómodos al uid (Firebase),
- * al idUsuario y al objeto completo.
- *
- * Uso típico:
- *
- *   @Service
- *   public class MiServicio {
- *
- *       private final CurrentUserService currentUserService;
- *
- *       public MiServicio(CurrentUserService currentUserService) {
- *           this.currentUserService = currentUserService;
- *       }
- *
- *       public void hacerAlgo() {
- *           String uid = currentUserService.getCurrentUid();
- *           // ...
- *       }
- *   }
- *
- * Nota: en código asíncrono (@Async, hilos nuevos) el SecurityContext NO se
- * propaga por defecto. Captura el uid antes de saltar de hilo o configura
- * DelegatingSecurityContextExecutor.
- */
+// Acceso cómodo al usuario autenticado (el AuthenticatedUser que dejó el
+// JwtAuthFilter en el SecurityContext) desde cualquier servicio.
+// Ojo: en código asíncrono el SecurityContext no se propaga solo, capturar
+// el uid antes de cambiar de hilo.
 @Component
 public class CurrentUserService {
 

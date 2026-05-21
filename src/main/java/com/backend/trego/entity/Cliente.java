@@ -27,16 +27,10 @@ public class Cliente extends Usuario {
     protected Cliente(String nombre, String email, String foto, EnumRoles cliente, String uid, Object object, List<DTDireccion> direccionesVaciasGoogle) {
     }
 
-    // ==========================================
-    // Constructor modificado a PUBLIC para que UsuarioService pueda instanciarlo
-    // (JPA/Hibernate lo sigue usando sin problemas)
-    // ==========================================
     public Cliente() {
     }
 
-    // ==========================================
-    // CONSTRUCTOR 1: Para Flujos de Firebase (Google/SMS) - 7 Parámetros
-    // ==========================================
+    // Para los flujos de Firebase (Google/SMS), con uid.
     public Cliente(String nombre, String email, String urlImagen, EnumRoles rol, String firebaseUid,
             String telefono, List<DTDireccion> direcciones) {
         super(nombre, email, urlImagen, rol, firebaseUid);
@@ -46,9 +40,7 @@ public class Cliente extends Usuario {
         }
     }
 
-    // ==========================================
-    // CONSTRUCTOR 2: Para Registro Clásico (Formulario/Controlador) - 6 Parámetros
-    // ==========================================
+    // Para el registro clásico por formulario, sin uid.
     public Cliente(String nombre, String email, String urlImagen, EnumRoles rol,
             String telefono, List<DTDireccion> direcciones) {
         super(nombre, email, urlImagen, rol, null);

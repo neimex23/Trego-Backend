@@ -16,15 +16,9 @@ import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.repository.CarritoRepository;
 import com.backend.trego.repository.ProductoRepository;
 
-/**
- * Servicio encargado de la gestión del Carrito de compras del cliente.
- *
- * Regla principal: un cliente solo puede tener un carrito activo, y todos los
- * productos del carrito deben pertenecer al mismo restaurante. Internamente
- * usa la entidad LineaCarrito como tabla de unión (producto + cantidad),
- * pero el API hacia el front trabaja siempre con DTOProducto (con los
- * campos auxiliares cantidad y observaciones cargados).
- */
+// Carrito del cliente. Un cliente tiene un solo carrito activo y todos sus
+// productos deben ser del mismo restaurante. Por dentro usa LineaCarrito
+// (producto + cantidad), pero hacia el front todo va como DTOProducto.
 @Service
 public class CarritoService {
 
@@ -75,11 +69,10 @@ public class CarritoService {
 
         Integer idRestauranteSolicitado = restauranteDTO.getIdRestaurante();
 
-        // Buscar o crear carrito
         Carrito carrito = carritoRepository.findByUidCliente(uidCliente)
                 .orElseGet(() -> new Carrito(uidCliente, idRestauranteSolicitado));
 
-        // Validar que el producto sea del mismo restaurante que el carrito
+        // No se mezclan productos de distintos restaurantes
         if (!carrito.getLineas().isEmpty()
                 && carrito.getIdRestaurante() != null
                 && !carrito.getIdRestaurante().equals(idRestauranteSolicitado)) {
@@ -91,7 +84,7 @@ public class CarritoService {
             carrito.setIdRestaurante(idRestauranteSolicitado);
         }
 
-        // Buscar si ya existe una línea con este producto
+        // Si el producto ya está en el carrito, sumamos cantidad en vez de duplicar la línea
         Optional<LineaCarrito> existente = carrito.getLineas().stream()
                 .filter(l -> l.getProducto() != null
                         && l.getProducto().getIdProducto() == producto.getIdProducto())

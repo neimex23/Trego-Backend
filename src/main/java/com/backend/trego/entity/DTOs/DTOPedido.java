@@ -5,9 +5,7 @@ import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import java.util.Date;
 import java.util.List;
 
-/**
- * DTO para representar un Pedido realizado por un cliente.
- */
+// Pedido realizado por un cliente.
 public class DTOPedido {
 
     private Integer idPedido;

@@ -2,10 +2,7 @@ package com.backend.trego.entity.DTOs;
 
 import com.backend.trego.entity.Enums.EnumRoles;
 
-/**
- * DTO genérico para representar un Usuario del sistema
- * (Cliente, Restaurante o Administrador).
- */
+// Usuario del sistema: cliente, restaurante o administrador.
 public class DTOUsuario {
 
     private Integer idUsuario;

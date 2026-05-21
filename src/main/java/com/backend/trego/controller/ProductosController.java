@@ -10,9 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Endpoints REST para la gestión del catálogo de Productos e Ingredientes.
- */
+// Endpoints del catálogo de productos e ingredientes.
 @RestController
 @RequestMapping("/api/productos")
 public class ProductosController {

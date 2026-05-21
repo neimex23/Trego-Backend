@@ -16,12 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Servicio encargado de la gestión de usuarios del sistema:
- * alta, búsqueda, validación de direcciones, verificación por email, etc.
- *
- * Las firmas siguen el Documento de Diseño (Tabla 1 - UsuarioService).
- */
+// Gestión de usuarios: alta, búsqueda, direcciones y verificación por email.
 @Service
 public class UsuarioService {
 
@@ -29,7 +24,7 @@ public class UsuarioService {
     private final NotificacionesService notificacionesService;
     private final PasswordEncoder passwordEncoder;
     private final CurrentUserService currentUserService;
-    // Caché temporal en memoria para asociar emails con sus códigos y contraseñas
+    // Mapa en memoria: email -> datos del registro pendiente (código + contraseña)
     private final Map<String, RegistroTemporal> registrosPendientes = new ConcurrentHashMap<>();
 
     public UsuarioService(UsuarioRepository usuarioRepository, NotificacionesService notificacionesService,
@@ -40,45 +35,30 @@ public class UsuarioService {
         this.currentUserService = currentUserService;
     }
 
-    /**
-     * Da de alta un nuevo usuario en el sistema.
-     * Corregido: Ahora instancia 'Cliente' (clase concreta) y devuelve la entidad 'Usuario'.
-     */
+    // Da de alta un cliente nuevo a partir del DTO y lo devuelve ya con su id.
     public Usuario altaUsuario(DTOUsuario usuarioDTO) {
         Cliente nuevoCliente = new Cliente();
-        
-        // Mapeamos los datos del DTO a la entidad
-        nuevoCliente.setFirebaseUid(usuarioDTO.getUid()); // Si en tu entidad se llama setUid(), cambialo
+
+        nuevoCliente.setFirebaseUid(usuarioDTO.getUid());
         nuevoCliente.setEmail(usuarioDTO.getEmail());
         nuevoCliente.setNombre(usuarioDTO.getNombre());
         nuevoCliente.setRol(usuarioDTO.getRol());
-        
-        // Retornamos el usuario guardado (que ya vendrá con su idUsuario autogenerado)
+
         return usuarioRepository.save(nuevoCliente);
     }
 
-    /**
-     * CU-RES-01 - Paso 4 y 5: Inicia el proceso de registro, valida duplicados y
-     * envía el correo.
-     * * @param email
-     * @param password
-     */
+    // Arranca el registro de un restaurante: chequea que el email no exista,
+    // manda el código y guarda los datos en el mapa hasta que lo confirme.
     public void iniciarRegistroRestaurante(String email, String password) {
         if (existeUsuario(email)) {
             throw new IllegalArgumentException("El correo electrónico ya se encuentra ingresado en el sistema.");
         }
-        // Generamos el código y enviamos el correo electrónico usando tu servicio de
-        // notificaciones
         String codigo = this.enviarCodigoVerificacion(email);
 
-        // Guardamos los datos de forma temporal hasta que introduzca el código
         RegistroTemporal registro = new RegistroTemporal(email, password, codigo);
         registrosPendientes.put(email, registro);
     }
 
-    /**
-     * Registra un restaurante a partir de email y contraseña.
-     */
     public DTOUsuario registrarRestaurante(String email, String password) {
 
         String passwordCifrada = passwordEncoder.encode(password);
@@ -97,28 +77,18 @@ public class UsuarioService {
         return usuario;
     }
 
-    /**
-     * Verifica si existe un usuario con el email indicado.
-     */
     public Boolean existeUsuario(String email) {
         return usuarioRepository.existsByEmail(email);
     }
 
-    /**
-     * Envía un código de verificación al correo electrónico indicado.
-     */
     public String enviarCodigoVerificacion(String email) {
         return notificacionesService.codigoVerificacionEmail(email);
     }
 
-    /**
-     * CU-RES-01 Caso 7: Verifica un código de verificación previamente enviado al
-     * usuario.
-     */
+    // Valida el código que el usuario ingresó y, si es correcto, da de alta el restaurante.
     public DTOUsuario verificarCodigo(String email, String codigo) {
         RegistroTemporal pendiente = registrosPendientes.get(email);
 
-        // Flujo Alternativo 7.1: Código incorrecto o expirado
         if (pendiente == null || pendiente.estaExpiradoCodigo() || !pendiente.getCodigoVerificacion().equals(codigo)) {
             throw new IllegalArgumentException("Código inválido o expirado");
         }
@@ -127,35 +97,25 @@ public class UsuarioService {
 
     }
 
-    /**
-     * Flujo Alternativo 7.1 - Paso 7.1.3: Reenvía un nuevo código de verificación
-     * utilizando los datos que ya tenemos retenidos en la caché temporal.
-     */
+    // Reenvía el código reutilizando los datos que quedaron guardados en el mapa.
     public void reenviarCodigoVerificacion(String email) {
         RegistroTemporal pendiente = registrosPendientes.get(email);
 
-        // Si el registro ya no existe en el mapa (ej: expiró por completo y el
-        // @Scheduled lo borró)
+        // Si ya no está en el mapa es porque expiró del todo y lo borró el @Scheduled
         if (pendiente == null) {
             throw new IllegalArgumentException(
                     "El tiempo de registro ha expirado por completo. Por favor, vuelve a ingresar tus datos.");
         }
 
-        // Generamos un nuevo código y enviamos el correo electrónico
         String nuevoCodigo = this.enviarCodigoVerificacion(email);
 
-        // Reemplazamos el registro viejo por uno nuevo con el código actualizado
         RegistroTemporal registroActualizado = new RegistroTemporal(email, pendiente.getPassword(), nuevoCodigo);
         registrosPendientes.put(email, registroActualizado);
 
         System.out.println("[Caché] Nuevo código generado y guardado para: " + email);
     }
 
-    /**
-     * Tarea programada en segundo plano que limpia el caché de registros colgados.
-     * Son aquellos que no llegan a completar el registro
-     * * fixedRate = 300000: Se ejecuta cada 5 minutos (300,000 milisegundos).
-     */
+    // Cada 5 minutos limpia del mapa los registros que quedaron sin completar.
     @Scheduled(fixedRate = 300000)
     public void limpiarRegistrosExpirados() {
         if (registrosPendientes.isEmpty()) {
@@ -165,8 +125,6 @@ public class UsuarioService {
         System.out.println("[Caché] Iniciando limpieza automática de registros expirados...");
         int sizeInitial = registrosPendientes.size();
 
-        // Removemos de forma segura todas las entradas del mapa que cumplan la
-        // condición 'estaExpiradoCacheReenvio()'
         registrosPendientes.entrySet().removeIf(entry -> {
             boolean expirado = entry.getValue().estaExpiradoCacheReenvio();
             if (expirado) {
