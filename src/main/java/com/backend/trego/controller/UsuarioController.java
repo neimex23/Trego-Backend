@@ -1,6 +1,7 @@
 package com.backend.trego.controller;
 
 import com.backend.trego.entity.DTOs.DTORegistroRestaurante;
+import com.backend.trego.entity.DTOs.DTDireccion;
 import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.service.UsuarioService;
 
@@ -9,6 +10,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -76,6 +80,18 @@ public class UsuarioController {
             return ResponseEntity.ok("Se ha enviado un nuevo código de verificación a tu correo electrónico.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/obtenerDirecciones")
+    @Operation(summary = "Obtener Direcciones", description = "Retorna las direcciones asociadas al cliente autenticado")
+    @ApiResponse(responseCode = "200", description = "Direcciones obtenidas exitosamente")
+    @ApiResponse(responseCode = "401", description = "No autorizado")
+    public ResponseEntity<?> obtenerDirecciones() {
+        try {
+            return ResponseEntity.ok(usuarioService.obtenerDirecciones());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autorizado");
         }
     }
 
