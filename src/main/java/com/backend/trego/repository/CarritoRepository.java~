@@ -1,0 +1,19 @@
+package com.backend.trego.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import com.backend.trego.entity.Carrito;
+import java.util.Optional;
+
+@Repository
+public interface CarritoRepository extends JpaRepository<Carrito, Integer> {
+    
+    // Cambiamos a findByClienteId para seguir la convención de JPA
+    // Si tu ID de cliente es un entero:
+    Optional<Carrito> findByCliente_Id(Integer clienteId);
+    
+    // Si tu ID de cliente es un String (por ejemplo un UID de Firebase):
+    // Optional<Carrito> findByCliente_Uid(String uid);
+    
+    void deleteByCliente_Id(Integer clienteId);
+}

@@ -19,6 +19,7 @@ import jakarta.persistence.OneToMany;
  * (LineaCarrito) cada una con un producto y su cantidad. Todos los productos
  * de un carrito deben pertenecer al mismo restaurante.
  */
+
 @Entity
 public class Carrito {
 
@@ -59,10 +60,6 @@ public class Carrito {
 
     public String getUidCliente() {
         return uidCliente;
-    }
-
-    public void setUidCliente(String uidCliente) {
-        this.uidCliente = uidCliente;
     }
 
     public Integer getIdRestaurante() {

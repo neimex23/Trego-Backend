@@ -1,0 +1,143 @@
+LOGUEO
+
+
+
+Archivo / Clase,Responsabilidad
+
+SecurityConfig:  Es el portero. Define quién puede entrar (público) y qué rutas requieren un ticket (token).
+
+JwtAuthFilter: "Es el validador de tickets. Se ejecuta en cada petición, revisa si hay un token, lo analiza y le dice a Spring: ""Sí, este usuario es quien dice ser, aquí tienes sus datos""."
+
+JWTUtil: "Es la imprenta y el sello. Contiene la lógica para ""escribir"" el token, añadirle la fecha de expiración, el rol y lo más importante: firmarlo para que nadie pueda falsificarlo."
+
+AuthController: "Es la recepción. Expone los puntos de entrada donde los usuarios dicen ""hola"" (login)."
+
+AuthService: "Es el cerebro. Coordina la lógica de negocio: consulta la BD, habla con Firebase, decide si el usuario está deshabilitado, etc."
+
+AuthenticatedUser: "Es la credencial interna. Es el objeto que el filtro crea para que, dentro de tu código, puedas usar @AuthenticationPrincipal y obtener los datos del usuario al instante."
+
+
+
+El Viaje de una Petición de Login (Google)
+
+Cuando un usuario presiona "Iniciar sesión con Google" en tu app, sucede lo siguiente:
+
+1    Entrada (AuthController): El cliente envía un idToken de Google a /api/auth/google. El AuthController recibe la petición y llama a AuthService.
+2    Validación y Registro (AuthService + Firebase): El servicio verifica con Firebase que el token sea auténtico. Si el usuario existe en tu BD, lo recupera; si no, lo registra.
+3    Generación de Token (JWTUtil): Una vez validado, el AuthService le pide a JWTUtil que firme un nuevo token (el tuyo propio, no el de Google), incluyendo información como uid, email y rol.
+4    Respuesta: El servidor devuelve al cliente tu token JWT, que el cliente guardará para futuras peticiones.
+    
+
+
+Resumen del flujo en peticiones protegidas (ej. /api/usuarios/perfil)
+
+Cuando ya tienes el token y haces un GET a una ruta protegida:
+
+1    La petición llega a SecurityConfig.
+
+2    Antes de llegar a cualquier controlador, intercepta el JwtAuthFilter.
+
+3    El filtro usa JWTUtil para ver si el token es válido.
+
+4    Si es válido, crea el objeto AuthenticatedUser y lo pone en el SecurityContext.
+
+5    Spring Security ve que el usuario está "autenticado" y permite el paso.
+
+6    Tu UsuarioController recibe la petición, inyecta el usuario con @AuthenticationPrincipal y procesa la lógica.    
+    
+    
+    
+    
+Backend dispone de tres métodos de autenticación principales, todos centralizados en el endpoint `/api/auth`.
+
+Aquí tienes el desglose y cómo probar cada uno:
+
+### 1. Login Tradicional (Administrador / Restaurante)
+
+Este método utiliza usuario (email) y contraseña directamente contra tu base de datos.
+
+* **Endpoint:** `POST /api/auth/login/admin`
+* **Cuerpo (JSON):**
+```json
+{
+    "email": "tu-email@ejemplo.com",
+    "password": "tu-password-segura"
+}
+
+```
+
+
+* **Cómo probar:** Puedes usar `curl` desde tu terminal:
+```bash
+curl -X POST http://localhost:8080/api/auth/login/admin \
+     -H "Content-Type: application/json" \
+     -d '{"email":"tu-email@ejemplo.com", "password":"tu-password-segura"}'
+
+```
+
+
+
+### 2. Login con Google (Cliente)
+
+Este flujo está diseñado para delegar la autenticación en Firebase. El cliente envía el `idToken` emitido por Google/Firebase al backend, el cual valida su integridad antes de permitir el acceso.
+
+* **Endpoint:** `POST /api/auth/google`
+* **Cuerpo (JSON):**
+```json
+{
+    "idToken": "TOKEN_RECIBIDO_DE_FIREBASE_EN_EL_FRONTEND"
+}
+
+```
+
+
+* **Cómo probar:** Necesitarás obtener un token de prueba desde tu aplicación cliente (Android/iOS/Web) tras loguearte con Google y enviarlo mediante `curl`:
+```bash
+curl -X POST http://localhost:8080/api/auth/google \
+     -H "Content-Type: application/json" \
+     -d '{"idToken":"eyJhbGciOiJSUzI1Ni..."}'
+
+```
+
+
+
+### 3. Login con SMS (Cliente)
+
+Similar al de Google, este método utiliza un `firebaseToken` para verificar la autenticación basada en número telefónico realizada a través de Firebase.
+
+* **Endpoint:** `POST /api/auth/sms`
+* **Cuerpo (JSON):**
+```json
+{
+    "firebaseToken": "TOKEN_DE_FIREBASE_TRAS_VALIDAR_SMS"
+}
+
+```
+
+
+* **Cómo probar:** Al igual que con Google, el token debe provenir del proceso de autenticación de Firebase en el frontend:
+```bash
+curl -X POST http://localhost:8080/api/auth/sms \
+     -H "Content-Type: application/json" \
+     -d '{"firebaseToken":"TOKEN_RECIBIDO_POR_SMS"}'
+
+```
+
+
+
+---
+
+### Notas importantes para tus pruebas:
+
+1. **Respuestas:** Todos estos métodos devolverán un `LoginResponseDTO` en caso de éxito, que contiene el `jwtToken` generado por tu backend.
+2. **Uso del JWT:** Una vez que obtengas ese token, deberás incluirlo en los headers de tus futuras peticiones a endpoints protegidos (como `/api/usuarios/perfil` o `/api/carrito`) de la siguiente manera:
+`-H "Authorization: Bearer TU_TOKEN_JWT_AQUI"`
+3. **Manejo de errores:** El `AuthController` está configurado para devolver:
+* `401 Unauthorized` si las credenciales son incorrectas.
+* `403 Forbidden` si el usuario ha sido deshabilitado.
+* `500 Internal Server Error` si ocurre un problema inesperado.
+
+
+// Ejemplo de cómo proteger rutas por roles en el futuro:
+.requestMatchers("/api/admin/**").hasRole("ADMIN")
+.requestMatchers("/api/restaurante/**").hasRole("RESTAURANTE")

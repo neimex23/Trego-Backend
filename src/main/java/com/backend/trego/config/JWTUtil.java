@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JWTUtil {
@@ -24,8 +26,13 @@ public class JWTUtil {
      * el identificador estable para flujos de admin/restaurante que no tienen uid.
      */
     public String generateToken(String email, String rol, String firebaseUid, Integer idUsuario) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", rol); // Corregido: 'role' a 'rol' para que coincida con el parámetro
+        claims.put("uid", firebaseUid); // guarda el UID en los claims del token
+    
         return Jwts.builder()
-                .subject(email)
+                .setClaims(claims)
+                .setSubject(email) // Corregido para que respete tu comentario (email como subject)
                 .claim("rol", rol)
                 .claim("uid", firebaseUid)       // puede ser null para admin/restaurante
                 .claim("userId", idUsuario)      // PK numérica de Usuario en la BD
@@ -33,6 +40,15 @@ public class JWTUtil {
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 8)) // 8 horas
                 .signWith(key) // Firma digitalmente el token usando la clave secreta.
                 .compact();
+    }
+    
+    public String getUidFromToken(String token) {
+        Claims claims = Jwts.parser()
+            .verifyWith(key) // Sintaxis actualizada para evitar el error de parseClaimsJws
+            .build()
+            .parseSignedClaims(token)
+            .getPayload();
+        return (String) claims.get("uid");
     }
 
     /**
@@ -63,6 +79,7 @@ public class JWTUtil {
             parseClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
+            System.out.println("DEBUG: Error al validar token: " + e.getMessage());
             return false;
         }
     }
@@ -88,6 +105,7 @@ public class JWTUtil {
         try {
             return Integer.parseInt(userId.toString());
         } catch (NumberFormatException e) {
+            System.out.println("DEBUG: Error al extraeri el Userid: " + e.getMessage());
             return null;
         }
     }

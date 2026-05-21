@@ -1,5 +1,6 @@
 package com.backend.trego.controller;
 
+import com.backend.trego.config.AuthenticatedUser;
 import com.backend.trego.entity.DTOs.DTORegistroRestaurante;
 import com.backend.trego.entity.DTOs.DTDireccion;
 import com.backend.trego.entity.DTOs.DTOUsuario;
@@ -14,6 +15,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -93,6 +95,18 @@ public class UsuarioController {
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autorizado");
         }
+    }
+
+    @GetMapping("/test-auth")
+    @Operation(summary = "Prueba de seguridad", description = "Endpoint para verificar que el JWT funciona.")
+    public ResponseEntity<String> testAuth() {
+        return ResponseEntity.ok("¡El filtro JWT funciona correctamente! Estás autenticado. \n");
+    }
+
+    @GetMapping("/perfil")
+    public ResponseEntity<?> obtenerPerfil(@AuthenticationPrincipal AuthenticatedUser user) {
+        // 'user' contiene el idUsuario, email, uid y rol que extrajiste en el filtro
+        return ResponseEntity.ok(user);
     }
 
 }
