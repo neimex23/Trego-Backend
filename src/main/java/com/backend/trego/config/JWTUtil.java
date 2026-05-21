@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -14,10 +15,14 @@ import java.util.Map;
 @Component
 public class JWTUtil {
 
-    private final String SECRET_KEY = "UnaClaveSecretaMuyLargaParaTregoAplicacion2026!";
     // Se define la firma secreta del backend. Es la clave matemática con la que se encriptan y desencriptan los tokens para asegurar que nadie los altere en el camino.
-    private final SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-    // Convierte la cadena de texto en una clave criptográfica real basada en el algoritmo HMAC, necesaria para firmar el token de forma segura.
+    // Se obtiene desde application.properties (jwt.secret) para no exponerla en el código.
+    private final SecretKey key;
+
+    public JWTUtil(@Value("${jwt.secret}") String secretKey) {
+        // Convierte la cadena de texto en una clave criptográfica real basada en el algoritmo HMAC, necesaria para firmar el token de forma segura.
+        this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
+    }
 
     /**
      * Genera un JWT con el email como subject y, como claims adicionales,
