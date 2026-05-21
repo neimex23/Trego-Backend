@@ -28,3 +28,7 @@ mercadopago.access.token=
 
 # Para pruebas borrar antes de la entrega 
 logging.level.org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor=TRACE
+
+# --- geoapify ---
+# Obtener desde https://myprojects.geoapify.com/api
+geoapify.api.key=
