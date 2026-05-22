@@ -43,4 +43,8 @@ build/
 ### VS Code ###
 .vscode/
 
+# Ignorar archivos temporales de editores
 *~
+
+# Ignorar archivos de configuracion con credenciales sensibles
+application.properties
