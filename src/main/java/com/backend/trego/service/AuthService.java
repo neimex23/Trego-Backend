@@ -198,6 +198,7 @@ public class AuthService {
         // 3. eliminarToken(jwt) - Agregar a la lista negra local
         tokenBlacklistService.addToBlacklist(token);
         System.out.println("DEBUG: JWT agregado a la lista negra (invalidado)");
+    }
 
     // FLUJO CU-CLI-01: Registro de Cliente (Google/SMS)
     public Usuario altaUsuario(DTOUsuario dto) {
