@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.backend.trego.entity.DTOs.DTOCarrito;
-import com.backend.trego.entity.DTOs.DTOProductoCarrito;
+import com.backend.trego.entity.DTOs.DTOProducto;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -104,17 +104,10 @@ public class Carrito {
     }
 
     public DTOCarrito toDTO() {
-        DTOCarrito dto = new DTOCarrito();
-        dto.setIdCarrito(this.idCarrito);
-        dto.setUidCliente(this.uidCliente);
-        dto.setIdRestaurante(this.idRestaurante);
-
-        List<DTOProductoCarrito> productosDTO = new ArrayList<>();
+        List<DTOProducto> productosDTO = new ArrayList<>();
         for (LineaCarrito linea : this.lineas) {
             productosDTO.add(linea.toDTO());
         }
-        dto.setProductos(productosDTO);
-        dto.setTotal(this.total);
-        return dto;
+        return new DTOCarrito(this.idCarrito, this.uidCliente, this.idRestaurante, productosDTO, this.total);
     }
 }

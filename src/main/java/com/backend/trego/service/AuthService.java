@@ -112,12 +112,15 @@ public class AuthService {
 
             if (usuarioOpt.isEmpty()) {
                 System.out.println(">>> [BYPASS] El usuario no existe en la BD local. Registrando cliente nuevo... \n");
-                DTOUsuario nuevoUsuarioDTO = new DTOUsuario();
-                nuevoUsuarioDTO.setUid(uid);
-                nuevoUsuarioDTO.setEmail(email);
-                nuevoUsuarioDTO.setNombre(nombre != null ? nombre : "Usuario Trego");
-                nuevoUsuarioDTO.setUrlImagen(fotoPerfil); 
-                nuevoUsuarioDTO.setRol(EnumRoles.Cliente); 
+                DTOUsuario nuevoUsuarioDTO = new DTOUsuario(
+                        null,
+                        uid,
+                        nombre != null ? nombre : "Usuario Trego",
+                        email,
+                        null,
+                        fotoPerfil,
+                        null,
+                        EnumRoles.Cliente);
 
                 usuario = usuarioService.altaUsuario(nuevoUsuarioDTO);
             } else {
@@ -145,11 +148,15 @@ public class AuthService {
             Usuario usuario;
 
             if (usuarioOpt.isEmpty()) {
-                DTOUsuario nuevoUsuarioDTO = new DTOUsuario();
-                nuevoUsuarioDTO.setUid(uid);
-                nuevoUsuarioDTO.setTelefono(telefono);
-                nuevoUsuarioDTO.setNombre("Nuevo Cliente SMS");
-                nuevoUsuarioDTO.setRol(EnumRoles.Cliente);
+                DTOUsuario nuevoUsuarioDTO = new DTOUsuario(
+                        null,
+                        uid,
+                        "Nuevo Cliente SMS",
+                        null,
+                        null,
+                        null,
+                        telefono,
+                        EnumRoles.Cliente);
 
                 usuario = usuarioService.altaUsuario(nuevoUsuarioDTO);
             } else {
@@ -181,8 +188,16 @@ public class AuthService {
         }
 
         try {
-            dto.setRol(EnumRoles.Cliente); // Paso 2 CU: rol por defecto
-            return usuarioService.altaUsuario(dto); // Paso 3 CU: persiste en DB
+            DTOUsuario clienteDTO = new DTOUsuario(
+                    dto.getIdUsuario(),
+                    dto.getUid(),
+                    dto.getNombre(),
+                    dto.getEmail(),
+                    dto.getPassword(),
+                    dto.getUrlImagen(),
+                    dto.getTelefono(),
+                    EnumRoles.Cliente);
+            return usuarioService.altaUsuario(clienteDTO); // Paso 3 CU: persiste en DB
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {

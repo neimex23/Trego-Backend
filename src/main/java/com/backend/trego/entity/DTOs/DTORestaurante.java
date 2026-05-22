@@ -15,7 +15,7 @@ public class DTORestaurante {
     private String password;
     private String telefono;
     private String urlImagen;
-    private DTODireccion direccion;
+    private DTDireccion direccion;
     private EnumCategoriaRestaurante categoria;
     private Boolean habilitado;
     private Boolean abierto;
@@ -23,110 +23,90 @@ public class DTORestaurante {
     private Date horaCierre;
     private List<DTOProducto> productos = new ArrayList<>();
 
-    public DTORestaurante() {
+    public DTORestaurante(Integer idRestaurante, String nombre, String email, String password, String telefono,
+            String urlImagen, DTDireccion direccion, EnumCategoriaRestaurante categoria, Boolean habilitado,
+            Boolean abierto, Date horaApertura, Date horaCierre, List<DTOProducto> productos) {
+        this.idRestaurante = idRestaurante;
+        this.nombre = nombre;
+        this.email = email;
+        this.password = password;
+        this.telefono = telefono;
+        this.urlImagen = urlImagen;
+        this.direccion = direccion;
+        this.categoria = categoria;
+        this.habilitado = habilitado;
+        this.abierto = abierto;
+        this.horaApertura = horaApertura;
+        this.horaCierre = horaCierre;
+        this.productos = productos;
     }
 
     public Integer getIdRestaurante() {
         return idRestaurante;
     }
 
-    public void setIdRestaurante(Integer idRestaurante) {
-        this.idRestaurante = idRestaurante;
-    }
-
     public String getNombre() {
         return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getPassword() {
         return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getTelefono() {
         return telefono;
     }
 
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
-    }
-
     public String getUrlImagen() {
         return urlImagen;
     }
 
-    public void setUrlImagen(String urlImagen) {
-        this.urlImagen = urlImagen;
-    }
-
-    public DTODireccion getDireccion() {
+    public DTDireccion getDireccion() {
         return direccion;
-    }
-
-    public void setDireccion(DTODireccion direccion) {
-        this.direccion = direccion;
     }
 
     public EnumCategoriaRestaurante getCategoria() {
         return categoria;
     }
 
-    public void setCategoria(EnumCategoriaRestaurante categoria) {
-        this.categoria = categoria;
-    }
-
     public Boolean getHabilitado() {
         return habilitado;
-    }
-
-    public void setHabilitado(Boolean habilitado) {
-        this.habilitado = habilitado;
     }
 
     public Boolean getAbierto() {
         return abierto;
     }
 
-    public void setAbierto(Boolean abierto) {
-        this.abierto = abierto;
-    }
-
     public Date getHoraApertura() {
         return horaApertura;
-    }
-
-    public void setHoraApertura(Date horaApertura) {
-        this.horaApertura = horaApertura;
     }
 
     public Date getHoraCierre() {
         return horaCierre;
     }
 
-    public void setHoraCierre(Date horaCierre) {
-        this.horaCierre = horaCierre;
-    }
-
     public List<DTOProducto> getProductos() {
         return productos;
     }
 
-    public void setProductos(List<DTOProducto> productos) {
-        this.productos = productos;
+    public DTORestaurante() {
     }
+
+    // Constructor con los datos públicos del restaurante (sin password ni dirección)
+    public DTORestaurante(Integer idRestaurante, String nombre, String email, String telefono, String urlImagen,
+            EnumCategoriaRestaurante categoria, Boolean habilitado, Boolean abierto) {
+        this.idRestaurante = idRestaurante;
+        this.nombre = nombre;
+        this.email = email;
+        this.telefono = telefono;
+        this.urlImagen = urlImagen;
+        this.categoria = categoria;
+        this.habilitado = habilitado;
+        this.abierto = abierto;
+    }
+
 }

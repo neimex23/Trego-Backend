@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.backend.trego.entity.DTOs.DTOAgregarAlCarritoRequest;
 import com.backend.trego.entity.DTOs.DTOCarrito;
-import com.backend.trego.entity.DTOs.DTOProductoCarrito;
+import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.service.CarritoService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,9 +82,9 @@ public class CarritoController {
             @ApiResponse(responseCode = "400", description = "Datos inválidos"),
             @ApiResponse(responseCode = "404", description = "Producto no encontrado en el carrito")
     })
-    public ResponseEntity<DTOProductoCarrito> modificarProducto(@RequestBody DTOProductoCarrito producto) {
+    public ResponseEntity<DTOProducto> modificarProducto(@RequestBody DTOProducto producto) {
         try {
-            DTOProductoCarrito actualizado = carritoService.modificarProductoCarrito(producto);
+            DTOProducto actualizado = carritoService.modificarProductoCarrito(producto);
             if (actualizado == null) {
                 return ResponseEntity.noContent().build();
             }
@@ -118,7 +118,7 @@ public class CarritoController {
             @ApiResponse(responseCode = "400", description = "DTOProductoCarrito inválido"),
             @ApiResponse(responseCode = "404", description = "El producto no estaba en el carrito o el carrito no existe")
     })
-    public ResponseEntity<DTOCarrito> eliminarProducto(@RequestBody DTOProductoCarrito producto) {
+    public ResponseEntity<DTOCarrito> eliminarProducto(@RequestBody DTOProducto producto) {
         try {
             DTOCarrito carrito = carritoService.eliminarProducto(producto);
             if (carrito == null) {

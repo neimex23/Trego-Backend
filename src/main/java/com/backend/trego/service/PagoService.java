@@ -2,8 +2,12 @@ package com.backend.trego.service;
 
 import com.backend.trego.entity.MPResponse;
 import com.backend.trego.entity.Pedido;
+import com.backend.trego.entity.ProductoPedido;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
+import com.backend.trego.entity.DTOs.DTOProducto;
+
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,14 +35,42 @@ public class PagoService {
         }
 
         Pedido pedido = ordenesService.obtenerOFallar(pedidoDTO.getIdPedido());
+        DTOPedido pedidoConProductos = completarPedidoDTO(pedidoDTO, pedido);
 
-        MPResponse mpResponse = mercadoPagoService.crearOrden(pedido);
+        MPResponse mpResponse = mercadoPagoService.crearOrden(pedidoConProductos);
 
         return new DTOPreferenciaMP(
                 mpResponse.getOrderid(),
                 mpResponse.getInit_point(),
                 mpResponse.getSandbox_init_point(),
                 pedido.getIdPedido());
+    }
+
+    private DTOPedido completarPedidoDTO(DTOPedido pedidoDTO, Pedido pedido) {
+        List<DTOProducto> productos = pedidoDTO.getProductos();
+        if (productos == null || productos.isEmpty()) {
+            productos = productosDesdePedido(pedido);
+        }
+        Double total = pedidoDTO.getTotal() != null ? pedidoDTO.getTotal() : (double) pedido.getTotal();
+        return new DTOPedido(pedido.getIdPedido(), total, productos);
+    }
+
+    private List<DTOProducto> productosDesdePedido(Pedido pedido) {
+        return pedido.getProductos().stream()
+                .map(this::toDTOProducto)
+                .toList();
+    }
+
+    private DTOProducto toDTOProducto(ProductoPedido linea) {
+        return new DTOProducto(
+                linea.getProducto().getIdProducto(),
+                linea.getProducto().getNombre(),
+                linea.getProducto().getDescripcion(),
+                linea.getProducto().getPrecio(),
+                linea.getProducto().getUrlImagen(),
+                linea.getCantidad(),
+                linea.getComentarioCliente(),
+                (double) linea.getPrecioSuma());
     }
 
     public void procesarWebHook(String payload) {

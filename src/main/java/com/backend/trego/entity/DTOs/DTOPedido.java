@@ -11,9 +11,10 @@ public class DTOPedido {
     private Integer idPedido;
     private Integer idCliente;
     private Integer idRestaurante;
-    private List<DTOProductoOrden> productos;
-    private DTODireccion direccionEntrega;
+    private List<DTOProducto> productos;
+    private DTDireccion direccionEntrega;
     private Double total;
+
     private EnumEstadoPedido estado;
     private Date fechaCreacion;
     private Date horaEntregaEstimada;
@@ -22,83 +23,72 @@ public class DTOPedido {
     public DTOPedido() {
     }
 
-    public Integer getIdPedido() {
-        return idPedido;
+    // Constructor mínimo usado al generar la preferencia de pago (id + total).
+    public DTOPedido(Integer idPedido, Double total) {
+        this.idPedido = idPedido;
+        this.total = total;
     }
 
-    public void setIdPedido(Integer idPedido) {
+    // Constructor usado al generar la preferencia de pago con las líneas del pedido.
+    public DTOPedido(Integer idPedido, Double total, List<DTOProducto> productos) {
         this.idPedido = idPedido;
+        this.total = total;
+        this.productos = productos;
+    }
+
+    public DTOPedido(Integer idPedido, Integer idCliente, Integer idRestaurante, List<DTOProducto> productos,
+            DTDireccion direccionEntrega, Double total, EnumEstadoPedido estado, Date fechaCreacion,
+            Date horaEntregaEstimada, Integer tiempoPreparacion) {
+        this.idPedido = idPedido;
+        this.idCliente = idCliente;
+        this.idRestaurante = idRestaurante;
+        this.productos = productos;
+        this.direccionEntrega = direccionEntrega;
+        this.total = total;
+        this.estado = estado;
+        this.fechaCreacion = fechaCreacion;
+        this.horaEntregaEstimada = horaEntregaEstimada;
+        this.tiempoPreparacion = tiempoPreparacion;
+    }
+
+    public Integer getIdPedido() {
+        return idPedido;
     }
 
     public Integer getIdCliente() {
         return idCliente;
     }
 
-    public void setIdCliente(Integer idCliente) {
-        this.idCliente = idCliente;
-    }
-
     public Integer getIdRestaurante() {
         return idRestaurante;
     }
 
-    public void setIdRestaurante(Integer idRestaurante) {
-        this.idRestaurante = idRestaurante;
-    }
-
-    public List<DTOProductoOrden> getProductos() {
+    public List<DTOProducto> getProductos() {
         return productos;
     }
 
-    public void setProductos(List<DTOProductoOrden> productos) {
-        this.productos = productos;
-    }
-
-    public DTODireccion getDireccionEntrega() {
+    public DTDireccion getDireccionEntrega() {
         return direccionEntrega;
-    }
-
-    public void setDireccionEntrega(DTODireccion direccionEntrega) {
-        this.direccionEntrega = direccionEntrega;
     }
 
     public Double getTotal() {
         return total;
     }
 
-    public void setTotal(Double total) {
-        this.total = total;
-    }
-
     public EnumEstadoPedido getEstado() {
         return estado;
-    }
-
-    public void setEstado(EnumEstadoPedido estado) {
-        this.estado = estado;
     }
 
     public Date getFechaCreacion() {
         return fechaCreacion;
     }
 
-    public void setFechaCreacion(Date fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
-    }
-
     public Date getHoraEntregaEstimada() {
         return horaEntregaEstimada;
-    }
-
-    public void setHoraEntregaEstimada(Date horaEntregaEstimada) {
-        this.horaEntregaEstimada = horaEntregaEstimada;
     }
 
     public Integer getTiempoPreparacion() {
         return tiempoPreparacion;
     }
 
-    public void setTiempoPreparacion(Integer tiempoPreparacion) {
-        this.tiempoPreparacion = tiempoPreparacion;
-    }
 }

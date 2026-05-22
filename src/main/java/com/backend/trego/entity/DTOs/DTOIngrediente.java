@@ -20,23 +20,11 @@ public class DTOIngrediente {
         return idIngrediente;
     }
 
-    public void setIdIngrediente(Integer idIngrediente) {
-        this.idIngrediente = idIngrediente;
-    }
-
     public String getNombre() {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
     public Integer getIdRestaurante() {
         return idRestaurante;
-    }
-
-    public void setIdRestaurante(Integer idRestaurante) {
-        this.idRestaurante = idRestaurante;
     }
 }

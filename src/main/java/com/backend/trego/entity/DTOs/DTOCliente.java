@@ -34,47 +34,23 @@ public class DTOCliente {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
     public String getEmail() {
         return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getUrlImagen() {
         return urlImagen;
     }
 
-    public void setUrlImagen(String urlImagen) {
-        this.urlImagen = urlImagen;
-    }
-
     public String getTelefono() {
         return telefono;
-    }
-
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
     }
 
     public String getUidCliente() {
         return uidCliente;
     }
 
-    public void setUidCliente(String uidCliente) {
-        this.uidCliente = uidCliente;
-    }
-
     public List<DTDireccion> getDirecciones() {
         return direcciones;
-    }
-
-    public void setDirecciones(List<DTDireccion> direcciones) {
-        this.direcciones = direcciones;
     }
 }
