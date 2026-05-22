@@ -17,15 +17,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.backend.trego.entity.DTOs.DTOAgregarAlCarritoRequest;
 import com.backend.trego.entity.DTOs.DTOCarrito;
-import com.backend.trego.entity.DTOs.DTOProducto;
+import com.backend.trego.entity.DTOs.DTOProductoCarrito;
 import com.backend.trego.service.CarritoService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
-// Carrito del cliente autenticado. En la API todo viaja como DTOProducto;
-// la cantidad y las observaciones van dentro del propio DTOProducto.
+// Carrito del cliente autenticado. Cada línea viaja como DTOProductoCarrito,
+// que lleva idProducto + cantidad + observaciones (y subtotal en las respuestas).
 @RestController
 @RequestMapping("/api/carrito")
 @CrossOrigin("*")
@@ -54,7 +54,7 @@ public class CarritoController {
 
     @PostMapping("/productos")
     @Operation(summary = "Agregar un producto al carrito",
-            description = "El front envía DTOProducto (con cantidad y observaciones) + DTORestaurante "
+            description = "El front envía DTOProductoCarrito (idProducto, cantidad y observaciones) + DTORestaurante "
                     + "dentro de DTOAgregarAlCarritoRequest.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Producto agregado / cantidad acumulada"),
@@ -75,16 +75,16 @@ public class CarritoController {
 
     @PatchMapping("/productos")
     @Operation(summary = "Modificar la cantidad u observaciones de un producto del carrito",
-            description = "Recibe el DTOProducto del carrito con la nueva cantidad. Si cantidad <= 0 se elimina la línea.")
+            description = "Recibe el DTOProductoCarrito con la nueva cantidad. Si cantidad <= 0 se elimina la línea.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Producto modificado"),
             @ApiResponse(responseCode = "204", description = "Cantidad <= 0: la línea fue eliminada"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos"),
             @ApiResponse(responseCode = "404", description = "Producto no encontrado en el carrito")
     })
-    public ResponseEntity<DTOProducto> modificarProducto(@RequestBody DTOProducto producto) {
+    public ResponseEntity<DTOProductoCarrito> modificarProducto(@RequestBody DTOProductoCarrito producto) {
         try {
-            DTOProducto actualizado = carritoService.modificarProductoCarrito(producto);
+            DTOProductoCarrito actualizado = carritoService.modificarProductoCarrito(producto);
             if (actualizado == null) {
                 return ResponseEntity.noContent().build();
             }
@@ -112,13 +112,13 @@ public class CarritoController {
 
     @DeleteMapping("/productos")
     @Operation(summary = "Eliminar un producto específico del carrito",
-            description = "Recibe el DTOProducto a eliminar en el body. Devuelve el carrito actualizado.")
+            description = "Recibe el DTOProductoCarrito a eliminar en el body. Devuelve el carrito actualizado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Producto eliminado, se devuelve el carrito actualizado"),
-            @ApiResponse(responseCode = "400", description = "DTOProducto inválido"),
+            @ApiResponse(responseCode = "400", description = "DTOProductoCarrito inválido"),
             @ApiResponse(responseCode = "404", description = "El producto no estaba en el carrito o el carrito no existe")
     })
-    public ResponseEntity<DTOCarrito> eliminarProducto(@RequestBody DTOProducto producto) {
+    public ResponseEntity<DTOCarrito> eliminarProducto(@RequestBody DTOProductoCarrito producto) {
         try {
             DTOCarrito carrito = carritoService.eliminarProducto(producto);
             if (carrito == null) {

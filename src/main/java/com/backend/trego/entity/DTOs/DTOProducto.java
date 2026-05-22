@@ -27,11 +27,6 @@ public class DTOProducto {
     private DTOArticulo articulo;
     private DTOCombo combo;
 
-    // Campos auxiliares del carrito: no se persisten en Producto,
-    // cantidad y observaciones viven en la LineaCarrito.
-    private Integer cantidad;
-    private String observaciones;
-
     public DTOProducto() {
     }
 
@@ -124,19 +119,6 @@ public class DTOProducto {
     }
     public void setCombo(DTOCombo combo) {
         this.combo = combo;
-    }
-
-    public Integer getCantidad() {
-        return cantidad;
-    }
-    public void setCantidad(Integer cantidad) {
-        this.cantidad = cantidad;
-    }
-    public String getObservaciones() {
-        return observaciones;
-    }
-    public void setObservaciones(String observaciones) {
-        this.observaciones = observaciones;
     }
 
     public Producto toProducto() {

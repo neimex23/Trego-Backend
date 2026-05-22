@@ -11,14 +11,14 @@ import com.backend.trego.entity.LineaCarrito;
 import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.DTOs.DTOAgregarAlCarritoRequest;
 import com.backend.trego.entity.DTOs.DTOCarrito;
-import com.backend.trego.entity.DTOs.DTOProducto;
+import com.backend.trego.entity.DTOs.DTOProductoCarrito;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.repository.CarritoRepository;
 import com.backend.trego.repository.ProductoRepository;
 
 // Carrito del cliente. Un cliente tiene un solo carrito activo y todos sus
 // productos deben ser del mismo restaurante. Por dentro usa LineaCarrito
-// (producto + cantidad), pero hacia el front todo va como DTOProducto.
+// (producto + cantidad), pero hacia el front cada línea va como DTOProductoCarrito.
 @Service
 public class CarritoService {
 
@@ -45,13 +45,13 @@ public class CarritoService {
     @Transactional
     public DTOCarrito agregarProducto(DTOAgregarAlCarritoRequest request) {
         if (request == null || request.getProducto() == null) {
-            throw new IllegalArgumentException("La petición y el DTOProducto no pueden ser nulos");
+            throw new IllegalArgumentException("La petición y la línea del carrito no pueden ser nulas");
         }
-        DTOProducto productoDTO = request.getProducto();
+        DTOProductoCarrito productoDTO = request.getProducto();
         DTORestaurante restauranteDTO = request.getRestaurante();
 
         if (productoDTO.getIdProducto() == null) {
-            throw new IllegalArgumentException("DTOProducto.idProducto es obligatorio");
+            throw new IllegalArgumentException("DTOProductoCarrito.idProducto es obligatorio");
         }
         if (restauranteDTO == null || restauranteDTO.getIdRestaurante() == null) {
             throw new IllegalArgumentException("DTORestaurante.idRestaurante es obligatorio");
@@ -108,7 +108,7 @@ public class CarritoService {
 
 
     @Transactional
-    public DTOProducto modificarProductoCarrito(DTOProducto productoDTO) {
+    public DTOProductoCarrito modificarProductoCarrito(DTOProductoCarrito productoDTO) {
         if (productoDTO == null || productoDTO.getIdProducto() == null) {
             throw new IllegalArgumentException("Debe especificarse el idProducto a modificar");
         }
@@ -155,9 +155,9 @@ public class CarritoService {
     }
 
     @Transactional
-    public DTOCarrito eliminarProducto(DTOProducto productoDTO) {
+    public DTOCarrito eliminarProducto(DTOProductoCarrito productoDTO) {
         if (productoDTO == null || productoDTO.getIdProducto() == null) {
-            throw new IllegalArgumentException("DTOProducto.idProducto es obligatorio");
+            throw new IllegalArgumentException("DTOProductoCarrito.idProducto es obligatorio");
         }
         String uidCliente = currentUserService.getCurrentUid();
         Optional<Carrito> carritoOpt = carritoRepository.findByUidCliente(uidCliente);
