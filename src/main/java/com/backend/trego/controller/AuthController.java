@@ -38,7 +38,7 @@ public class AuthController {
         } catch (DisabledException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Usuario Deshabilitado \n");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor \n");
         }
     }
 
@@ -73,6 +73,17 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(e.getMessage());
         }
     }
+    
+    @PostMapping("/cerrarSesion")
+    public ResponseEntity<?> cerrarSesion(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token no proporcionado o formato inválido \n");
+        }
+
+        String token = authHeader.substring(7).trim();
+        authService.cerrarSesion(token);
+        
+        return ResponseEntity.ok("Sesión cerrada exitosamente");
 
     // FLUJO CU-CLI-01: Registro de Cliente (Google o SMS)
     @PostMapping("/registro")

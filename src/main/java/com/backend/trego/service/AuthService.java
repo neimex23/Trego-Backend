@@ -24,6 +24,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.FirebaseAuthException;
 
+import com.backend.trego.service.TokenBlacklistService;
+
 import java.util.Optional;
 
 @Service
@@ -36,19 +38,22 @@ public class AuthService {
     
     private final UsuarioRepository usuarioRepository; 
     private final UsuarioService usuarioService;
+	private final TokenBlacklistService tokenBlacklistService;
 
     public AuthService(AdministradorRepository adminRepo, 
                        RestauranteRepository restauranteRepo, 
                        PasswordEncoder passwordEncoder, 
                        JWTUtil jwtUtil, 
                        UsuarioRepository usuarioRepository, 
-                       UsuarioService usuarioService) {
+                       UsuarioService usuarioService,
+                       TokenBlacklistService tokenBlacklistService) {
         this.adminRepo = adminRepo;
         this.restauranteRepo = restauranteRepo;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.usuarioRepository = usuarioRepository;
         this.usuarioService = usuarioService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     // Login de admin / restaurante con email y contraseña.
@@ -167,6 +172,25 @@ public class AuthService {
             throw new BadCredentialsException("Token de SMS inválido");
         }
     }
+    
+    // Implementación del cierre de sesión
+    public void cerrarSesion(String token) {
+        // 1. Extrae los datos necesarios desde JWT
+        String uid = jwtUtil.extractUid(token);
+
+        // 2. [opt Inicio Firebase] Si el usuario tiene UID de Firebase, revocar tokens remotos
+        if (uid != null && !uid.trim().isEmpty()) {
+            try {
+                FirebaseAuth.getInstance().revokeRefreshTokens(uid);
+                System.out.println("DEBUG: Tokens revocados en Firebase para UID: " + uid);
+            } catch (FirebaseAuthException e) {
+                System.err.println("DEBUG: Error revocando tokens en Firebase (posiblemente usuario no de Firebase): " + e.getMessage());
+            }
+        }
+
+        // 3. eliminarToken(jwt) - Agregar a la lista negra local
+        tokenBlacklistService.addToBlacklist(token);
+        System.out.println("DEBUG: JWT agregado a la lista negra (invalidado)");
 
     // FLUJO CU-CLI-01: Registro de Cliente (Google/SMS)
     public Usuario altaUsuario(DTOUsuario dto) {
