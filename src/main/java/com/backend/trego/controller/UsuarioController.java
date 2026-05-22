@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 // Endpoints de usuarios: clientes, restaurantes y administradores.
 @RestController
 @RequestMapping("/api/usuarios")
+@CrossOrigin("*")
 @Tag(name = "Usuarios y Restaurantes", description = "Endpoints para la gestión de cuentas y registro de locales")
 public class UsuarioController {
 

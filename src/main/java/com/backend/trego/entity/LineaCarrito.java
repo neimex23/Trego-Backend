@@ -1,6 +1,6 @@
 package com.backend.trego.entity;
 
-import com.backend.trego.entity.DTOs.DTOProducto;
+import com.backend.trego.entity.DTOs.DTOProductoCarrito;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -88,10 +88,10 @@ public class LineaCarrito {
         return producto.getPrecio() * cantidad;
     }
 
-    // Pasa la línea a DTOProducto. Solo llena los campos básicos del producto;
-    // tipo/plato/articulo/combo quedan en null y los completa quien lo necesite.
-    public DTOProducto toDTO() {
-        DTOProducto dto = new DTOProducto();
+    // Pasa la línea a DTOProductoCarrito: datos básicos del producto + la
+    // cantidad, observaciones y subtotal propios de esta línea del carrito.
+    public DTOProductoCarrito toDTO() {
+        DTOProductoCarrito dto = new DTOProductoCarrito();
         if (this.producto != null) {
             dto.setIdProducto(this.producto.getIdProducto());
             dto.setNombre(this.producto.getNombre());
@@ -101,6 +101,7 @@ public class LineaCarrito {
         }
         dto.setCantidad(this.cantidad);
         dto.setObservaciones(this.observaciones);
+        dto.setSubtotal(getSubtotal());
         return dto;
     }
 }

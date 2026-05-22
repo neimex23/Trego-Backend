@@ -13,6 +13,7 @@ import java.util.List;
 // Endpoints del catálogo de productos e ingredientes.
 @RestController
 @RequestMapping("/api/productos")
+@CrossOrigin("*")
 public class ProductosController {
 
     private final ProductosService productosService;

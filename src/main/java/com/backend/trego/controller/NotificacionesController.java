@@ -12,6 +12,7 @@ import java.util.Map;
 // Endpoints para el envío de notificaciones.
 @RestController
 @RequestMapping("/api/notificaciones")
+@CrossOrigin("*")
 public class NotificacionesController {
 
     private final NotificacionesService notificacionesService;

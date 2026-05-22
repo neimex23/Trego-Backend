@@ -17,6 +17,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
@@ -189,5 +191,27 @@ public class AuthService {
         // 3. eliminarToken(jwt) - Agregar a la lista negra local
         tokenBlacklistService.addToBlacklist(token);
         System.out.println("DEBUG: JWT agregado a la lista negra (invalidado)");
+
+    // FLUJO CU-CLI-01: Registro de Cliente (Google/SMS)
+    public Usuario altaUsuario(DTOUsuario dto) {
+        // Verificar si el cliente ya existe por UID
+        if (dto.getUid() == null || dto.getUid().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El UID de Firebase es obligatorio");
+        }
+
+        Optional<Usuario> existente = usuarioRepository.findByFirebaseUid(dto.getUid());
+        if (existente.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "El cliente ya se encuentra registrado");
+        }
+
+        try {
+            dto.setRol(EnumRoles.Cliente); // Paso 2 CU: rol por defecto
+            return usuarioService.altaUsuario(dto); // Paso 3 CU: persiste en DB
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            // El diagrama indica que las excepciones se propagan hacia AuthController
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al guardar el cliente");
+        }
     }
 }

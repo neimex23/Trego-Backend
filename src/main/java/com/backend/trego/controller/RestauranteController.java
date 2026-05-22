@@ -14,6 +14,7 @@ import java.util.List;
 // Endpoints de restaurantes.
 @RestController
 @RequestMapping("/api/restaurantes")
+@CrossOrigin("*")
 public class RestauranteController {
 
     private final RestauranteService restauranteService;

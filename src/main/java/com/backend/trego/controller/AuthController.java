@@ -1,5 +1,7 @@
 package com.backend.trego.controller;
 
+import com.backend.trego.entity.Usuario;
+import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.entity.DTOs.LoginDTO;
 import com.backend.trego.entity.DTOs.LoginResponseDTO;
 import com.backend.trego.service.AuthService;
@@ -9,11 +11,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin("*")
 public class AuthController {
 
     private final AuthService authService;
@@ -79,5 +84,19 @@ public class AuthController {
         authService.cerrarSesion(token);
         
         return ResponseEntity.ok("Sesión cerrada exitosamente");
+
+    // FLUJO CU-CLI-01: Registro de Cliente (Google o SMS)
+    @PostMapping("/registro")
+    public ResponseEntity<?> registrarCliente(@RequestBody DTOUsuario dto) {
+        try {
+            Usuario usuario = authService.altaUsuario(dto);
+            URI location = URI.create("/api/auth/registro/" + usuario.getIdUsuario());
+            return ResponseEntity.created(location).build();
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al registrar cliente");
+        }
     }
 }
