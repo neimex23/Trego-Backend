@@ -24,8 +24,4 @@ public class DTOPlato {
         return tiempoPreparacionMinutos;
     }
 
-    public void setTiempoPreparacionMinutos(Integer tiempoPreparacionMinutos) {
-        this.tiempoPreparacionMinutos = tiempoPreparacionMinutos;
-    }
-
 }

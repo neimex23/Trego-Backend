@@ -13,6 +13,12 @@ import com.backend.trego.exception.PagoRechazadoException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mercadopago.resources.payment.Payment;
+import com.backend.trego.entity.ProductoPedido;
+import com.backend.trego.entity.DTOs.DTOPedido;
+import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
+import com.backend.trego.entity.DTOs.DTOProducto;
+
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,10 +65,6 @@ public class PagoService {
                 pedido.getIdPedido());
     }
 
-    // Procesa la notificación (webhook) que envía MercadoPago. MP avisa con un
-    // payload tipo {"type":"payment","data":{"id":"123"}}; con ese id se consulta
-    // el pago real y se resuelve el estado del pedido (externalReference = idPedido).
-    @Transactional
     public void procesarWebHook(String payload) {
         Long paymentId = extraerPaymentId(payload);
         if (paymentId == null) {
@@ -105,9 +107,6 @@ public class PagoService {
         }
 
         pedido.setEstado(EnumEstadoPedido.Pagado);
-        if (pedido.getHorarioEntrega() == null) {
-            pedido.setHorarioEntrega(LocalDateTime.now().plusMinutes(45));
-        }
 
         ordenesService.guardar(pedido);
 
@@ -150,8 +149,6 @@ public class PagoService {
                 idTransaccion,
                 pedido.getTotal());
     }
-
-    // ---- helpers ----
 
     // Extrae el id del pago del payload del webhook. MP usa varias formas:
     // {"type":"payment","data":{"id":"123"}} o {"action":"payment.created", ...}.

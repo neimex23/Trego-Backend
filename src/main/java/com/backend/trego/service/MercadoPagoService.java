@@ -7,6 +7,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.backend.trego.entity.DTOs.DTOPedido;
+import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.MPResponse;
 import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;

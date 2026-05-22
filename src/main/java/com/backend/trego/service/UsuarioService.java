@@ -69,10 +69,15 @@ public class UsuarioService {
 
         registrosPendientes.remove(email);
 
-        DTOUsuario usuario = new DTOUsuario();
-        usuario.setEmail(restauranteGuardado.getEmail());
-        usuario.setIdUsuario(restauranteGuardado.getIdUsuario());
-        usuario.setRol(restauranteGuardado.getRol());
+        DTOUsuario usuario = new DTOUsuario(
+                restauranteGuardado.getIdUsuario(),
+                null,
+                null,
+                restauranteGuardado.getEmail(),
+                null,
+                null,
+                null,
+                restauranteGuardado.getRol());
 
         return usuario;
     }

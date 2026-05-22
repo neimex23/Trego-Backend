@@ -14,6 +14,18 @@ public class DTOUsuario {
     private String telefono;
     private EnumRoles rol;
 
+    public DTOUsuario(Integer idUsuario, String uid, String nombre, String email, String password, String urlImagen,
+            String telefono, EnumRoles rol) {
+        this.idUsuario = idUsuario;
+        this.uid = uid;
+        this.nombre = nombre;
+        this.email = email;
+        this.password = password;
+        this.urlImagen = urlImagen;
+        this.telefono = telefono;
+        this.rol = rol;
+    }
+
     public DTOUsuario() {
     }
 
@@ -27,63 +39,30 @@ public class DTOUsuario {
         return idUsuario;
     }
 
-    public void setIdUsuario(Integer idUsuario) {
-        this.idUsuario = idUsuario;
-    }
-
     public String getUid() {
         return uid;
-    }
-
-    public void setUid(String uid) {
-        this.uid = uid;
     }
 
     public String getNombre() {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
     public String getEmail() {
         return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getUrlImagen() {
         return urlImagen;
-    }
-
-    public void setUrlImagen(String urlImagen) {
-        this.urlImagen = urlImagen;
     }
 
     public String getTelefono() {
         return telefono;
     }
-
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
-    }
-
     public EnumRoles getRol() {
         return rol;
-    }
-
-    public void setRol(EnumRoles rol) {
-        this.rol = rol;
     }
 }

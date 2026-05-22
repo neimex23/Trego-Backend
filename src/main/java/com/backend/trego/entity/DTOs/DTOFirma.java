@@ -9,55 +9,33 @@ public class DTOFirma {
     private String cloudName;
     private String uploadUrl;
     private String publicId;
-
-    public DTOFirma() {
-    }
-
     public String getFirma() {
         return firma;
     }
-
-    public void setFirma(String firma) {
-        this.firma = firma;
-    }
-
     public Long getTimestamp() {
         return timestamp;
     }
-
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
-    }
-
     public String getApiKey() {
         return apiKey;
     }
-
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
-    }
-
     public String getCloudName() {
         return cloudName;
     }
-
-    public void setCloudName(String cloudName) {
-        this.cloudName = cloudName;
-    }
-
     public String getUploadUrl() {
         return uploadUrl;
     }
-
-    public void setUploadUrl(String uploadUrl) {
-        this.uploadUrl = uploadUrl;
-    }
-
     public String getPublicId() {
         return publicId;
     }
-
-    public void setPublicId(String publicId) {
+    
+    public DTOFirma(String firma, Long timestamp, String apiKey, String cloudName, String uploadUrl, String publicId) {
+        this.firma = firma;
+        this.timestamp = timestamp;
+        this.apiKey = apiKey;
+        this.cloudName = cloudName;
+        this.uploadUrl = uploadUrl;
         this.publicId = publicId;
     }
+
+
 }
