@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DTO del carrito de compras. Contiene la lista de productos del carrito
- * (cada DTOProducto trae su cantidad y observaciones cargadas) y el total
- * acumulado.
+ * DTO del carrito de compras. Contiene la lista de líneas del carrito
+ * (cada DTOProductoCarrito trae su cantidad, observaciones y subtotal) y el
+ * total acumulado.
  */
 public class DTOCarrito {
 
     private Integer idCarrito;
     private String uidCliente;
     private Integer idRestaurante;
-    private List<DTOProducto> productos = new ArrayList<>();
+    private List<DTOProductoCarrito> productos = new ArrayList<>();
     private Double total;
 
     public DTOCarrito() {
@@ -43,11 +43,11 @@ public class DTOCarrito {
         this.idRestaurante = idRestaurante;
     }
 
-    public List<DTOProducto> getProductos() {
+    public List<DTOProductoCarrito> getProductos() {
         return productos;
     }
 
-    public void setProductos(List<DTOProducto> productos) {
+    public void setProductos(List<DTOProductoCarrito> productos) {
         this.productos = productos;
     }
 
