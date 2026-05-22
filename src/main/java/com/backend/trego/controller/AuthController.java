@@ -84,6 +84,7 @@ public class AuthController {
         authService.cerrarSesion(token);
         
         return ResponseEntity.ok("Sesión cerrada exitosamente");
+    }
 
     // FLUJO CU-CLI-01: Registro de Cliente (Google o SMS)
     @PostMapping("/registro")
