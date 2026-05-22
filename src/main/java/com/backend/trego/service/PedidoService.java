@@ -6,10 +6,10 @@ import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.ProductoPedido;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTOCarrito;
-import com.backend.trego.entity.DTOs.DTODireccion;
+import com.backend.trego.entity.DTOs.DTDireccion;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
-import com.backend.trego.entity.DTOs.DTOProductoCarrito;
+import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.entity.DTOs.DTDireccion;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
@@ -59,7 +59,7 @@ public class PedidoService {
     // en MercadoPago y devuelve la preferencia (con la URL de checkout) para que
     // el front redirija a la pasarela.
     @Transactional
-    public DTOPreferenciaMP confirmarPedido(DTOCarrito carritoDTO, DTODireccion direccionDTO,
+    public DTOPreferenciaMP confirmarPedido(DTOCarrito carritoDTO, DTDireccion direccionDTO,
                                             String restauranteId) {
         // Valida existencia del restaurante (404 si no existe).
         DTORestaurante restauranteDTO = restauranteService.obtenerRestaurante(restauranteId);
@@ -71,9 +71,10 @@ public class PedidoService {
         Pedido pedido = crearPedido(carritoDTO, direccionDTO, fecha, restauranteDTO);
 
         // Genera la preferencia de pago delegando en PagoService -> MercadoPagoService.
-        DTOPedido pedidoDTO = new DTOPedido();
-        pedidoDTO.setIdPedido(pedido.getIdPedido());
-        pedidoDTO.setTotal((double) pedido.getTotal());
+        DTOPedido pedidoDTO = new DTOPedido(
+                pedido.getIdPedido(),
+                (double) pedido.getTotal(),
+                carritoDTO.getProductos());
         DTOPreferenciaMP preferencia = pagoService.crearPreferencia(pedidoDTO);
 
         return preferencia;
@@ -82,7 +83,7 @@ public class PedidoService {
     // Construye el pedido a partir del carrito y lo guarda. Antes de crearlo
     // verifica que el restaurante esté abierto.
     @Transactional
-    public Pedido crearPedido(DTOCarrito carritoDTO, DTODireccion direccionDTO,
+    public Pedido crearPedido(DTOCarrito carritoDTO, DTDireccion direccionDTO,
                               Date fecha, DTORestaurante restauranteDTO) {
         if (restauranteDTO == null || restauranteDTO.getIdRestaurante() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restaurante inválido");
@@ -109,7 +110,7 @@ public class PedidoService {
         pedido.setCliente(cliente);
         pedido.setRestaurante(restaurante);
 
-        for (DTOProductoCarrito linea : carritoDTO.getProductos()) {
+        for (DTOProducto linea : carritoDTO.getProductos()) {
             if (linea.getIdProducto() == null) {
                 continue;
             }
@@ -139,7 +140,7 @@ public class PedidoService {
         return restauranteService.estaAbierto(restauranteID);
     }
 
-    private DTDireccion mapDireccion(DTODireccion d) {
+    private DTDireccion mapDireccion(DTDireccion d) {
         if (d == null) {
             return null;
         }

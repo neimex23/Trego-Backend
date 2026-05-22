@@ -11,7 +11,7 @@ import com.backend.trego.entity.LineaCarrito;
 import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.DTOs.DTOAgregarAlCarritoRequest;
 import com.backend.trego.entity.DTOs.DTOCarrito;
-import com.backend.trego.entity.DTOs.DTOProductoCarrito;
+import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.repository.CarritoRepository;
 import com.backend.trego.repository.ProductoRepository;
@@ -47,7 +47,7 @@ public class CarritoService {
         if (request == null || request.getProducto() == null) {
             throw new IllegalArgumentException("La petición y la línea del carrito no pueden ser nulas");
         }
-        DTOProductoCarrito productoDTO = request.getProducto();
+        DTOProducto productoDTO = request.getProducto();
         DTORestaurante restauranteDTO = request.getRestaurante();
 
         if (productoDTO.getIdProducto() == null) {
@@ -108,7 +108,7 @@ public class CarritoService {
 
 
     @Transactional
-    public DTOProductoCarrito modificarProductoCarrito(DTOProductoCarrito productoDTO) {
+    public DTOProducto modificarProductoCarrito(DTOProducto productoDTO) {
         if (productoDTO == null || productoDTO.getIdProducto() == null) {
             throw new IllegalArgumentException("Debe especificarse el idProducto a modificar");
         }
@@ -124,7 +124,7 @@ public class CarritoService {
                 .orElseThrow(() -> new NoSuchElementException(
                         "El producto " + productoDTO.getIdProducto() + " no está en el carrito"));
 
-        Integer nuevaCantidad = productoDTO.getCantidad();
+        Integer nuevaCantidad = productoDTO.getCantidadDisponible();
         if (nuevaCantidad != null && nuevaCantidad <= 0) {
             carrito.removeLinea(linea);
             carritoRepository.save(carrito);
@@ -155,9 +155,9 @@ public class CarritoService {
     }
 
     @Transactional
-    public DTOCarrito eliminarProducto(DTOProductoCarrito productoDTO) {
+    public DTOCarrito eliminarProducto(DTOProducto productoDTO) {
         if (productoDTO == null || productoDTO.getIdProducto() == null) {
-            throw new IllegalArgumentException("DTOProductoCarrito.idProducto es obligatorio");
+            throw new IllegalArgumentException("DTOProducto.idProducto es obligatorio");
         }
         String uidCliente = currentUserService.getCurrentUid();
         Optional<Carrito> carritoOpt = carritoRepository.findByUidCliente(uidCliente);

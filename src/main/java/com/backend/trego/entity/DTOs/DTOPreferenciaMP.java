@@ -22,31 +22,15 @@ public class DTOPreferenciaMP {
         return preferenceId;
     }
 
-    public void setPreferenceId(String preferenceId) {
-        this.preferenceId = preferenceId;
-    }
-
     public String getInitPoint() {
         return initPoint;
-    }
-
-    public void setInitPoint(String initPoint) {
-        this.initPoint = initPoint;
     }
 
     public String getSandboxInitPoint() {
         return sandboxInitPoint;
     }
 
-    public void setSandboxInitPoint(String sandboxInitPoint) {
-        this.sandboxInitPoint = sandboxInitPoint;
-    }
-
     public Integer getIdPedido() {
         return idPedido;
-    }
-
-    public void setIdPedido(Integer idPedido) {
-        this.idPedido = idPedido;
     }
 }

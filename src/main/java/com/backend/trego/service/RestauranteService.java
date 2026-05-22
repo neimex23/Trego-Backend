@@ -1,7 +1,7 @@
 package com.backend.trego.service;
 
 import com.backend.trego.entity.Restaurante;
-import com.backend.trego.entity.DTOs.DTODireccion;
+import com.backend.trego.entity.DTOs.DTDireccion;
 import com.backend.trego.entity.DTOs.DTOFirma;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.repository.RestauranteRepository;
@@ -34,7 +34,7 @@ public class RestauranteService {
         return false;
     }
 
-    public List<DTORestaurante> listarRestaurantesZona(DTODireccion direccion) {
+    public List<DTORestaurante> listarRestaurantesZona(DTDireccion direccion) {
         // TODO: implementar
         return List.of();
     }
@@ -84,16 +84,15 @@ public class RestauranteService {
     }
 
     private DTORestaurante toDTO(Restaurante restaurante) {
-        DTORestaurante dto = new DTORestaurante();
-        dto.setIdRestaurante(restaurante.getIdUsuario());
-        dto.setNombre(restaurante.getNombre());
-        dto.setEmail(restaurante.getEmail());
-        dto.setTelefono(restaurante.getTelefono());
-        dto.setUrlImagen(restaurante.getUrlImagen());
-        dto.setCategoria(restaurante.getCategoria());
-        dto.setHabilitado(restaurante.isHabilitado());
-        dto.setAbierto(estaAbiertoDe(restaurante));
-        return dto;
+        return new DTORestaurante(
+                restaurante.getIdUsuario(),
+                restaurante.getNombre(),
+                restaurante.getEmail(),
+                restaurante.getTelefono(),
+                restaurante.getUrlImagen(),
+                restaurante.getCategoria(),
+                restaurante.isHabilitado(),
+                estaAbiertoDe(restaurante));
     }
 
     // Misma lógica que estaAbierto pero sobre una entidad ya cargada, para no

@@ -1,6 +1,6 @@
 package com.backend.trego.entity;
 
-import com.backend.trego.entity.DTOs.DTOProductoCarrito;
+import com.backend.trego.entity.DTOs.DTOProducto;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -88,20 +88,22 @@ public class LineaCarrito {
         return producto.getPrecio() * cantidad;
     }
 
-    // Pasa la línea a DTOProductoCarrito: datos básicos del producto + la
+    // Pasa la línea a DTOProducto: datos básicos del producto + la
     // cantidad, observaciones y subtotal propios de esta línea del carrito.
-    public DTOProductoCarrito toDTO() {
-        DTOProductoCarrito dto = new DTOProductoCarrito();
+    public DTOProducto toDTO() {
+        Integer idProducto = null;
+        String nombre = null;
+        String descripcion = null;
+        float precio = 0f;
+        String urlImagen = null;
         if (this.producto != null) {
-            dto.setIdProducto(this.producto.getIdProducto());
-            dto.setNombre(this.producto.getNombre());
-            dto.setDescripcion(this.producto.getDescripcion());
-            dto.setPrecio(this.producto.getPrecio());
-            dto.setUrlImagen(this.producto.getUrlImagen());
+            idProducto = this.producto.getIdProducto();
+            nombre = this.producto.getNombre();
+            descripcion = this.producto.getDescripcion();
+            precio = this.producto.getPrecio();
+            urlImagen = this.producto.getUrlImagen();
         }
-        dto.setCantidad(this.cantidad);
-        dto.setObservaciones(this.observaciones);
-        dto.setSubtotal(getSubtotal());
-        return dto;
+        return new DTOProducto(idProducto, nombre, descripcion, precio, urlImagen,
+                this.cantidad, this.observaciones, getSubtotal());
     }
 }
