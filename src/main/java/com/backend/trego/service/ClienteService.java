@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.backend.trego.entity.Cliente;
+import com.backend.trego.entity.DTOs.DTOCliente;
+import com.backend.trego.entity.Enums.EnumRoles;
 import com.backend.trego.repository.ClienteRepository;
 
 @Service
@@ -25,6 +27,34 @@ public class ClienteService {
 
     public Cliente guardar(Cliente cliente) {
         return repo.save(cliente);
+    }
+
+    public Cliente crear(DTOCliente dto) {
+        validarDto(dto);
+        return guardar(desdeDto(dto));
+    }
+
+    public Cliente actualizar(Integer id, DTOCliente dto) {
+        return actualizar(id, desdeDto(dto));
+    }
+
+    private void validarDto(DTOCliente dto) {
+        if (dto.getNombre() == null || dto.getNombre().isBlank()
+                || dto.getEmail() == null || dto.getEmail().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Nombre y email son obligatorios");
+        }
+    }
+
+    private Cliente desdeDto(DTOCliente dto) {
+        return new Cliente(
+                dto.getNombre(),
+                dto.getEmail(),
+                dto.getUrlImagen(),
+                EnumRoles.Cliente,
+                dto.getUidCliente(),
+                dto.getTelefono(),
+                dto.getDirecciones());
     }
 
     public Optional<Cliente> obtener(Integer id) {

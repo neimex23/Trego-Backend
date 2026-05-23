@@ -2,7 +2,7 @@ package com.backend.trego.service;
 
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTORestaurante;
-import com.backend.trego.exceptions.SinProductoException;
+import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.repository.RestauranteRepository; //No se si anda
 import org.springframework.stereotype.Service;
 
@@ -56,7 +56,8 @@ public class MenuRestauranteService {
 
     private List<DTOProducto> aplicarFiltro(List<DTOProducto> productos, String categoria) {
         return productos.stream()
-                .filter(p -> p.getCategoria().equalsIgnoreCase(categoria))
+                .filter(p -> p.getCategoria() != null
+                        && p.getCategoria().name().equalsIgnoreCase(categoria))
                 .collect(Collectors.toList());
     }
 
