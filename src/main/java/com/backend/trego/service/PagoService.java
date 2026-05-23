@@ -13,20 +13,13 @@ import com.backend.trego.exception.PagoRechazadoException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mercadopago.resources.payment.Payment;
-import com.backend.trego.entity.ProductoPedido;
-import com.backend.trego.entity.DTOs.DTOPedido;
-import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
-import com.backend.trego.entity.DTOs.DTOProducto;
-
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 // Integración con MercadoPago: crea preferencias de pago y procesa los webhooks.
 // La construcción de la preferencia se delega en MercadoPagoService, que ya

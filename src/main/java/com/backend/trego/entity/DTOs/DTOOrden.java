@@ -1,8 +1,5 @@
 package com.backend.trego.entity.DTOs;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 public class DTOOrden {
     private DTDireccion direccion;

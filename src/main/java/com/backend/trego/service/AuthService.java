@@ -24,8 +24,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.FirebaseAuthException;
 
-import com.backend.trego.service.TokenBlacklistService;
-
 import java.util.Optional;
 
 @Service

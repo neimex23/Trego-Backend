@@ -1,15 +1,8 @@
 package com.backend.trego.controller;
 
-import com.backend.trego.entity.DTOs.DTDireccion;
-import com.backend.trego.entity.DTOs.DTOFirma;
-import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.service.RestauranteService;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Date;
-import java.util.List;
 
 // Endpoints de restaurantes.
 @RestController
