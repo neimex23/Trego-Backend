@@ -35,6 +35,10 @@ public abstract class Producto {
     @JoinColumn(name = "carrito_id")
     private Carrito carrito;
 
+    @ManyToOne
+    @JoinColumn(name = "restaurante_id")
+    private Restaurante restaurante;
+
     protected Producto() {
     }
 
@@ -111,5 +115,13 @@ public abstract class Producto {
 
     public void setCarrito(Carrito carrito) {
         this.carrito = carrito;
+    }
+
+    public Restaurante getRestaurante() {
+        return restaurante;
+    }
+
+    public void setRestaurante(Restaurante restaurante) {
+        this.restaurante = restaurante;
     }
 }

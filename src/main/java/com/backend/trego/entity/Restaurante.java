@@ -14,7 +14,6 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
 @Entity
@@ -39,8 +38,7 @@ public class Restaurante extends Usuario {
 
     private int radioEntrega;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "restaurante_id")
+    @OneToMany(mappedBy = "restaurante", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Producto> productos = new ArrayList<>();
 
     protected Restaurante() {
@@ -69,6 +67,7 @@ public class Restaurante extends Usuario {
 
     public void addProducto(Producto producto) {
         this.productos.add(producto);
+        producto.setRestaurante(this);
     }
 
     public void setProductos(List<Producto> productos) {
