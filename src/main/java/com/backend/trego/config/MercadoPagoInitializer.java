@@ -13,6 +13,7 @@ public class MercadoPagoInitializer {
 
     @PostConstruct
     public void init() {
-         MercadoPagoConfig.setAccessToken(accessToken);
+        MercadoPagoConfig.setAccessToken(accessToken);
+        System.out.println(">>> [MercadoPago] Inicializado con éxito en Trego.");
     }
 }

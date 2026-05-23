@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
-import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -64,11 +63,9 @@ public class PedidoService {
         // Valida existencia del restaurante (404 si no existe).
         DTORestaurante restauranteDTO = restauranteService.obtenerRestaurante(restauranteId);
 
-        Date fecha = obtenerHoraActual();
-
         // Crea y persiste el pedido. Lanza RestauranteCerradoException (409) si el
         // restaurante no está operativo.
-        Pedido pedido = crearPedido(carritoDTO, direccionDTO, fecha, restauranteDTO);
+        Pedido pedido = crearPedido(carritoDTO, direccionDTO, restauranteDTO);
 
         // Genera la preferencia de pago delegando en PagoService -> MercadoPagoService.
         DTOPedido pedidoDTO = new DTOPedido(
@@ -84,7 +81,7 @@ public class PedidoService {
     // verifica que el restaurante esté abierto.
     @Transactional
     public Pedido crearPedido(DTOCarrito carritoDTO, DTDireccion direccionDTO,
-                              Date fecha, DTORestaurante restauranteDTO) {
+                              DTORestaurante restauranteDTO) {
         if (restauranteDTO == null || restauranteDTO.getIdRestaurante() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restaurante inválido");
         }
@@ -130,10 +127,6 @@ public class PedidoService {
 
     public DTORestaurante obtenerRestaurante(String idRestaurante) {
         return restauranteService.obtenerRestaurante(idRestaurante);
-    }
-
-    public Date obtenerHoraActual() {
-        return new Date();
     }
 
     public boolean verificarRestauranteAbierto(String restauranteID) {

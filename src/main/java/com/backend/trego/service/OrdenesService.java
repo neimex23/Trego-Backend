@@ -1,15 +1,16 @@
 package com.backend.trego.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
-import com.backend.trego.entity.Enums.EnumRazonCancelacion;
 import com.backend.trego.repository.PedidoRepository;
 
 @Service
@@ -56,10 +57,10 @@ public class OrdenesService {
         return repo.save(p);
     }
 
-    public Pedido cancelar(Integer id, EnumRazonCancelacion razon) {
+    public Pedido cancelar(Integer id, String razon) {
         Pedido p = obtenerOFallar(id);
         p.setEstado(EnumEstadoPedido.Cancelado);
-        p.setRazonCancelacion(razon);
+        p.setRazonCancelacion(razon != null ? razon : "Cancelado por el cliente");
         return repo.save(p);
     }
 
@@ -74,5 +75,17 @@ public class OrdenesService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado");
         }
         repo.deleteById(id);
+    }
+
+    @Transactional
+    public int cancelarPedidosExpirados() {
+        List<Pedido> expirados = repo.findByFechaExpiracionNotNullAndFechaExpiracionBefore(LocalDateTime.now());
+        for (Pedido pedido : expirados) {
+            pedido.setEstado(EnumEstadoPedido.Cancelado);
+            pedido.setRazonCancelacion("Expirado: plazo de pago de 24 horas vencido");
+            pedido.setFechaExpiracion(null);
+        }
+        repo.saveAll(expirados);
+        return expirados.size();
     }
 }

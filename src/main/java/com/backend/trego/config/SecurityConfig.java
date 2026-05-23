@@ -39,7 +39,12 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() 
+                .requestMatchers("/api/auth/**").permitAll()
+                // Webhook de MercadoPago
+                .requestMatchers("/api/pagos/webhook").permitAll()
+                // Consulta de estado de pago: el front la usa al volver del checkout,
+                // tras el redirect de MP (cuando puede no tener el token a mano).
+                .requestMatchers("/api/pagos/estado/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
             )
