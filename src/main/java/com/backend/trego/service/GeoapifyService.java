@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.backend.trego.entity.DTOs.DTDireccion;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOGeoapifyProperties;
 import com.backend.trego.entity.DTOs.DTOGeoapifyResponse;
 
@@ -16,7 +16,7 @@ public class GeoapifyService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public DTDireccion obtenerDireccion(double latitud, double longitud) {
+    public DTODireccion obtenerDireccion(double latitud, double longitud) {
 
         String url = String.format(
                 "https://api.geoapify.com/v1/geocode/reverse?lat=%s&lon=%s&apiKey=%s",
@@ -57,6 +57,6 @@ public class GeoapifyService {
         // esquina aproximada
         String esquina = props.getBarrio();
 
-        return new DTDireccion(calle, numero, apartamento, esquina, latitud, longitud);
+        return new DTODireccion(calle, numero, apartamento, esquina, latitud, longitud);
     }
 }

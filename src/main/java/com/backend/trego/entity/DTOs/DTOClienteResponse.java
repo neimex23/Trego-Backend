@@ -17,14 +17,14 @@ public class DTOClienteResponse {
     private String uidCliente;
     private boolean habilitado;
     private EnumRoles rol;
-    private List<DTDireccion> direcciones = new ArrayList<>();
+    private List<DTODireccion> direcciones = new ArrayList<>();
 
     public DTOClienteResponse() {
     }
 
     public DTOClienteResponse(int id, String nombre, String email, String urlImagen, String telefono,
                               String uidCliente, boolean habilitado, EnumRoles rol,
-                              List<DTDireccion> direcciones) {
+                              List<DTODireccion> direcciones) {
         this.id = id;
         this.nombre = nombre;
         this.email = email;
@@ -84,7 +84,7 @@ public class DTOClienteResponse {
         return rol;
     }
 
-    public List<DTDireccion> getDirecciones() {
+    public List<DTODireccion> getDirecciones() {
         return direcciones;
     }
 }

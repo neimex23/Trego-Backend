@@ -2,8 +2,8 @@ package com.backend.trego.controller;
 
 import com.backend.trego.entity.Usuario;
 import com.backend.trego.entity.DTOs.DTOUsuario;
-import com.backend.trego.entity.DTOs.LoginDTO;
-import com.backend.trego.entity.DTOs.LoginResponseDTO;
+import com.backend.trego.entity.DTOs.DTOLogin;
+import com.backend.trego.entity.DTOs.DTOLoginResponse;
 import com.backend.trego.service.AuthService;
 
 import org.springframework.http.HttpStatus;
@@ -29,9 +29,9 @@ public class AuthController {
 
     // Login de admin / restaurante (usuario y contraseña)
     @PostMapping("/login/admin")
-    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<?> login(@RequestBody DTOLogin loginDTO) {
         try {
-            LoginResponseDTO response = authService.login(loginDTO);
+            DTOLoginResponse response = authService.login(loginDTO);
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error de autenticación \n");
@@ -47,7 +47,7 @@ public class AuthController {
     public ResponseEntity<?> loginConFirebase(@RequestBody Map<String, String> body) {
         String idToken = body.get("idToken");
         try {
-            LoginResponseDTO response = authService.loginConGoogle(idToken);
+            DTOLoginResponse response = authService.loginConGoogle(idToken);
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error de autenticación \n");
@@ -63,7 +63,7 @@ public class AuthController {
     public ResponseEntity<?> loginConSMS(@RequestBody Map<String, String> body) {
         String firebaseToken = body.get("firebaseToken");
         try {
-            LoginResponseDTO response = authService.loginConSMS(firebaseToken);
+            DTOLoginResponse response = authService.loginConSMS(firebaseToken);
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error de autenticación SMS \n");

@@ -15,7 +15,7 @@ public class DTORestaurante {
     private String password;
     private String telefono;
     private String urlImagen;
-    private DTDireccion direccion;
+    private DTODireccion direccion;
     private EnumCategoriaRestaurante categoria;
     private Boolean habilitado;
     private Boolean abierto;
@@ -24,7 +24,7 @@ public class DTORestaurante {
     private List<DTOProducto> productos = new ArrayList<>();
 
     public DTORestaurante(Integer idRestaurante, String nombre, String email, String password, String telefono,
-            String urlImagen, DTDireccion direccion, EnumCategoriaRestaurante categoria, Boolean habilitado,
+            String urlImagen, DTODireccion direccion, EnumCategoriaRestaurante categoria, Boolean habilitado,
             Boolean abierto, Date horaApertura, Date horaCierre, List<DTOProducto> productos) {
         this.idRestaurante = idRestaurante;
         this.nombre = nombre;
@@ -65,7 +65,7 @@ public class DTORestaurante {
         return urlImagen;
     }
 
-    public DTDireccion getDireccion() {
+    public DTODireccion getDireccion() {
         return direccion;
     }
 

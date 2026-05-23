@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.backend.trego.entity.Usuario;
-import com.backend.trego.entity.DTOs.DTDireccion;
+import com.backend.trego.entity.DTOs.DTODireccion;
 
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
@@ -21,6 +21,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     Optional<Usuario> findByEmail(String email);
 
     @Query("SELECT d FROM Cliente c JOIN c.direcciones d WHERE c.firebaseUid = :uid")
-    List<DTDireccion> findDireccionesByFirebaseUid(@Param("uid") String uid);
+    List<DTODireccion> findDireccionesByFirebaseUid(@Param("uid") String uid);
 
 }

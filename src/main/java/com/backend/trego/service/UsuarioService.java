@@ -1,6 +1,6 @@
 package com.backend.trego.service;
 
-import com.backend.trego.entity.DTOs.DTDireccion;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.repository.UsuarioRepository;
 import com.backend.trego.entity.RegistroTemporal;
@@ -144,7 +144,7 @@ public class UsuarioService {
         }
     }
 
-    public List<DTDireccion> obtenerDirecciones() {
+    public List<DTODireccion> obtenerDirecciones() {
         String uid = currentUserService.getCurrentUid();
         return usuarioRepository.findDireccionesByFirebaseUid(uid);
     }

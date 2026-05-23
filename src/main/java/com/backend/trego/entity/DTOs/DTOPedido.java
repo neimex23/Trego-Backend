@@ -13,8 +13,8 @@ public class DTOPedido {
     private Integer idPedido;
     private Integer idCliente;
     private Integer idRestaurante;
-    private List<DTOProducto> productos;
-    private DTDireccion direccionEntrega;
+    private List<DTOProductoPedido> productos;
+    private DTODireccion direccionEntrega;
     private Double total;
 
     private EnumEstadoPedido estado;
@@ -31,14 +31,14 @@ public class DTOPedido {
         this.total = total;
     }
 
-    public DTOPedido(Integer idPedido, Double total, List<DTOProducto> productos) {
+    public DTOPedido(Integer idPedido, Double total, List<DTOProductoPedido> productos) {
         this.idPedido = idPedido;
         this.total = total;
         this.productos = productos;
     }
 
-    public DTOPedido(Integer idPedido, Integer idCliente, Integer idRestaurante, List<DTOProducto> productos,
-            DTDireccion direccionEntrega, Double total, EnumEstadoPedido estado, LocalDateTime fechaCreacion,
+    public DTOPedido(Integer idPedido, Integer idCliente, Integer idRestaurante, List<DTOProductoPedido> productos,
+            DTODireccion direccionEntrega, Double total, EnumEstadoPedido estado, LocalDateTime fechaCreacion,
             LocalDateTime fechaExpiracion, LocalDateTime horaEntregaEstimada, Integer tiempoPreparacion) {
         this.idPedido = idPedido;
         this.idCliente = idCliente;
@@ -57,7 +57,7 @@ public class DTOPedido {
         if (pedido == null) {
             return null;
         }
-        List<DTOProducto> lineas = pedido.getProductos().stream()
+        List<DTOProductoPedido> lineas = pedido.getProductos().stream()
                 .map(DTOPedido::mapearLinea)
                 .collect(Collectors.toList());
         Integer idCliente = pedido.getCliente() != null ? pedido.getCliente().getIdUsuario() : null;
@@ -76,20 +76,18 @@ public class DTOPedido {
                 null);
     }
 
-    private static DTOProducto mapearLinea(ProductoPedido pp) {
+    private static DTOProductoPedido mapearLinea(ProductoPedido pp) {
         var producto = pp.getProducto();
-        if (producto == null) {
-            return new DTOProducto();
-        }
-        return new DTOProducto(
-                producto.getIdProducto(),
-                producto.getNombre(),
-                producto.getDescripcion(),
-                producto.getPrecio(),
-                producto.getUrlImagen(),
-                pp.getCantidad(),
+        DTOProductoSimplificado simplificado = producto != null
+                ? DTOProductoSimplificado.desde(producto)
+                : null;
+        return new DTOProductoPedido(
+                null,
+                null,
                 pp.getComentarioCliente(),
-                (double) pp.getPrecioSuma());
+                pp.getCantidad(),
+                (double) pp.getPrecioSuma(),
+                simplificado);
     }
 
     public Integer getIdPedido() {
@@ -116,19 +114,19 @@ public class DTOPedido {
         this.idRestaurante = idRestaurante;
     }
 
-    public List<DTOProducto> getProductos() {
+    public List<DTOProductoPedido> getProductos() {
         return productos;
     }
 
-    public void setProductos(List<DTOProducto> productos) {
+    public void setProductos(List<DTOProductoPedido> productos) {
         this.productos = productos;
     }
 
-    public DTDireccion getDireccionEntrega() {
+    public DTODireccion getDireccionEntrega() {
         return direccionEntrega;
     }
 
-    public void setDireccionEntrega(DTDireccion direccionEntrega) {
+    public void setDireccionEntrega(DTODireccion direccionEntrega) {
         this.direccionEntrega = direccionEntrega;
     }
 
