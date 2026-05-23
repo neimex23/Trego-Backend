@@ -13,13 +13,13 @@ public class DTOCliente {
     private String urlImagen;
     private String telefono;
     private String uidCliente;
-    private List<DTDireccion> direcciones = new ArrayList<>();
+    private List<DTODireccion> direcciones = new ArrayList<>();
 
     public DTOCliente() {
     }
 
     public DTOCliente(String nombre, String email, String urlImagen, String telefono,
-                      String uidCliente, List<DTDireccion> direcciones) {
+                      String uidCliente, List<DTODireccion> direcciones) {
         this.nombre = nombre;
         this.email = email;
         this.urlImagen = urlImagen;
@@ -50,7 +50,7 @@ public class DTOCliente {
         return uidCliente;
     }
 
-    public List<DTDireccion> getDirecciones() {
+    public List<DTODireccion> getDirecciones() {
         return direcciones;
     }
 }

@@ -4,8 +4,8 @@ import com.backend.trego.entity.Usuario;
 import com.backend.trego.entity.Enums.EnumRoles;
 import com.backend.trego.entity.Administrador;
 import com.backend.trego.entity.Restaurante;
-import com.backend.trego.entity.DTOs.LoginDTO;
-import com.backend.trego.entity.DTOs.LoginResponseDTO;
+import com.backend.trego.entity.DTOs.DTOLogin;
+import com.backend.trego.entity.DTOs.DTOLoginResponse;
 import com.backend.trego.entity.DTOs.DTOUsuario; 
 
 import com.backend.trego.repository.UsuarioRepository;
@@ -55,7 +55,7 @@ public class AuthService {
     }
 
     // Login de admin / restaurante con email y contraseña.
-    public LoginResponseDTO login(LoginDTO loginDTO) {
+    public DTOLoginResponse login(DTOLogin loginDTO) {
         String email = loginDTO.getEmail();
         String password = loginDTO.getPassword();
         
@@ -68,7 +68,7 @@ public class AuthService {
             }
             
             String token = jwtUtil.generateToken(admin.getEmail(), admin.getRol().name());
-            return new LoginResponseDTO(token, admin.getRol().name(), admin.getNombre(), admin.getEmail());
+            return new DTOLoginResponse(token, admin.getRol().name(), admin.getNombre(), admin.getEmail());
         }
 
         Optional<Restaurante> restOpt = restauranteRepo.findByEmail(email);
@@ -81,14 +81,14 @@ public class AuthService {
                 throw new BadCredentialsException("Error de autenticación");
             }
             String token = jwtUtil.generateToken(rest.getEmail(), rest.getRol().name());
-            return new LoginResponseDTO(token, rest.getRol().name(), rest.getNombre(), rest.getEmail());
+            return new DTOLoginResponse(token, rest.getRol().name(), rest.getNombre(), rest.getEmail());
         }
 
         throw new BadCredentialsException("Error de autenticación");
     }
     
     // Login de cliente con Google: valida el token de Firebase y crea el cliente si no existe.
-    public LoginResponseDTO loginConGoogle(String idToken) {
+    public DTOLoginResponse loginConGoogle(String idToken) {
         try {
             
             String uid;
@@ -133,7 +133,7 @@ public class AuthService {
             int idUsuarioInt = usuario.getIdUsuario();
             String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), usuario.getFirebaseUid(), idUsuarioInt);
             
-            return new LoginResponseDTO(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
+            return new DTOLoginResponse(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
 
         } catch (FirebaseAuthException e) {
             throw new BadCredentialsException("Token de Google inválido");
@@ -141,7 +141,7 @@ public class AuthService {
     }
 
     // Login de cliente por SMS: mismo esquema que Google pero usando el teléfono.
-    public LoginResponseDTO loginConSMS(String firebaseToken) {
+    public DTOLoginResponse loginConSMS(String firebaseToken) {
         try {
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(firebaseToken);
             String uid = decodedToken.getUid();
@@ -171,7 +171,7 @@ public class AuthService {
             
             String jwt = jwtUtil.generateToken(identificador, usuario.getRol().name(), usuario.getFirebaseUid(), idUsuarioInt);
             
-            return new LoginResponseDTO(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
+            return new DTOLoginResponse(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
 
         } catch (FirebaseAuthException e) {
             throw new BadCredentialsException("Token de SMS inválido");

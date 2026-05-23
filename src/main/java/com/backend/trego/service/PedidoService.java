@@ -6,12 +6,11 @@ import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.ProductoPedido;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTOCarrito;
-import com.backend.trego.entity.DTOs.DTDireccion;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
-import com.backend.trego.entity.DTOs.DTOProducto;
+import com.backend.trego.entity.DTOs.DTOProductoPedido;
 import com.backend.trego.entity.DTOs.DTORestaurante;
-import com.backend.trego.entity.DTOs.DTDireccion;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.exception.RestauranteCerradoException;
 import com.backend.trego.repository.ClienteRepository;
@@ -58,7 +57,7 @@ public class PedidoService {
     // en MercadoPago y devuelve la preferencia (con la URL de checkout) para que
     // el front redirija a la pasarela.
     @Transactional
-    public DTOPreferenciaMP confirmarPedido(DTOCarrito carritoDTO, DTDireccion direccionDTO,
+    public DTOPreferenciaMP confirmarPedido(DTOCarrito carritoDTO, DTODireccion direccionDTO,
                                             String restauranteId) {
         // Valida existencia del restaurante (404 si no existe).
         DTORestaurante restauranteDTO = restauranteService.obtenerRestaurante(restauranteId);
@@ -80,7 +79,7 @@ public class PedidoService {
     // Construye el pedido a partir del carrito y lo guarda. Antes de crearlo
     // verifica que el restaurante esté abierto.
     @Transactional
-    public Pedido crearPedido(DTOCarrito carritoDTO, DTDireccion direccionDTO,
+    public Pedido crearPedido(DTOCarrito carritoDTO, DTODireccion direccionDTO,
                               DTORestaurante restauranteDTO) {
         if (restauranteDTO == null || restauranteDTO.getIdRestaurante() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restaurante inválido");
@@ -107,7 +106,7 @@ public class PedidoService {
         pedido.setCliente(cliente);
         pedido.setRestaurante(restaurante);
 
-        for (DTOProducto linea : carritoDTO.getProductos()) {
+        for (DTOProductoPedido linea : carritoDTO.getProductos()) {
             if (linea.getIdProducto() == null) {
                 continue;
             }
@@ -133,11 +132,11 @@ public class PedidoService {
         return restauranteService.estaAbierto(restauranteID);
     }
 
-    private DTDireccion mapDireccion(DTDireccion d) {
+    private DTODireccion mapDireccion(DTODireccion d) {
         if (d == null) {
             return null;
         }
-        return new DTDireccion(d.getCalle(), d.getNumero(), d.getApartamento(),
+        return new DTODireccion(d.getCalle(), d.getNumero(), d.getApartamento(),
                 d.getEsquina(), d.getLatitud(), d.getLongitud());
     }
 

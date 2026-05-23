@@ -3,7 +3,7 @@ package com.backend.trego.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.backend.trego.entity.DTOs.DTDireccion;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.Enums.EnumRoles;
 
 import jakarta.persistence.CascadeType;
@@ -17,14 +17,14 @@ public class Cliente extends Usuario {
     private String telefono;
 
     @ElementCollection
-    private List<DTDireccion> direcciones = new ArrayList<>();
+    private List<DTODireccion> direcciones = new ArrayList<>();
 
     private boolean habilitado = true;
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comentario> comentarios = new ArrayList<>();
 
-    protected Cliente(String nombre, String email, String foto, EnumRoles cliente, String uid, Object object, List<DTDireccion> direccionesVaciasGoogle) {
+    protected Cliente(String nombre, String email, String foto, EnumRoles cliente, String uid, Object object, List<DTODireccion> direccionesVaciasGoogle) {
     }
 
     public Cliente() {
@@ -32,7 +32,7 @@ public class Cliente extends Usuario {
 
     // Para los flujos de Firebase (Google/SMS), con uid.
     public Cliente(String nombre, String email, String urlImagen, EnumRoles rol, String firebaseUid,
-            String telefono, List<DTDireccion> direcciones) {
+            String telefono, List<DTODireccion> direcciones) {
         super(nombre, email, urlImagen, rol, firebaseUid);
         this.telefono = telefono;
         if (direcciones != null) {
@@ -42,7 +42,7 @@ public class Cliente extends Usuario {
 
     // Para el registro clásico por formulario, sin uid.
     public Cliente(String nombre, String email, String urlImagen, EnumRoles rol,
-            String telefono, List<DTDireccion> direcciones) {
+            String telefono, List<DTODireccion> direcciones) {
         super(nombre, email, urlImagen, rol, null);
         this.telefono = telefono;
         if (direcciones != null) {
@@ -59,7 +59,7 @@ public class Cliente extends Usuario {
         this.comentarios.add(comentario);
     }
 
-    public void addDireccion(DTDireccion direccion) {
+    public void addDireccion(DTODireccion direccion) {
         this.direcciones.add(direccion);
     }
 
@@ -79,11 +79,11 @@ public class Cliente extends Usuario {
         this.telefono = telefono;
     }
 
-    public List<DTDireccion> getDirecciones() {
+    public List<DTODireccion> getDirecciones() {
         return direcciones;
     }
 
-    public void setDirecciones(List<DTDireccion> direcciones) {
+    public void setDirecciones(List<DTODireccion> direcciones) {
         this.direcciones = direcciones;
     }
 

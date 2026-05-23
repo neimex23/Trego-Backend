@@ -4,7 +4,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.backend.trego.entity.DTOs.DTDireccion;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.Enums.EnumCategoriaRestaurante;
 import com.backend.trego.entity.Enums.EnumRoles;
 
@@ -23,7 +23,7 @@ public class Restaurante extends Usuario {
     private String telefono;
 
     @Embedded
-    private DTDireccion direccion;
+    private DTODireccion direccion;
 
     private String descripcion;
     private float calificacionProm;
@@ -50,7 +50,7 @@ public class Restaurante extends Usuario {
     }
 
     public Restaurante(String nombre, String email, String urlImagen, String password, String rut,
-            String telefono, DTDireccion direccion, String descripcion, float calificacionProm,
+            String telefono, DTODireccion direccion, String descripcion, float calificacionProm,
             EnumCategoriaRestaurante categoria, LocalTime apertura, LocalTime cierre, int radioEntrega) {
         super(nombre, email, urlImagen, EnumRoles.Restaurante, null);
         this.password = password;
@@ -84,8 +84,8 @@ public class Restaurante extends Usuario {
     public void setRut(String rut) { this.rut = rut; }
     public String getTelefono() { return telefono; }
     public void setTelefono(String telefono) { this.telefono = telefono; }
-    public DTDireccion getDireccion() { return direccion; }
-    public void setDireccion(DTDireccion direccion) { this.direccion = direccion; }
+    public DTODireccion getDireccion() { return direccion; }
+    public void setDireccion(DTODireccion direccion) { this.direccion = direccion; }
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
     public float getCalificacionProm() { return calificacionProm; }

@@ -26,7 +26,6 @@ public class DTOLoginResponse {
         return rol;
     }
 
-
     public String getNombre() {
         return nombre;
     }
@@ -34,5 +33,4 @@ public class DTOLoginResponse {
     public String getEmail() {
         return email;
     }
-
 }

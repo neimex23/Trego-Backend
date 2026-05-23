@@ -6,14 +6,14 @@ package com.backend.trego.entity.DTOs;
 public class DTOConfirmarPedidoRequest {
 
     private DTOCarrito carrito;
-    private DTDireccion direccion;
+    private DTODireccion direccion;
     private Integer restauranteId;
 
     public DTOCarrito getCarrito() {
         return carrito;
     }
 
-    public DTDireccion getDireccion() {
+    public DTODireccion getDireccion() {
         return direccion;
     }
 
@@ -24,7 +24,7 @@ public class DTOConfirmarPedidoRequest {
     public DTOConfirmarPedidoRequest() {
     }   
 
-    public DTOConfirmarPedidoRequest(DTOCarrito carrito, DTDireccion direccion, Integer restauranteId) {
+    public DTOConfirmarPedidoRequest(DTOCarrito carrito, DTODireccion direccion, Integer restauranteId) {
         this.carrito = carrito;
         this.direccion = direccion;
         this.restauranteId = restauranteId;
