@@ -2,7 +2,6 @@ package com.backend.trego.entity;
 
 import com.backend.trego.entity.DTOs.DTDireccion;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
-import com.backend.trego.entity.Enums.EnumRazonCancelacion;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Embedded;
@@ -28,7 +27,8 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idPedido;
 
-    private LocalDateTime horarioRecibido = LocalDateTime.now();
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaExpiracion;
     private float total;
 
     @Enumerated(EnumType.STRING)
@@ -39,8 +39,7 @@ public class Pedido {
 
     private LocalDateTime horarioEntrega;
 
-    @Enumerated(EnumType.STRING)
-    private EnumRazonCancelacion razonCancelacion;
+    private String razonCancelacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id")
@@ -73,6 +72,13 @@ public class Pedido {
         this.estado = estado;
         this.direccionEntrega = direccionEntrega;
         this.horarioEntrega = horarioEntrega;
+        inicializarVigencia();
+    }
+
+    public void inicializarVigencia() {
+        LocalDateTime ahora = LocalDateTime.now();
+        this.fechaCreacion = ahora;
+        this.fechaExpiracion = ahora.plusHours(24);
     }
 
     public void addProductoPedido(ProductoPedido pp) {
@@ -89,8 +95,20 @@ public class Pedido {
         return idPedido;
     }
 
-    public LocalDateTime getHorarioRecibido() {
-        return horarioRecibido;
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public LocalDateTime getFechaExpiracion() {
+        return fechaExpiracion;
+    }
+
+    public void setFechaExpiracion(LocalDateTime fechaExpiracion) {
+        this.fechaExpiracion = fechaExpiracion;
     }
 
     public Cliente getCliente() {
@@ -173,11 +191,11 @@ public class Pedido {
         this.horarioEntrega = horarioEntrega;
     }
 
-    public EnumRazonCancelacion getRazonCancelacion() {
+    public String getRazonCancelacion() {
         return razonCancelacion;
     }
 
-    public void setRazonCancelacion(EnumRazonCancelacion razonCancelacion) {
+    public void setRazonCancelacion(String razonCancelacion) {
         this.razonCancelacion = razonCancelacion;
     }
 

@@ -38,13 +38,16 @@ public class PagoService {
     private final OrdenesService ordenesService;
     private final NotificacionesService notificacionesService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final CarritoService carritoService;
 
     public PagoService(MercadoPagoService mercadoPagoService,
                        OrdenesService ordenesService,
-                       NotificacionesService notificacionesService) {
+                       NotificacionesService notificacionesService,
+                       CarritoService carritoService) {
         this.mercadoPagoService = mercadoPagoService;
         this.ordenesService = ordenesService;
         this.notificacionesService = notificacionesService;
+        this.carritoService = carritoService;
     }
 
     // Recibe el pedido ya creado (con id), recupera la entidad y genera la
@@ -107,6 +110,8 @@ public class PagoService {
         }
 
         pedido.setEstado(EnumEstadoPedido.Pagado);
+        pedido.setFechaExpiracion(null);
+        carritoService.limpiarItemsCarrito();
 
         ordenesService.guardar(pedido);
 
@@ -115,13 +120,17 @@ public class PagoService {
                 + " (transacción " + pago.getId() + "). Pedido marcado como Pagado.");
     }
 
-    // Rama de pago rechazado: el pedido se deja en Solicitado para que el cliente
-    // pueda reintentar el pago. Solo se registra el motivo.
+    // Rama de pago rechazado: marca el pedido como PagoRechazado y guarda el
+    // detalle de Mercado Pago en razonCancelacion.
     private void registrarRechazo(Pedido pedido, Payment pago) {
         String motivo = pago.getStatusDetail() != null ? pago.getStatusDetail() : "rechazado";
+        pedido.setEstado(EnumEstadoPedido.PagoRechazado);
+        pedido.setRazonCancelacion(motivo);
+        pedido.setFechaExpiracion(null);
+        ordenesService.guardar(pedido);
         System.out.println("Pago RECHAZADO para el pedido " + pedido.getIdPedido()
                 + " (transacción " + pago.getId() + "). Motivo: " + motivo
-                + ". El pedido queda disponible para reintentar el pago.");
+                + ". Pedido marcado como PagoRechazado.");
     }
 
     private void enviarNotificacionConfirmacion(Pedido pedido) {
