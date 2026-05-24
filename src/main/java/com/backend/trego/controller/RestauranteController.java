@@ -1,39 +1,49 @@
 package com.backend.trego.controller;
 
-import com.backend.trego.exception.SinProductoException;
-import com.backend.trego.service.MenuRestauranteService;
+import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.service.RestauranteService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
-// Endpoints de restaurantes. Ya se sabe 
+import java.util.List;
+
+// Endpoints de restaurantes.
 @RestController
 @RequestMapping("/api/restaurantes")
 @CrossOrigin("*")
+@Tag(name = "Restaurantes", description = "Listado y consulta de restaurantes para el cliente")
 public class RestauranteController {
 
     private final RestauranteService restauranteService;
-	private final MenuRestauranteService menuRestauranteService;
 
-    public RestauranteController(RestauranteService restauranteService, MenuRestauranteService menuRestauranteService) {
+    public RestauranteController(RestauranteService restauranteService) {
         this.restauranteService = restauranteService;
-        this.menuRestauranteService = menuRestauranteService;
     }
-//endpoint ver menu
-	@GetMapping("/{restauranteId}/verMenu") //Es para que responda solo a peticiones get restauranteId funciona como variable guarda el Id del resturante que selecciono el cliente para que no se manden menus de otros restaurantes
-	public ResponseEntity<?> verMenu(
-        @PathVariable Integer restauranteId,
-        @RequestParam(required = false) String categoria,
-        @RequestParam(required = false) String orden) {
 
-	    try {
-	        return ResponseEntity.ok(menuRestauranteService.verRestaurante(restauranteId, categoria, orden));
-	    } catch (SinProductoException e) {
-	        // Ojo el diagrama exige 200 OK incluso si no hay productos
-	        return ResponseEntity.ok(Map.of("mensaje", e.getMessage()));
-	    }
-	}
-   
+    // CU-CLI: Listar restaurantes registrados. Si se pasa 'nombre' se filtra por
+    // coincidencia parcial; si no, devuelve todos los habilitados.
+    @GetMapping
+    @Operation(summary = "Listar restaurantes", description = "Devuelve los restaurantes habilitados. Acepta un filtro opcional por nombre.")
+    @ApiResponse(responseCode = "200", description = "Listado de restaurantes")
+    public ResponseEntity<List<DTORestaurante>> listar(@RequestParam(required = false) String nombre) {
+        List<DTORestaurante> restaurantes = (nombre == null || nombre.isBlank())
+                ? restauranteService.listarRestaurantes()
+                : restauranteService.buscarRestaurantePorNombre(nombre);
+        return ResponseEntity.ok(restaurantes);
+    }
+
+    // CU-CLI: Ver datos de un restaurante puntual (sin el menú).
+    @GetMapping("/{id}")
+    @Operation(summary = "Obtener restaurante", description = "Devuelve los datos públicos de un restaurante por id.")
+    @ApiResponse(responseCode = "200", description = "Restaurante encontrado")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    public ResponseEntity<DTORestaurante> obtener(@PathVariable String id) {
+        return ResponseEntity.ok(restauranteService.obtenerRestaurante(id));
+    }
+
 }
