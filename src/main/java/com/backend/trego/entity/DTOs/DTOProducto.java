@@ -23,6 +23,7 @@ public class DTOProducto {
     private Integer cantidadDisponible;
     private List<DTOIngrediente> ingredientes = new ArrayList<>();
     private EnumTipoProducto tipo;
+    private DTOOferta oferta;
     private DTOPlato plato;
     private DTOArticulo articulo;
     private DTOCombo combo;
@@ -116,6 +117,14 @@ public class DTOProducto {
 
     public DTOCombo getCombo() {
         return combo;
+    }
+
+    public DTOOferta getOferta() {
+        return oferta;
+    }
+
+    public void setOferta(DTOOferta oferta) {
+        this.oferta = oferta;
     }
 
     public Producto toProducto() {

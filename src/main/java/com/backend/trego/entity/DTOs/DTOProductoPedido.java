@@ -7,7 +7,7 @@ import com.backend.trego.entity.LineaCarrito;
 
 public class DTOProductoPedido {
     private Integer cantidadDisponible;
-    private List<DTOIngrediente> ingredientes = new ArrayList<>();
+    private List<DTOIngrediente> ingredientesAQuitar = new ArrayList<>();
     private String observaciones;
     private Integer cantidad;
     private Double subtotal;
@@ -17,8 +17,8 @@ public class DTOProductoPedido {
         return cantidadDisponible;
     }
 
-    public List<DTOIngrediente> getIngredientes() {
-        return ingredientes;
+    public List<DTOIngrediente> getIngredientesAQuitar() {
+        return ingredientesAQuitar;
     }
 
     public String getObservaciones() {
@@ -48,7 +48,7 @@ public class DTOProductoPedido {
             Integer cantidad, Double subtotal, DTOProductoSimplificado producto) {
         this.cantidadDisponible = cantidadDisponible;
         if (ingredientes != null) {
-            this.ingredientes = ingredientes;
+            this.ingredientesAQuitar = ingredientes;
         }
         this.observaciones = observaciones;
         this.cantidad = cantidad;

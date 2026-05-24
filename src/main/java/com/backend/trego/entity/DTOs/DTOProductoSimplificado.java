@@ -1,6 +1,11 @@
 package com.backend.trego.entity.DTOs;
 
+import com.backend.trego.entity.Ingrediente;
+import com.backend.trego.entity.Plato;
 import com.backend.trego.entity.Producto;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DTOProductoSimplificado {
     private Integer idProducto;
@@ -9,6 +14,7 @@ public class DTOProductoSimplificado {
     private float precio;
     private String urlImagen;
     private Float precioOferta;
+    private List<DTOIngrediente> ingredientes = new ArrayList<>();
 
     public Integer getIdProducto() {
         return idProducto;
@@ -34,6 +40,10 @@ public class DTOProductoSimplificado {
         return precioOferta;
     }
 
+    public List<DTOIngrediente> getIngredientes() {
+        return ingredientes;
+    }
+
     public DTOProductoSimplificado() {
     }
 
@@ -54,13 +64,25 @@ public class DTOProductoSimplificado {
         Integer idRestaurante = producto.getRestaurante() != null
                 ? producto.getRestaurante().getIdUsuario()
                 : null;
-        return new DTOProductoSimplificado(
+        DTOProductoSimplificado dto = new DTOProductoSimplificado(
                 producto.getIdProducto(),
                 idRestaurante,
                 producto.getNombre(),
                 producto.getPrecio(),
                 producto.getUrlImagen(),
                 calcularPrecioOferta(producto));
+
+        // Los ingredientes solo existen en Plato
+        if (producto instanceof Plato plato) {
+            for (Ingrediente ing : plato.getIngredientes()) {
+                dto.ingredientes.add(new DTOIngrediente(
+                        ing.getIdIngrediente(),
+                        ing.getNombre(),
+                        idRestaurante));
+            }
+        }
+
+        return dto;
     }
 
     private static Float calcularPrecioOferta(Producto producto) {

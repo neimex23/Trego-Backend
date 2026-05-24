@@ -39,13 +39,33 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Auth
                 .requestMatchers("/api/auth/**").permitAll()
+                // Registro de restaurante (flujo por código de verificación)
+                .requestMatchers("/api/usuarios/registrar-restaurante/**").permitAll()
+                // Menú público de restaurante
+                .requestMatchers("/api/pedido/restaurante/*/verMenu").permitAll()
                 // Webhook de MercadoPago
                 .requestMatchers("/api/pagos/webhook").permitAll()
                 // Consulta de estado de pago: el front la usa al volver del checkout,
                 // tras el redirect de MP (cuando puede no tener el token a mano).
                 .requestMatchers("/api/pagos/estado/**").permitAll()
+                // Swagger
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                // Carrito
+                .requestMatchers("/api/carrito/**").authenticated()
+                // Pedidos
+                .requestMatchers("/api/pedido/**").authenticated()
+                // Pagos (resto de endpoints, ej. crear preferencia)
+                .requestMatchers("/api/pagos/**").authenticated()
+                // Productos y restaurantes
+                .requestMatchers("/api/productos/**").authenticated()
+                .requestMatchers("/api/restaurantes/**").authenticated()
+                // Clientes y usuarios
+                .requestMatchers("/api/clientes/**").authenticated()
+                .requestMatchers("/api/usuarios/**").authenticated()
+                // Notificaciones
+                .requestMatchers("/api/notificaciones/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
