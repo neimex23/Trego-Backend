@@ -83,15 +83,23 @@ public class UsuarioController {
         }
     }
 
-    @GetMapping("/test-auth")
-    @Operation(summary = "Prueba de seguridad", description = "Endpoint para verificar que el JWT funciona.")
-    public ResponseEntity<String> testAuth() {
-        return ResponseEntity.ok("¡El filtro JWT funciona correctamente! Estás autenticado. \n");
-    }
-
     @GetMapping("/perfil")
     public ResponseEntity<?> obtenerPerfil(@AuthenticationPrincipal AuthenticatedUser user) {
         return ResponseEntity.ok(user);
+    }
+
+    // Devuelve el usuario autenticado (cliente, restaurante o administrador) resuelto desde el token.
+    @GetMapping("/actual")
+    @Operation(summary = "Obtener usuario actual", description = "Devuelve los datos del usuario autenticado según el token JWT.")
+    @ApiResponse(responseCode = "200", description = "Usuario autenticado encontrado")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    @ApiResponse(responseCode = "404", description = "Usuario autenticado no encontrado")
+    public ResponseEntity<?> obtenerUsuarioActual() {
+        try {
+            return ResponseEntity.ok(usuarioService.obtenerUsuarioActual());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
     }
 
 }

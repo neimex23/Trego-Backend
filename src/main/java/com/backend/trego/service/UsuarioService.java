@@ -144,6 +144,36 @@ public class UsuarioService {
         }
     }
 
+    // Devuelve el usuario autenticado actualmente, resuelto desde el token.
+    // Cliente: se busca por firebaseUid; Restaurante/Administrador: por idUsuario.
+    public DTOUsuario obtenerUsuarioActual() {
+        var auth = currentUserService.getCurrentUser();
+        Usuario u = null;
+
+        if (auth.getIdUsuario() != null) {
+            u = usuarioRepository.findById(auth.getIdUsuario()).orElse(null);
+        }
+        if (u == null && auth.getUid() != null) {
+            u = usuarioRepository.findByFirebaseUid(auth.getUid()).orElse(null);
+        }
+        if (u == null && auth.getEmail() != null) {
+            u = usuarioRepository.findByEmail(auth.getEmail()).orElse(null);
+        }
+        if (u == null) {
+            throw new IllegalStateException("No se encontró el usuario autenticado en la base de datos.");
+        }
+
+        return new DTOUsuario(
+                u.getIdUsuario(),
+                u.getFirebaseUid(),
+                u.getNombre(),
+                u.getEmail(),
+                null,
+                u.getFotoPerfil(),
+                null,
+                u.getRol());
+    }
+
     public List<DTODireccion> obtenerDirecciones() {
         String uid = currentUserService.getCurrentUid();
         return usuarioRepository.findDireccionesByFirebaseUid(uid);

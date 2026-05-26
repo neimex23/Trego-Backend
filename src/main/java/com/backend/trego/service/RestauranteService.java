@@ -67,6 +67,15 @@ public class RestauranteService {
         return toDTO(restaurante);
     }
 
+    // Devuelve el restaurante autenticado actualmente (lee el id del token).
+    public DTORestaurante obtenerRestauranteActual() {
+        Integer id = currentUserService.getCurrentId();
+        Restaurante restaurante = restauranteRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + id));
+        return toDTO(restaurante);
+    }
+
     // Carga la entidad o devuelve 404 si no existe.
     public Restaurante buscarRestaurante(String restauranteId) {
         Integer id = parseId(restauranteId);

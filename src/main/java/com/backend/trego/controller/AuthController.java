@@ -1,15 +1,19 @@
 package com.backend.trego.controller;
 
+import com.backend.trego.config.AuthenticatedUser;
 import com.backend.trego.entity.Usuario;
 import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.entity.DTOs.DTOLogin;
 import com.backend.trego.entity.DTOs.DTOLoginResponse;
 import com.backend.trego.service.AuthService;
 
+import io.swagger.v3.oas.annotations.Operation;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -74,6 +78,19 @@ public class AuthController {
         }
     }
     
+    
+    @GetMapping("/test-auth")
+    @Operation(summary = "Prueba de seguridad", description = "Endpoint para verificar que el JWT funciona. Devuelve el principal autenticado.")
+    public ResponseEntity<?> testAuth(@AuthenticationPrincipal AuthenticatedUser user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("No hay usuario autenticado en el contexto de seguridad.");
+        }
+        return ResponseEntity.ok(Map.of(
+                "mensaje", "El filtro JWT funciona correctamente. Estás autenticado.",
+                "usuario", user));
+    }
+
     @PostMapping("/cerrarSesion")
     public ResponseEntity<?> cerrarSesion(@RequestHeader(value = "Authorization", required = false) String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {

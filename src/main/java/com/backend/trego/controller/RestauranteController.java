@@ -37,6 +37,16 @@ public class RestauranteController {
         return ResponseEntity.ok(restaurantes);
     }
 
+    // Devuelve los datos del restaurante autenticado (extraídos del JWT).
+    @GetMapping("/actual")
+    @Operation(summary = "Obtener restaurante actual", description = "Devuelve los datos del restaurante actualmente autenticado, según el token JWT.")
+    @ApiResponse(responseCode = "200", description = "Restaurante autenticado encontrado")
+    @ApiResponse(responseCode = "401", description = "No autenticado o token sin rol Restaurante")
+    @ApiResponse(responseCode = "404", description = "Restaurante autenticado no encontrado")
+    public ResponseEntity<DTORestaurante> obtenerActual() {
+        return ResponseEntity.ok(restauranteService.obtenerRestauranteActual());
+    }
+
     // CU-CLI: Ver datos de un restaurante puntual (sin el menú).
     @GetMapping("/{id}")
     @Operation(summary = "Obtener restaurante", description = "Devuelve los datos públicos de un restaurante por id.")
