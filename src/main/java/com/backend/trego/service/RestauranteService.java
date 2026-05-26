@@ -23,12 +23,14 @@ import java.util.stream.Collectors;
 public class RestauranteService {
 
     private final RestauranteRepository restauranteRepository;
+    private final CurrentUserService currentUserService;
     private final ProductosService productosService;
     private final CloudinaryService cloudinaryService;
 
-    public RestauranteService(RestauranteRepository restauranteRepository, ProductosService productosService,
+    public RestauranteService(RestauranteRepository restauranteRepository, CurrentUserService currentUserService, ProductosService productosService,
             CloudinaryService cloudinaryService) {
         this.restauranteRepository = restauranteRepository;
+        this.currentUserService = currentUserService;
         this.productosService = productosService;
         this.cloudinaryService = cloudinaryService;
     }
@@ -106,8 +108,8 @@ public class RestauranteService {
                 restaurante.getNombre(),
                 restaurante.getEmail(),
                 restaurante.getTelefono(),
-                restaurante.getUrlImagen(),
                 restaurante.getFotoPortada(),
+                restaurante.getFotoPerfil(),
                 restaurante.getDescripcion(),
                 restaurante.getCategoria(),
                 restaurante.getCalificacionProm(),
@@ -209,6 +211,7 @@ public class RestauranteService {
                 null, // password: nunca se expone al frontend
                 restaurante.getRut(),
                 restaurante.getTelefono(),
+                restaurante.getFotoPerfil(),
                 restaurante.getFotoPortada(),
                 restaurante.getDireccion(),
                 restaurante.getDescripcion(),
@@ -233,8 +236,8 @@ public class RestauranteService {
 
     // Actualiza los datos del restaurante aplicando sólo los campos no nulos del
     // DTO. No se permite modificar id ni habilitado.
-    public DTORestaurante actualizarRestaurante(String restauranteId, DTORestaurante dto) {
-        Restaurante restaurante = buscarRestaurante(restauranteId);
+    public DTORestaurante actualizarRestaurante(DTORestaurante dto) {
+        Restaurante restaurante = buscarRestaurante(String.valueOf(currentUserService.getCurrentId()));
 
         if (dto.getNombre() != null) {
             restaurante.setNombre(dto.getNombre());

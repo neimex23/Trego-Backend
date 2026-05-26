@@ -67,7 +67,7 @@ public class AuthService {
                 throw new BadCredentialsException("Error de autenticación");
             }
             
-            String token = jwtUtil.generateToken(admin.getEmail(), admin.getRol().name());
+            String token = jwtUtil.generateToken(admin.getEmail(), admin.getRol().name(), null, admin.getIdUsuario());
             return new DTOLoginResponse(token, admin.getRol().name(), admin.getNombre(), admin.getEmail());
         }
 
@@ -77,7 +77,7 @@ public class AuthService {
             if (!passwordEncoder.matches(password, rest.getPassword())) {
                 throw new BadCredentialsException("Error de autenticación");
             }
-            String token = jwtUtil.generateToken(rest.getEmail(), rest.getRol().name());
+            String token = jwtUtil.generateToken(rest.getEmail(), rest.getRol().name(), null, rest.getIdUsuario());
             return new DTOLoginResponse(token, rest.getRol().name(), rest.getNombre(), rest.getEmail());
         }
 

@@ -20,7 +20,7 @@ public abstract class Usuario {
 
     private String nombre;
     private String email;
-    private String urlImagen;
+    private String fotoPerfil;
     private String firebaseUid;
 
     @Enumerated(EnumType.STRING)
@@ -34,10 +34,10 @@ public abstract class Usuario {
         this.rol = rol;
     }
 
-    public Usuario(String nombre, String email, String urlImagen, EnumRoles rol, String firebaseUid) {
+    public Usuario(String nombre, String email, String fotoPerfil, EnumRoles rol, String firebaseUid) {
         this.nombre = nombre;
         this.email = email;
-        this.urlImagen = urlImagen;
+        this.fotoPerfil = fotoPerfil;
         this.rol = rol;
         this.firebaseUid = firebaseUid;
     }
@@ -62,12 +62,12 @@ public abstract class Usuario {
         this.email = email;
     }
 
-    public String getUrlImagen() {
-        return urlImagen;
+    public String getFotoPerfil() {
+        return fotoPerfil;
     }
 
-    public void setUrlImagen(String urlImagen) {
-        this.urlImagen = urlImagen;
+    public void setFotoPerfil(String fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
     }
 
     public EnumRoles getRol() {

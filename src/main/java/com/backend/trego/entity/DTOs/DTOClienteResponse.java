@@ -12,7 +12,7 @@ public class DTOClienteResponse {
     private int id;
     private String nombre;
     private String email;
-    private String urlImagen;
+    private String fotoPerfil;
     private String telefono;
     private String uidCliente;
     private boolean habilitado;
@@ -22,13 +22,13 @@ public class DTOClienteResponse {
     public DTOClienteResponse() {
     }
 
-    public DTOClienteResponse(int id, String nombre, String email, String urlImagen, String telefono,
+    public DTOClienteResponse(int id, String nombre, String email, String fotoPerfil, String telefono,
                               String uidCliente, boolean habilitado, EnumRoles rol,
                               List<DTODireccion> direcciones) {
         this.id = id;
         this.nombre = nombre;
         this.email = email;
-        this.urlImagen = urlImagen;
+        this.fotoPerfil = fotoPerfil;
         this.telefono = telefono;
         this.uidCliente = uidCliente;
         this.habilitado = habilitado;
@@ -43,7 +43,7 @@ public class DTOClienteResponse {
                 c.getIdUsuario(),
                 c.getNombre(),
                 c.getEmail(),
-                c.getUrlImagen(),
+                c.getFotoPerfil(),
                 c.getTelefono(),
                 c.getUidCliente(),
                 c.isHabilitado(),
@@ -64,8 +64,8 @@ public class DTOClienteResponse {
         return email;
     }
 
-    public String getUrlImagen() {
-        return urlImagen;
+    public String getFotoPerfil() {
+        return fotoPerfil;
     }
 
     public String getTelefono() {

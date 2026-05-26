@@ -78,7 +78,7 @@ public class ClienteService {
         Cliente existente = obtenerOFallar(id);
         existente.setNombre(datos.getNombre());
         existente.setEmail(datos.getEmail());
-        existente.setUrlImagen(datos.getUrlImagen());
+        existente.setFotoPerfil(datos.getFotoPerfil());
         existente.setTelefono(datos.getTelefono());
         existente.setUidCliente(datos.getUidCliente());
         if (datos.getDirecciones() != null) {
