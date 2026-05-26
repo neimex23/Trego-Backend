@@ -13,10 +13,6 @@ public class DTOGeoapifyResponse {
         return caracteristicas;
     }
 
-    public void setCaracteristicas(List<Caracteristica> caracteristicas) {
-        this.caracteristicas = caracteristicas;
-    }
-
     public static class Caracteristica {
 
         @JsonProperty("properties")
@@ -24,10 +20,6 @@ public class DTOGeoapifyResponse {
 
         public DTOGeoapifyProperties getPropiedades() {
             return propiedades;
-        }
-
-        public void setPropiedades(DTOGeoapifyProperties propiedades) {
-            this.propiedades = propiedades;
         }
     }
 }

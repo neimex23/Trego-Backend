@@ -24,10 +24,13 @@ public class RestauranteService {
 
     private final RestauranteRepository restauranteRepository;
     private final ProductosService productosService;
+    private final CloudinaryService cloudinaryService;
 
-    public RestauranteService(RestauranteRepository restauranteRepository, ProductosService productosService) {
+    public RestauranteService(RestauranteRepository restauranteRepository, ProductosService productosService,
+            CloudinaryService cloudinaryService) {
         this.restauranteRepository = restauranteRepository;
         this.productosService = productosService;
+        this.cloudinaryService = cloudinaryService;
     }
 
     public boolean abrirLocal(String idRestaurante, Date horaServicio) {
@@ -104,9 +107,15 @@ public class RestauranteService {
                 restaurante.getEmail(),
                 restaurante.getTelefono(),
                 restaurante.getUrlImagen(),
+                restaurante.getFotoPortada(),
+                restaurante.getDescripcion(),
                 restaurante.getCategoria(),
+                restaurante.getCalificacionProm(),
+                restaurante.getRadioEntrega(),
                 restaurante.isHabilitado(),
-                estaAbiertoDe(restaurante));
+                estaAbiertoDe(restaurante),
+                restaurante.getApertura(),
+                restaurante.getCierre());
     }
 
     // Misma lógica que estaAbierto pero sobre una entidad ya cargada, para no
@@ -198,14 +207,18 @@ public class RestauranteService {
                 restaurante.getNombre(),
                 restaurante.getEmail(),
                 null, // password: nunca se expone al frontend
+                restaurante.getRut(),
                 restaurante.getTelefono(),
-                restaurante.getUrlImagen(),
+                restaurante.getFotoPortada(),
                 restaurante.getDireccion(),
+                restaurante.getDescripcion(),
                 restaurante.getCategoria(),
+                restaurante.getCalificacionProm(),
+                restaurante.getRadioEntrega(),
                 restaurante.isHabilitado(),
                 estaAbiertoDe(restaurante),
-                null, // horaApertura: la entidad usa LocalTime, el DTO Date
-                null, // horaCierre
+                restaurante.getApertura(),
+                restaurante.getCierre(),
                 productos);
     }
 
@@ -214,8 +227,55 @@ public class RestauranteService {
         return List.of();
     }
 
-    public DTOFirma firmarImagen(String nombreArchivo, String tipoArchivo) {
-        // TODO: implementar
-        return null;
+    public DTOFirma firmarArchivo(String nombreArchivo, String tipoArchivo) {
+        return cloudinaryService.firmar(nombreArchivo, tipoArchivo);
+    }
+
+    // Actualiza los datos del restaurante aplicando sólo los campos no nulos del
+    // DTO. No se permite modificar id ni habilitado.
+    public DTORestaurante actualizarRestaurante(String restauranteId, DTORestaurante dto) {
+        Restaurante restaurante = buscarRestaurante(restauranteId);
+
+        if (dto.getNombre() != null) {
+            restaurante.setNombre(dto.getNombre());
+        }
+        if (dto.getEmail() != null) {
+            restaurante.setEmail(dto.getEmail());
+        }
+        if (dto.getPassword() != null) {
+            restaurante.setPassword(dto.getPassword());
+        }
+        if (dto.getRut() != null) {
+            restaurante.setRut(dto.getRut());
+        }
+        if (dto.getTelefono() != null) {
+            restaurante.setTelefono(dto.getTelefono());
+        }
+        if (dto.getFotoPortada() != null) {
+            restaurante.setFotoPortada(dto.getFotoPortada());
+        }
+        if (dto.getDireccion() != null) {
+            restaurante.setDireccion(dto.getDireccion());
+        }
+        if (dto.getDescripcion() != null) {
+            restaurante.setDescripcion(dto.getDescripcion());
+        }
+        if (dto.getCategoria() != null) {
+            restaurante.setCategoria(dto.getCategoria());
+        }
+        if (dto.getCalificacionProm() != null) {
+            restaurante.setCalificacionProm(dto.getCalificacionProm());
+        }
+        if (dto.getRadioEntrega() != null) {
+            restaurante.setRadioEntrega(dto.getRadioEntrega());
+        }
+        if (dto.getHoraApertura() != null || dto.getHoraCierre() != null) {
+            LocalTime apertura = dto.getHoraApertura() != null ? dto.getHoraApertura() : restaurante.getApertura();
+            LocalTime cierre = dto.getHoraCierre() != null ? dto.getHoraCierre() : restaurante.getCierre();
+            restaurante.setHorario(apertura, cierre);
+        }
+
+        Restaurante actualizado = restauranteRepository.save(restaurante);
+        return toDTO(actualizado);
     }
 }

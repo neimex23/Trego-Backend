@@ -17,23 +17,11 @@ public class DTOGeoapifyProperties {
         return calle;
     }
 
-    public void setCalle(String calle) {
-        this.calle = calle;
-    }
-
     public String getNumeroPuerta() {
         return numeroPuerta;
     }
 
-    public void setNumeroPuerta(String numeroPuerta) {
-        this.numeroPuerta = numeroPuerta;
-    }
-
     public String getBarrio() {
         return barrio;
-    }
-
-    public void setBarrio(String barrio) {
-        this.barrio = barrio;
     }
 }

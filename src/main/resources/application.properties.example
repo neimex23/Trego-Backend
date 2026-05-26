@@ -36,3 +36,13 @@ geoapify.api.key=
 # --- JWT ---
 # Clave secreta para firmar los tokens. Debe ser una cadena larga y aleatoria.
 jwt.secret=
+
+# ===== Admin user (para pruebas) =====
+admin.email=
+admin.password=
+
+# ===== Cloudinary =====
+# Completar con las credenciales del dashboard de Cloudinary (Settings > API Keys).
+cloudinary.cloud-name=tu-cloud-name
+cloudinary.api-key=tu-api-key
+cloudinary.api-secret=tu-api-secret
