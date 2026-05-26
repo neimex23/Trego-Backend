@@ -74,9 +74,6 @@ public class AuthService {
         Optional<Restaurante> restOpt = restauranteRepo.findByEmail(email);
         if (restOpt.isPresent()) {
             Restaurante rest = restOpt.get();
-            if (!rest.isHabilitado()) {
-                throw new DisabledException("Usuario Deshabilitado");
-            }
             if (!passwordEncoder.matches(password, rest.getPassword())) {
                 throw new BadCredentialsException("Error de autenticación");
             }

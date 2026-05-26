@@ -46,4 +46,31 @@ public class RestauranteController {
         return ResponseEntity.ok(restauranteService.obtenerRestaurante(id));
     }
 
+    // Actualizar datos de un restaurante. Sólo se aplican los campos no nulos del
+    // DTO; id y habilitado no se modifican.
+    @PatchMapping("/{id}")
+    @Operation(summary = "Actualizar restaurante", description = "Actualiza los datos de un restaurante por id. Sólo se modifican los campos no nulos del DTO. No se puede cambiar id ni habilitado.")
+    @ApiResponse(responseCode = "200", description = "Restaurante actualizado")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    public ResponseEntity<DTORestaurante> actualizar(@PathVariable String id, @RequestBody DTORestaurante dto) {
+        return ResponseEntity.ok(restauranteService.actualizarRestaurante(id, dto));
+    }
+
+    //CU Solicitar Alta Restaurante
+    //Firmar imagen para Cloudinary
+    @PostMapping("/imagenF/firma/{nombreArchivo},{tipo}")
+    @Operation(summary = "Solicitar Firmar un Archivo en Cloudinary", description = "Solicita una firma para subir un archivo a Cloudinary. El nombreArchivo es el nombre del archivo a subir (sin extensión) y tipo es opcional (image, video o raw).")
+    @ApiResponse(responseCode = "200", description = "Firma generada correctamente")
+    @ApiResponse(responseCode = "400", description = "Parámetros inválidos")
+    @ApiResponse(responseCode = "500", description = "Error al generar la firma")
+    public ResponseEntity<?> solicitarFirmaCloudinary(@PathVariable String nombreArchivo, @PathVariable String tipo) {
+        try {
+            return ResponseEntity.ok(restauranteService.firmarArchivo(nombreArchivo, tipo));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al generar la firma: " + e.getMessage());
+        }
+    }
+
 }

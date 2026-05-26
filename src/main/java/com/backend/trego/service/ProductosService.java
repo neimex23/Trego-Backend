@@ -24,9 +24,11 @@ import java.util.stream.Collectors;
 public class ProductosService {
 
     private final ProductoRepository productoRepository;
+    private final CloudinaryService cloudinaryService;
 
-    public ProductosService(ProductoRepository productoRepository) {
+    public ProductosService(ProductoRepository productoRepository, CloudinaryService cloudinaryService) {
         this.productoRepository = productoRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
     // Devuelve los productos del menú de un restaurante, ya mapeados a DTO.
@@ -48,8 +50,7 @@ public class ProductosService {
     }
 
     public DTOFirma generarFirma(String nombreArchivo, String tipoArchivo) {
-        // TODO: implementar
-        return null;
+        return cloudinaryService.firmar(nombreArchivo, tipoArchivo);
     }
 
     public DTOProducto crearProducto(DTOProducto productoDTO) {
@@ -58,8 +59,7 @@ public class ProductosService {
     }
 
     public DTOFirma firmarImagen(String nombreArchivo, String tipoArchivo) {
-        // TODO: implementar
-        return null;
+        return cloudinaryService.firmar(nombreArchivo, tipoArchivo);
     }
 
     // Convierte una entidad Producto (Plato, Articulo o Combo) a su DTO de catálogo.

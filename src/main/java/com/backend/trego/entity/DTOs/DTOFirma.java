@@ -9,6 +9,7 @@ public class DTOFirma {
     private String cloudName;
     private String uploadUrl;
     private String publicId;
+    
     public String getFirma() {
         return firma;
     }
