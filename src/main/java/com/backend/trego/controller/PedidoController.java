@@ -1,6 +1,8 @@
 package com.backend.trego.controller;
 
+import com.backend.trego.config.AuthenticatedUser;
 import com.backend.trego.entity.DTOs.DTOConfirmarPedidoRequest;
+import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
 import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.service.PedidoService;
@@ -15,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.List;
 
 // Endpoints de pedidos.
 @RestController
@@ -30,6 +33,26 @@ public class PedidoController {
         this.pedidoService = pedidoService;
         this.restauranteService = restauranteService;
     }
+
+	// --- "LISTAR PEDIDOS" ---
+    @GetMapping
+    @Operation(summary = "Listar pedidos del restaurante",
+            description = "Devuelve la lista de pedidos del restaurante autenticado, excluyendo los pendientes. Permite aplicar un filtro opcional por estado y por producto.")
+    @ApiResponse(responseCode = "200", description = "Lista de pedidos obtenida correctamente")
+    public ResponseEntity<List<DTOPedido>> listarPedidos(
+            @Parameter(description = "Filtro por estado del pedido (ej: en preparacion, en camino, entregado, cancelado)") @RequestParam(required = false) String estado,
+            @Parameter(description = "Filtro por ID de un producto específico") @RequestParam(required = false) Integer idProducto,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+
+        // Extrae el ID del restaurante directamente del token JWT de la sesión
+        String restauranteId = String.valueOf(user.getIdUsuario());
+
+        // Llama al servicio pasando el ID y los filtros
+        List<DTOPedido> pedidos = pedidoService.listarPedidosConfirmados(restauranteId, estado, idProducto);
+        
+        return ResponseEntity.ok(pedidos);
+    }
+	//-----------------
 
     @PostMapping("/confirmar")
     @Operation(summary = "Confirmar pedido",
