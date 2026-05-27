@@ -27,7 +27,7 @@ public class RestauranteController {
 
     // CU-CLI: Listar restaurantes registrados. Si se pasa 'nombre' se filtra por
     // coincidencia parcial; si no, devuelve todos los habilitados.
-    @GetMapping
+    @GetMapping("/listar")
     @Operation(summary = "Listar restaurantes", description = "Devuelve los restaurantes habilitados. Acepta un filtro opcional por nombre.")
     @ApiResponse(responseCode = "200", description = "Listado de restaurantes")
     public ResponseEntity<List<DTORestaurante>> listar(@RequestParam(required = false) String nombre) {
@@ -48,7 +48,7 @@ public class RestauranteController {
     }
 
     // CU-CLI: Ver datos de un restaurante puntual (sin el menú).
-    @GetMapping("/{id}")
+    @GetMapping("obtenerRestaurante/{id}")
     @Operation(summary = "Obtener restaurante", description = "Devuelve los datos públicos de un restaurante por id.")
     @ApiResponse(responseCode = "200", description = "Restaurante encontrado")
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
@@ -58,7 +58,7 @@ public class RestauranteController {
 
     // Actualizar datos de un restaurante. Sólo se aplican los campos no nulos del
     // DTO; id y habilitado no se modifican.
-    @PatchMapping("/{id}")
+    @PatchMapping("/actualizar")
     @Operation(summary = "Actualizar restaurante", description = "Actualiza los datos del restaurante actualmente logeado. Sólo se modifican los campos no nulos del DTO. No se puede cambiar id ni habilitado.")
     @ApiResponse(responseCode = "200", description = "Restaurante actualizado")
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
