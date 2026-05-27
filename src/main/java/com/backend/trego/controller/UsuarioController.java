@@ -84,6 +84,10 @@ public class UsuarioController {
     }
 
     @GetMapping("/perfil")
+    @Operation(summary = "Obtener perfil del principal autenticado",
+            description = "Devuelve el AuthenticatedUser resuelto a partir del JWT del header Authorization, sin consultar la base de datos. Útil para que el front conozca el rol y los datos básicos asociados al token actual.")
+    @ApiResponse(responseCode = "200", description = "Perfil del usuario autenticado")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
     public ResponseEntity<?> obtenerPerfil(@AuthenticationPrincipal AuthenticatedUser user) {
         return ResponseEntity.ok(user);
     }

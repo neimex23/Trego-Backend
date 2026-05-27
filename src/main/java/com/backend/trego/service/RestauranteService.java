@@ -26,13 +26,15 @@ public class RestauranteService {
     private final CurrentUserService currentUserService;
     private final ProductosService productosService;
     private final CloudinaryService cloudinaryService;
+    private final NotificacionesService notificacionesService;
 
     public RestauranteService(RestauranteRepository restauranteRepository, CurrentUserService currentUserService, ProductosService productosService,
-            CloudinaryService cloudinaryService) {
+            CloudinaryService cloudinaryService, NotificacionesService notificacionesService) {
         this.restauranteRepository = restauranteRepository;
         this.currentUserService = currentUserService;
         this.productosService = productosService;
         this.cloudinaryService = cloudinaryService;
+        this.notificacionesService = notificacionesService;
     }
 
     public boolean abrirLocal(String idRestaurante, Date horaServicio) {
@@ -234,9 +236,19 @@ public class RestauranteService {
                 productos);
     }
 
-    public List<DTORestaurante> listarRestaurantesEnEspera() {
-        // TODO: implementar
-        return List.of();
+    public List<DTORestaurante> listarRestaurantesNoHabilitados() {
+        if (!currentUserService.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No autenticado: se requiere iniciar sesión");
+        }
+        
+        if (!currentUserService.isAdmin()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: se requieren privilegios de administrador");
+        }
+
+        List<Restaurante> restaurantesNoHabilitados = restauranteRepository.findByHabilitadoFalse();
+        return restaurantesNoHabilitados.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     public DTOFirma firmarArchivo(String nombreArchivo, String tipoArchivo) {
@@ -289,5 +301,55 @@ public class RestauranteService {
 
         Restaurante actualizado = restauranteRepository.save(restaurante);
         return toDTO(actualizado);
+    }
+
+   public void habilitarRestaurante(Integer restauranteId) {
+
+        if (!currentUserService.isAuthenticated()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "No autenticado: se requiere iniciar sesión"
+            );
+        }
+
+        if (!currentUserService.isAdmin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Acceso denegado: se requieren privilegios de administrador"
+            );
+        }
+
+        Restaurante restaurante = buscarRestaurante(String.valueOf(restauranteId));
+
+        if (restaurante.isHabilitado()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El restaurante ya se encuentra habilitado"
+            );
+        }
+
+        restaurante.setHabilitado(true);
+        Restaurante guardado = restauranteRepository.save(restaurante);
+
+        notificacionesService.notificarRestauranteHabilitado(guardado);
+    }
+
+    public void noHabilitarRestaurante(Integer restauranteId, String motivo){
+         if (!currentUserService.isAuthenticated()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "No autenticado: se requiere iniciar sesión"
+            );
+        }
+
+        if (!currentUserService.isAdmin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Acceso denegado: se requieren privilegios de administrador"
+            );
+        }
+
+        Restaurante restaurante = buscarRestaurante(String.valueOf(restauranteId));
+        notificacionesService.notificarRestauranteNoHabilitado(restaurante,motivo);
     }
 }
