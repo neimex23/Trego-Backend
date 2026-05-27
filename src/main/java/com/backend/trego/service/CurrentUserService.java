@@ -72,4 +72,9 @@ public class CurrentUserService {
     public boolean isAuthenticated() {
         return getCurrentUserOrNull() != null;
     }
+
+    public boolean isAdmin() {
+        AuthenticatedUser user = getCurrentUserOrNull();
+        return user != null && "Administrador".equals(user.getRol());
+    }
 }

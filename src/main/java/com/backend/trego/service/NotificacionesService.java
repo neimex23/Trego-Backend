@@ -93,6 +93,104 @@ public class NotificacionesService {
         }
     }
 
+    // Notifica al restaurante que su solicitud de alta fue aprobada y ya está
+    // habilitado para operar en la plataforma.
+    public void notificarRestauranteHabilitado(Restaurante restaurante) {
+        try {
+            MimeMessage mail = mailSender.createMimeMessage();
+            MimeMessageHelper estructuraMail = new MimeMessageHelper(mail, false, "UTF-8");
+
+            estructuraMail.setTo(restaurante.getEmail());
+            estructuraMail.setFrom(mailFrom, mailFromName);
+            estructuraMail.setSubject("Tu restaurante ya está habilitado en Trego");
+            estructuraMail.setText(construirCuerpoHabilitacion(restaurante), true);
+
+            mailSender.send(mail);
+            System.out.println("Mail de habilitación enviado al restaurante: " + restaurante.getEmail());
+        } catch (Exception e) {
+            System.err.println("Error al enviar mail de habilitación: " + e.getMessage());
+        }
+    }
+
+    private String construirCuerpoHabilitacion(Restaurante restaurante) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
+        sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
+        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("</div>");
+
+        sb.append("<div style='padding: 32px;'>");
+        sb.append("<h2 style='color: #333;'>¡").append(restaurante.getNombre()).append(", tu solicitud fue aprobada!</h2>");
+        sb.append("<p style='color: #555; font-size: 16px;'>")
+                .append("Tu restaurante ya se encuentra habilitado en Trego y es visible para los clientes. ")
+                .append("Ya podés ingresar al panel para cargar tu menú, promociones y comenzar a recibir pedidos.")
+                .append("</p>");
+        sb.append("<hr style='border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;'>");
+        sb.append("<p style='color: #555;'>¡Bienvenido a bordo!</p>");
+        sb.append("<p style='color: #555;'><strong>El equipo de Trego</strong></p>");
+        sb.append("</div>");
+
+        sb.append("<div style='background-color: #f5f5f5; padding: 16px; text-align: center;'>");
+        sb.append("<p style='color: #999; font-size: 12px; margin: 0;'>© 2026 Trego. Todos los derechos reservados.</p>");
+        sb.append("</div>");
+        sb.append("</div>");
+        return sb.toString();
+    }
+
+    // Notifica al restaurante que su solicitud de alta fue rechazada, incluyendo
+    // el motivo informado por el administrador.
+    public void notificarRestauranteNoHabilitado(Restaurante restaurante, String motivo) {
+        try {
+            MimeMessage mail = mailSender.createMimeMessage();
+            MimeMessageHelper estructuraMail = new MimeMessageHelper(mail, false, "UTF-8");
+
+            estructuraMail.setTo(restaurante.getEmail());
+            estructuraMail.setFrom(mailFrom, mailFromName);
+            estructuraMail.setSubject("Tu solicitud de alta en Trego no fue aprobada");
+            estructuraMail.setText(construirCuerpoNoHabilitacion(restaurante, motivo), true);
+
+            mailSender.send(mail);
+            System.out.println("Mail de rechazo enviado al restaurante: " + restaurante.getEmail());
+        } catch (Exception e) {
+            System.err.println("Error al enviar mail de rechazo: " + e.getMessage());
+        }
+    }
+
+    private String construirCuerpoNoHabilitacion(Restaurante restaurante, String motivo) {
+        String motivoMostrado = (motivo == null || motivo.isBlank())
+                ? "No se especificó un motivo."
+                : motivo;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
+        sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
+        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("</div>");
+
+        sb.append("<div style='padding: 32px;'>");
+        sb.append("<h2 style='color: #333;'>Hola ").append(restaurante.getNombre()).append(",</h2>");
+        sb.append("<p style='color: #555; font-size: 16px;'>")
+                .append("Lamentamos informarte que tu solicitud de alta en Trego no fue aprobada en esta instancia.")
+                .append("</p>");
+        sb.append("<p style='color: #555; font-size: 16px;'><strong>Motivo:</strong></p>");
+        sb.append("<div style='background-color: #f9f9f9; border-left: 4px solid #FF6600; padding: 12px 16px; color: #555;'>")
+                .append(motivoMostrado)
+                .append("</div>");
+        sb.append("<p style='color: #555; margin-top: 24px;'>")
+                .append("Podés corregir la información indicada y volver a postular tu local. ")
+                .append("Si tenés dudas sobre el motivo, respondé a este correo y te ayudamos.")
+                .append("</p>");
+        sb.append("<hr style='border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;'>");
+        sb.append("<p style='color: #555;'><strong>El equipo de Trego</strong></p>");
+        sb.append("</div>");
+
+        sb.append("<div style='background-color: #f5f5f5; padding: 16px; text-align: center;'>");
+        sb.append("<p style='color: #999; font-size: 12px; margin: 0;'>© 2026 Trego. Todos los derechos reservados.</p>");
+        sb.append("</div>");
+        sb.append("</div>");
+        return sb.toString();
+    }
+
     // Envía un código de verificación por email y devuelve el código generado.
     public String codigoVerificacionEmail(String email) {
         String codigoGenerado = String.valueOf(100000 + new Random().nextInt(900000));
