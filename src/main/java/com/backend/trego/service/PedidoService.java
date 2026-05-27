@@ -1,6 +1,7 @@
 package com.backend.trego.service;
 
 import com.backend.trego.entity.Cliente;
+import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.ProductoPedido;
@@ -176,5 +177,37 @@ public class PedidoService {
 
     public void pagoConfirmado(DTOPreferenciaMP preferenciaDTO) {
         // TODO: implementar
+    }
+
+    
+    @Transactional
+    public DTOPedido reembolsarPedido(DTOPedido pedidoDTO) {
+        if (pedidoDTO == null || pedidoDTO.getIdPedido() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "DTOPedido inválido para reembolsar");
+        }
+
+        Pedido pedido = ordenesService.obtenerOFallar(pedidoDTO.getIdPedido());
+
+        Pago pago = pedido.getPago();
+        if (pago == null || pago.getIdTransaccion() == null || pago.getIdTransaccion().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El pedido " + pedido.getIdPedido() + " no tiene un pago asociado para reembolsar");
+        }
+
+        if (pedido.getEstado() == EnumEstadoPedido.Reembolsado) {
+            // Aun así dejamos pasar a MP por la idempotencia, pero cortamos acá
+            // para evitar trabajo innecesario y dar feedback claro al front.
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "El pedido " + pedido.getIdPedido() + " ya estaba reembolsado");
+        }
+
+        String idempotencyKey = "reembolso-pedido-" + pedido.getIdPedido();
+        pagoService.reembolsar(pago.getIdTransaccion(), idempotencyKey);
+
+        pedido.setEstado(EnumEstadoPedido.Reembolsado);
+        ordenesService.guardar(pedido);
+
+        return DTOPedido.desde(pedido);
     }
 }

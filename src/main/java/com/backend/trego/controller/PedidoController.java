@@ -1,6 +1,7 @@
 package com.backend.trego.controller;
 
 import com.backend.trego.entity.DTOs.DTOConfirmarPedidoRequest;
+import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
 import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.service.PedidoService;
@@ -42,6 +43,16 @@ public class PedidoController {
                 request.getDireccion(),
                 String.valueOf(request.getRestauranteId()));
         return ResponseEntity.ok(preferencia);
+    }
+
+    @PostMapping("/reembolsar")
+    @Operation(summary = "Reembolsar pedido",
+            description = "Recibe el DTOPedido a reembolsar. Recupera el pago asociado (idTransaccion de MercadoPago) y dispara el reembolso en MP usando una idempotencyKey")
+    @ApiResponse(responseCode = "200", description = "Reembolso ejecutado correctamente; el pedido queda en estado Reembolsado")
+    @ApiResponse(responseCode = "400", description = "DTOPedido inválido o el pedido no tiene un pago asociado")
+    @ApiResponse(responseCode = "409", description = "El pedido ya estaba reembolsado")
+    public ResponseEntity<DTOPedido> reembolsarPedido(@RequestBody DTOPedido pedidoDTO) {
+        return ResponseEntity.ok(pedidoService.reembolsarPedido(pedidoDTO));
     }
 
     // Ver el menú de un restaurante. restauranteId identifica el restaurante que
