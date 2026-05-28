@@ -25,10 +25,12 @@ public class ProductosService {
 
     private final ProductoRepository productoRepository;
     private final CloudinaryService cloudinaryService;
+    private final CurrentUserService currentUserService;
 
-    public ProductosService(ProductoRepository productoRepository, CloudinaryService cloudinaryService) {
+    public ProductosService(ProductoRepository productoRepository, CloudinaryService cloudinaryService, CurrentUserService currentUserService) {
         this.productoRepository = productoRepository;
         this.cloudinaryService = cloudinaryService;
+        this.currentUserService = currentUserService;
     }
 
     // Devuelve los productos del menú de un restaurante, ya mapeados a DTO.
@@ -39,7 +41,7 @@ public class ProductosService {
                 .collect(Collectors.toList());
     }
 
-    public List<DTOIngrediente> listarIngredientes(String idRestaurante) {
+    public List<DTOIngrediente> listarIngredientes() {
         // TODO: implementar
         return List.of();
     }

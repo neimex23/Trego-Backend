@@ -27,6 +27,7 @@ public class DTORestaurante {
     private LocalTime horaApertura;
     private LocalTime horaCierre;
     private List<DTOProducto> productos = new ArrayList<>();
+    private List<DTOIngrediente> ingredientesDisponibles = new ArrayList<>();
 
     public DTORestaurante() {
     }
@@ -94,4 +95,8 @@ public class DTORestaurante {
     public LocalTime getHoraCierre() { return horaCierre; }
     public List<DTOProducto> getProductos() { return productos; }
     public String getFotoPerfil() { return fotoPerfil; }
+    public List<DTOIngrediente> getIngredientesDisponibles() { return ingredientesDisponibles; }
+    public void setIngredientesDisponibles(List<DTOIngrediente> ingredientesDisponibles) {
+        this.ingredientesDisponibles = ingredientesDisponibles != null ? ingredientesDisponibles : new ArrayList<>();
+    }
 }

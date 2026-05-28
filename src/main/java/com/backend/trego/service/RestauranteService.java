@@ -1,8 +1,11 @@
 package com.backend.trego.service;
 
+import com.backend.trego.entity.Ingrediente;
+import com.backend.trego.entity.Plato;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOFirma;
+import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.exception.SinProductoException;
@@ -67,6 +70,29 @@ public class RestauranteService {
     public DTORestaurante obtenerRestaurante(String restauranteId) {
         Restaurante restaurante = buscarRestaurante(restauranteId);
         return toDTO(restaurante);
+    }
+
+    public List<DTOIngrediente> obtenerIngredientesDisponibles() {
+        Integer id = currentUserService.getCurrentId();
+        Restaurante restaurante = restauranteRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + id));
+        return restaurante.getIngredientesDisponibles().stream()
+                .map(ing -> new DTOIngrediente(ing.getIdIngrediente(), ing.getNombre(), id))
+                .collect(Collectors.toList());
+    }
+
+    public void crearIngrediente(String nombre){
+        Integer actualID = currentUserService.getCurrentId();
+        Restaurante restaurante = restauranteRepository.findById(actualID)
+                    .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + actualID));
+        if (restaurante.existeIngrediente(nombre))
+            new ResponseStatusException( HttpStatus.CONFLICT, "Ingrediente ya existe");
+
+        Ingrediente ingrediente = new Ingrediente(nombre);
+        restaurante.addIngredienteDisponible(ingrediente);
+        restauranteRepository.save(restaurante);
     }
 
     // Devuelve el restaurante autenticado actualmente (lee el id del token).

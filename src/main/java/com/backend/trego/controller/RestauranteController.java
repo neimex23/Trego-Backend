@@ -1,5 +1,6 @@
 package com.backend.trego.controller;
 
+import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.service.RestauranteService;
 
