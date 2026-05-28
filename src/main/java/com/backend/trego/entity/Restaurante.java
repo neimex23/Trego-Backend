@@ -37,7 +37,7 @@ public class Restaurante extends Usuario {
     @ElementCollection
     private List<LocalTime> horarioAtencion = new ArrayList<>();
 
-    private int radioEntrega;
+    private int radioEntrega = 10;
 
     @OneToMany(mappedBy = "restaurante", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Producto> productos = new ArrayList<>();
