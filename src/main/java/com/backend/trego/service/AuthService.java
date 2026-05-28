@@ -12,7 +12,6 @@ import com.backend.trego.repository.UsuarioRepository;
 import com.backend.trego.config.JWTUtil;
 
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;

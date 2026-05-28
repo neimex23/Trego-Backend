@@ -41,23 +41,8 @@ public class ProductosService {
                 .collect(Collectors.toList());
     }
 
-    public List<DTOIngrediente> listarIngredientes() {
-        // TODO: implementar
-        return List.of();
-    }
-
-    public DTOIngrediente crearIngrediente(String nombre) {
-        // TODO: implementar
-        return null;
-    }
-
     public DTOFirma generarFirma(String nombreArchivo, String tipoArchivo) {
         return cloudinaryService.firmar(nombreArchivo, tipoArchivo);
-    }
-
-    public DTOProducto crearProducto(DTOProducto productoDTO) {
-        // TODO: implementar
-        return null;
     }
 
     public DTOFirma firmarImagen(String nombreArchivo, String tipoArchivo) {

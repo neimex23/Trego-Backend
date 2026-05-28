@@ -1,6 +1,6 @@
 package com.backend.trego.controller;
 
-import com.backend.trego.entity.DTOs.DTOIngrediente;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.service.RestauranteService;
 
@@ -30,12 +30,20 @@ public class RestauranteController {
     // coincidencia parcial; si no, devuelve todos los habilitados.
     @GetMapping("/listar")
     @Operation(summary = "Listar restaurantes", description = "Devuelve los restaurantes habilitados. Acepta un filtro opcional por nombre.")
-    @ApiResponse(responseCode = "200", description = "Listado de restaurantes")
+    @ApiResponse(responseCode = "200", description = "Listado de restaurantes obtenido")
     public ResponseEntity<List<DTORestaurante>> listar(@RequestParam(required = false) String nombre) {
         List<DTORestaurante> restaurantes = (nombre == null || nombre.isBlank())
                 ? restauranteService.listarRestaurantes()
                 : restauranteService.buscarRestaurantePorNombre(nombre);
         return ResponseEntity.ok(restaurantes);
+    }
+
+    @GetMapping("/listarXdirreccion")
+    @Operation(summary = "Listar restaurantes dado una direccion", description = "Lista todos los restaurantes con cobertura segun la dirrecion provista")
+    @ApiResponse(responseCode = "200", description =  "Listado de restaurantes obtenido")
+    @ApiResponse(responseCode = "404", description = "Ningun restaurante obtenido")
+    public ResponseEntity<List<DTORestaurante>> listarRestaurantesDirreccion (@RequestBody DTODireccion dirreccionBusqueda){
+        return ResponseEntity.ok(restauranteService.listarRestaurantesZona(dirreccionBusqueda));
     }
 
     // Devuelve los datos del restaurante autenticado (extraídos del JWT).

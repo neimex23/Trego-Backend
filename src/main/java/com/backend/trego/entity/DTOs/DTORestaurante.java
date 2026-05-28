@@ -21,9 +21,9 @@ public class DTORestaurante {
     private String descripcion;
     private EnumCategoriaRestaurante categoria;
     private Float calificacionProm;
-    private Integer radioEntrega;
-    private Boolean habilitado;
-    private Boolean abierto;
+    private Integer radioEntrega = 10;
+    private Boolean habilitado = false;
+    private Boolean abierto = false;
     private LocalTime horaApertura;
     private LocalTime horaCierre;
     private List<DTOProducto> productos = new ArrayList<>();

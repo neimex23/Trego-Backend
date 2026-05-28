@@ -14,8 +14,10 @@ import com.backend.trego.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -50,9 +52,78 @@ public class RestauranteService {
         return false;
     }
 
+        public Date actualizarHoraCierre(Date horaCierre) {
+        // TODO: implementar
+        return null;
+    }
+
     public List<DTORestaurante> listarRestaurantesZona(DTODireccion direccion) {
-        // TODO: implementar (filtrado por zona/dirección)
-        return List.of();
+
+        List<DTORestaurante> restaurantesHabilitados = listarRestaurantes();
+        if (restaurantesHabilitados.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "No hay restaurantes habilitados"
+            );
+        }
+
+        double latitud = direccion.getLatitud();
+        double longitud = direccion.getLongitud();
+
+        List<DTORestaurante> restaurantesFiltro = new ArrayList<>();
+
+        for (DTORestaurante dtoRestaurante : restaurantesHabilitados) {
+
+            DTODireccion direccionResto = dtoRestaurante.getDireccion();
+
+            double latitudResto = direccionResto.getLatitud();
+            double longitudResto = direccionResto.getLongitud();
+
+            double radioEntrega = dtoRestaurante.getRadioEntrega(); // en KM
+
+            double distancia = calcularDistanciaKm(
+                    latitud,
+                    longitud,
+                    latitudResto,
+                    longitudResto
+            );
+
+            if (distancia <= radioEntrega) {
+                restaurantesFiltro.add(dtoRestaurante);
+            }
+        }
+
+        if (restaurantesFiltro.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "No hay restaurantes en la zona"
+            );
+        }
+
+        return restaurantesFiltro;
+    }
+
+    private double calcularDistanciaKm(
+        double lat1,
+        double lon1,
+        double lat2,
+        double lon2) {
+
+        final int RADIO_TIERRA_KM = 6371;
+
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+
+        double a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                        + Math.cos(Math.toRadians(lat1))
+                        * Math.cos(Math.toRadians(lat2))
+                        * Math.sin(dLon / 2)
+                        * Math.sin(dLon / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return RADIO_TIERRA_KM * c;
     }
 
     // Lista los restaurantes registrados y habilitados, en su forma pública (sin
@@ -61,10 +132,6 @@ public class RestauranteService {
         return restauranteRepository.findRestaurantesHabilitados().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
-    }
-
-    public void verificarHoraCierre() {
-        // TODO: implementar
     }
 
     public DTORestaurante obtenerRestaurante(String restauranteId) {
@@ -173,20 +240,6 @@ public class RestauranteService {
             return !ahora.isBefore(apertura) && !ahora.isAfter(cierre);
         }
         return !ahora.isBefore(apertura) || !ahora.isAfter(cierre);
-    }
-
-    public Date actualizarHoraCierre(Date horaCierre) {
-        // TODO: implementar
-        return null;
-    }
-
-    public void crearRestaurante(DTORestaurante restauranteDTO) {
-        // TODO: implementar
-    }
-
-    public DTORestaurante verRestauranteConProducto(String restauranteId) {
-        // TODO: implementar
-        return null;
     }
 
     public List<DTORestaurante> buscarRestaurantePorNombre(String nombre) {

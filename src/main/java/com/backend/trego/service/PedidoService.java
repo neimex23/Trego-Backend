@@ -171,10 +171,6 @@ public class PedidoService {
         return null;
     }
 
-    public void pagoConfirmado(DTOPreferenciaMP preferenciaDTO) {
-        // TODO: implementar
-    }
-
     
     @Transactional
     public DTOPedido reembolsarPedido(DTOPedido pedidoDTO) {
