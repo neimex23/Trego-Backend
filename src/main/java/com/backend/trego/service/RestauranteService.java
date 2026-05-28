@@ -74,7 +74,7 @@ public class RestauranteService {
 
     public List<DTOIngrediente> obtenerIngredientesDisponibles() {
         Integer id = currentUserService.getCurrentId();
-        Restaurante restaurante = restauranteRepository.findById(id)
+        Restaurante restaurante = restauranteRepository.findRestauranteById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + id));
         return restaurante.getIngredientesDisponibles().stream()
@@ -84,7 +84,7 @@ public class RestauranteService {
 
     public void crearIngrediente(String nombre){
         Integer actualID = currentUserService.getCurrentId();
-        Restaurante restaurante = restauranteRepository.findById(actualID)
+        Restaurante restaurante = restauranteRepository.findRestauranteById(actualID)
                     .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + actualID));
         if (restaurante.existeIngrediente(nombre))
