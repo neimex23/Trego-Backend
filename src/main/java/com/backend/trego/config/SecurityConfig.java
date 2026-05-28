@@ -1,5 +1,6 @@
 package com.backend.trego.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,12 +13,32 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+
+    @Value("${app.cors.allowed-origins}")
+    private List<String> corsAllowedOrigins;
+
+    @Value("${app.cors.allowed-methods}")
+    private List<String> corsAllowedMethods;
+
+    @Value("${app.cors.allowed-headers}")
+    private List<String> corsAllowedHeaders;
+
+    @Value("${app.cors.allow-credentials:true}")
+    private boolean corsAllowCredentials;
+
+    @Value("${app.cors.max-age:3600}")
+    private long corsMaxAge;
 
     public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
@@ -36,6 +57,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
@@ -73,5 +95,20 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Valores configurables desde application.properties (app.cors.*)
+        configuration.setAllowedOrigins(corsAllowedOrigins);
+        configuration.setAllowedMethods(corsAllowedMethods);
+        configuration.setAllowedHeaders(corsAllowedHeaders);
+        configuration.setAllowCredentials(corsAllowCredentials);
+        configuration.setMaxAge(corsMaxAge);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

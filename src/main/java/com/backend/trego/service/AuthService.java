@@ -9,8 +9,6 @@ import com.backend.trego.entity.DTOs.DTOLoginResponse;
 import com.backend.trego.entity.DTOs.DTOUsuario; 
 
 import com.backend.trego.repository.UsuarioRepository;
-import com.backend.trego.repository.AdministradorRepository;
-import com.backend.trego.repository.RestauranteRepository;
 import com.backend.trego.config.JWTUtil;
 
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,24 +27,18 @@ import java.util.Optional;
 @Service
 public class AuthService {
 
-    private final AdministradorRepository adminRepo;
-    private final RestauranteRepository restauranteRepo;
     private final PasswordEncoder passwordEncoder;
     private final JWTUtil jwtUtil;
-    
-    private final UsuarioRepository usuarioRepository; 
+
+    private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
 	private final TokenBlacklistService tokenBlacklistService;
 
-    public AuthService(AdministradorRepository adminRepo, 
-                       RestauranteRepository restauranteRepo, 
-                       PasswordEncoder passwordEncoder, 
-                       JWTUtil jwtUtil, 
-                       UsuarioRepository usuarioRepository, 
+    public AuthService(PasswordEncoder passwordEncoder,
+                       JWTUtil jwtUtil,
+                       UsuarioRepository usuarioRepository,
                        UsuarioService usuarioService,
                        TokenBlacklistService tokenBlacklistService) {
-        this.adminRepo = adminRepo;
-        this.restauranteRepo = restauranteRepo;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.usuarioRepository = usuarioRepository;
@@ -59,7 +51,7 @@ public class AuthService {
         String email = loginDTO.getEmail();
         String password = loginDTO.getPassword();
         
-        Optional<Administrador> adminOpt = adminRepo.findByEmail(email);
+        Optional<Administrador> adminOpt = usuarioRepository.findAdministradorByEmail(email);
         if (adminOpt.isPresent()) {
             Administrador admin = adminOpt.get();
             
@@ -71,7 +63,7 @@ public class AuthService {
             return new DTOLoginResponse(token, admin.getRol().name(), admin.getNombre(), admin.getEmail());
         }
 
-        Optional<Restaurante> restOpt = restauranteRepo.findByEmail(email);
+        Optional<Restaurante> restOpt = usuarioRepository.findRestauranteByEmail(email);
         if (restOpt.isPresent()) {
             Restaurante rest = restOpt.get();
             if (!passwordEncoder.matches(password, rest.getPassword())) {

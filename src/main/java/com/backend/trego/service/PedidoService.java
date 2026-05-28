@@ -14,9 +14,8 @@ import com.backend.trego.entity.DTOs.DTOProductoPedido;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.exception.RestauranteCerradoException;
-import com.backend.trego.repository.ClienteRepository;
 import com.backend.trego.repository.ProductoRepository;
-import com.backend.trego.repository.RestauranteRepository;
+import com.backend.trego.repository.UsuarioRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,23 +32,20 @@ public class PedidoService {
     private final PagoService pagoService;
     private final OrdenesService ordenesService;
     private final CurrentUserService currentUserService;
-    private final ClienteRepository clienteRepository;
-    private final RestauranteRepository restauranteRepository;
+    private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
 
     public PedidoService(RestauranteService restauranteService,
                          PagoService pagoService,
                          OrdenesService ordenesService,
                          CurrentUserService currentUserService,
-                         ClienteRepository clienteRepository,
-                         RestauranteRepository restauranteRepository,
+                         UsuarioRepository usuarioRepository,
                          ProductoRepository productoRepository) {
         this.restauranteService = restauranteService;
         this.pagoService = pagoService;
         this.ordenesService = ordenesService;
         this.currentUserService = currentUserService;
-        this.clienteRepository = clienteRepository;
-        this.restauranteRepository = restauranteRepository;
+        this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
     }
 
@@ -95,11 +91,11 @@ public class PedidoService {
                     "El restaurante " + restauranteDTO.getNombre() + " está cerrado en este momento");
         }
 
-        Cliente cliente = clienteRepository.findByUidCliente(currentUserService.getCurrentUid())
+        Cliente cliente = usuarioRepository.findClienteByUidCliente(currentUserService.getCurrentUid())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Cliente no encontrado"));
 
-        Restaurante restaurante = restauranteRepository.findById(restauranteDTO.getIdRestaurante())
+        Restaurante restaurante = usuarioRepository.findRestauranteById(restauranteDTO.getIdRestaurante())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante no encontrado"));
 
