@@ -46,3 +46,12 @@ admin.password=
 cloudinary.cloud-name=tu-cloud-name
 cloudinary.api-key=tu-api-key
 cloudinary.api-secret=tu-api-secret
+
+# ===== CORS =====
+# Origenes permitidos para llamadas desde el frontend. Lista separada por comas.
+# En produccion agregar el dominio publico (ej. https://trego.app).
+app.cors.allowed-origins=http://localhost:5173
+app.cors.allowed-methods=GET,POST,PUT,PATCH,DELETE,OPTIONS
+app.cors.allowed-headers=Authorization,Content-Type,Accept
+app.cors.allow-credentials=true
+app.cors.max-age=3600
