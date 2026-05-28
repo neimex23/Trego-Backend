@@ -9,7 +9,7 @@ import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.exception.SinProductoException;
-import com.backend.trego.repository.RestauranteRepository;
+import com.backend.trego.repository.UsuarioRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,13 +25,13 @@ import java.util.stream.Collectors;
 @Service
 public class RestauranteService {
 
-    private final RestauranteRepository restauranteRepository;
+    private final UsuarioRepository restauranteRepository;
     private final CurrentUserService currentUserService;
     private final ProductosService productosService;
     private final CloudinaryService cloudinaryService;
     private final NotificacionesService notificacionesService;
 
-    public RestauranteService(RestauranteRepository restauranteRepository, CurrentUserService currentUserService, ProductosService productosService,
+    public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService, ProductosService productosService,
             CloudinaryService cloudinaryService, NotificacionesService notificacionesService) {
         this.restauranteRepository = restauranteRepository;
         this.currentUserService = currentUserService;
@@ -58,7 +58,7 @@ public class RestauranteService {
     // Lista los restaurantes registrados y habilitados, en su forma pública (sin
     // password ni menú). Es el catálogo que ve el cliente.
     public List<DTORestaurante> listarRestaurantes() {
-        return restauranteRepository.findByHabilitadoTrue().stream()
+        return restauranteRepository.findRestaurantesHabilitados().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -98,7 +98,7 @@ public class RestauranteService {
     // Devuelve el restaurante autenticado actualmente (lee el id del token).
     public DTORestaurante obtenerRestauranteActual() {
         Integer id = currentUserService.getCurrentId();
-        Restaurante restaurante = restauranteRepository.findById(id)
+        Restaurante restaurante = restauranteRepository.findRestauranteById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + id));
         return toDTO(restaurante);
@@ -107,7 +107,7 @@ public class RestauranteService {
     // Carga la entidad o devuelve 404 si no existe.
     public Restaurante buscarRestaurante(String restauranteId) {
         Integer id = parseId(restauranteId);
-        return restauranteRepository.findById(id)
+        return restauranteRepository.findRestauranteById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante no encontrado con id: " + restauranteId));
     }
@@ -193,7 +193,7 @@ public class RestauranteService {
         if (nombre == null || nombre.isBlank()) {
             return listarRestaurantes();
         }
-        return restauranteRepository.findByHabilitadoTrueAndNombreContainingIgnoreCase(nombre.trim()).stream()
+        return restauranteRepository.findRestaurantesHabilitadosPorNombre(nombre.trim()).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -271,7 +271,7 @@ public class RestauranteService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: se requieren privilegios de administrador");
         }
 
-        List<Restaurante> restaurantesNoHabilitados = restauranteRepository.findByHabilitadoFalse();
+        List<Restaurante> restaurantesNoHabilitados = restauranteRepository.findRestaurantesNoHabilitados();
         return restaurantesNoHabilitados.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

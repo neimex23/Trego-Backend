@@ -10,19 +10,19 @@ import org.springframework.web.server.ResponseStatusException;
 import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.DTOs.DTOCliente;
 import com.backend.trego.entity.Enums.EnumRoles;
-import com.backend.trego.repository.ClienteRepository;
+import com.backend.trego.repository.UsuarioRepository;
 
 @Service
 public class ClienteService {
 
-    private final ClienteRepository repo;
+    private final UsuarioRepository repo;
 
-    public ClienteService(ClienteRepository repo) {
+    public ClienteService(UsuarioRepository repo) {
         this.repo = repo;
     }
 
     public List<Cliente> listar() {
-        return repo.findAll();
+        return repo.findAllClientes();
     }
 
     public Cliente guardar(Cliente cliente) {
@@ -58,20 +58,20 @@ public class ClienteService {
     }
 
     public Optional<Cliente> obtener(Integer id) {
-        return repo.findById(id);
+        return repo.findClienteById(id);
     }
 
     public Cliente obtenerOFallar(Integer id) {
-        return repo.findById(id)
+        return repo.findClienteById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
     }
 
     public Optional<Cliente> buscarPorEmail(String email) {
-        return repo.findByEmail(email);
+        return repo.findClienteByEmail(email);
     }
 
     public Optional<Cliente> buscarPorUid(String uidCliente) {
-        return repo.findByUidCliente(uidCliente);
+        return repo.findClienteByUidCliente(uidCliente);
     }
 
     public Cliente actualizar(Integer id, Cliente datos) {
@@ -88,7 +88,7 @@ public class ClienteService {
     }
 
     public void eliminar(Integer id) {
-        if (!repo.existsById(id)) {
+        if (!repo.existsClienteById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado");
         }
         repo.deleteById(id);
