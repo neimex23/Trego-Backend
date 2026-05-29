@@ -75,6 +75,9 @@ public class RestauranteService {
         for (DTORestaurante dtoRestaurante : restaurantesHabilitados) {
 
             DTODireccion direccionResto = dtoRestaurante.getDireccion();
+            if (direccionResto == null) {
+                continue;
+            }
 
             double latitudResto = direccionResto.getLatitud();
             double longitudResto = direccionResto.getLongitud();
@@ -214,6 +217,7 @@ public class RestauranteService {
                 restaurante.getTelefono(),
                 restaurante.getFotoPortada(),
                 restaurante.getFotoPerfil(),
+                restaurante.getDireccion(),
                 restaurante.getDescripcion(),
                 restaurante.getCategoria(),
                 restaurante.getCalificacionProm(),
