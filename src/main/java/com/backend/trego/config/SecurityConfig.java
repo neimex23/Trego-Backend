@@ -61,6 +61,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // /error: permitir para que el front pueda leer los mensajes de error
+                .requestMatchers("/error").permitAll()
                 // Auth: test-auth debe estar autenticado (va ANTES del permitAll)
                 .requestMatchers("/api/auth/test-auth").authenticated()
                 .requestMatchers("/api/auth/cerrarSesion").authenticated()

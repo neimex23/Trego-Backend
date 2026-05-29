@@ -38,7 +38,7 @@ public class RestauranteController {
         return ResponseEntity.ok(restaurantes);
     }
 
-    @GetMapping("/listarXdirreccion")
+    @PostMapping("/listarXdirreccion")
     @Operation(summary = "Listar restaurantes dado una direccion", description = "Lista todos los restaurantes con cobertura segun la dirrecion provista")
     @ApiResponse(responseCode = "200", description =  "Listado de restaurantes obtenido")
     @ApiResponse(responseCode = "404", description = "Ningun restaurante obtenido")
