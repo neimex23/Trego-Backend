@@ -77,6 +77,14 @@ public class OrdenesService {
         repo.deleteById(id);
     }
 
+    public List<Pedido> listarPedidos(Integer idRestaurante, EnumEstadoPedido estado) {
+        if (estado != null) {
+            return repo.findByRestauranteIdUsuarioAndEstado(idRestaurante, estado);
+        } else {
+            return repo.findByRestauranteIdUsuario(idRestaurante);
+        }
+    }
+
     @Transactional
     public int cancelarPedidosExpirados() {
         List<Pedido> expirados = repo.findByFechaExpiracionNotNullAndFechaExpiracionBefore(LocalDateTime.now());

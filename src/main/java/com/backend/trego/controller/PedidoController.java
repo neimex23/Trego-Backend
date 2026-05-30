@@ -34,12 +34,12 @@ public class PedidoController {
         this.restauranteService = restauranteService;
     }
 
-    @GetMapping
+    @GetMapping("/listarPedidos")
     @Operation(summary = "Listar pedidos del restaurante",
-            description = "Devuelve la lista de pedidos del restaurante autenticado, excluyendo los pendientes. Permite aplicar un filtro opcional por estado y por producto.")
+            description = "Devuelve la lista de pedidos del restaurante autenticado, Si no se establece estado los regresados por defecto son los 'Pagado' Permite aplicar un filtro opcional por estado y por producto.")
     @ApiResponse(responseCode = "200", description = "Lista de pedidos obtenida correctamente")
     public ResponseEntity<List<DTOPedido>> listarPedidos(
-            @Parameter(description = "Filtro por estado del pedido (ej: en preparacion, en camino, entregado, cancelado)") @RequestParam(required = false) EnumEstadoPedido estado,
+            @Parameter(description = "Filtro por estado del pedido") @RequestParam(required = false) EnumEstadoPedido estado,
             @Parameter(description = "Filtro por ID de un producto específico") @RequestParam(required = false) Integer idProducto) {
         return ResponseEntity.ok(pedidoService.listarPedidosConfirmados(idProducto, estado));
     }
