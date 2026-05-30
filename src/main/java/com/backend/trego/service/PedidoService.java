@@ -164,6 +164,14 @@ public class PedidoService {
         return stream.collect(Collectors.toList());
     }
 
+    // Método auxiliar privado para procesar el filtro por producto de forma limpia
+    private List<DTOPedido> filtrarPorProductos(List<DTOPedido> lista, Integer idProducto) {
+        return lista.stream()
+                .filter(pedido -> pedido.getProductos() != null && pedido.getProductos().stream()
+                        .anyMatch(linea -> idProducto.equals(linea.getIdProducto())))
+                .collect(Collectors.toList());
+    }
+
     public DTOPedido actualizarEstadoPedido(DTOPedido pedidoDTO, EnumEstadoPedido estado) {
         // TODO: implementar
         return null;

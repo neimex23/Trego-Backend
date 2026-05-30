@@ -39,9 +39,19 @@ public class PedidoController {
             description = "Devuelve la lista de pedidos del restaurante autenticado, Si no se establece estado los regresados por defecto son los 'Pagado' Permite aplicar un filtro opcional por estado y por producto.")
     @ApiResponse(responseCode = "200", description = "Lista de pedidos obtenida correctamente")
     public ResponseEntity<List<DTOPedido>> listarPedidos(
+<<<<<<< HEAD
             @Parameter(description = "Filtro por estado del pedido") @RequestParam(required = false) EnumEstadoPedido estado,
             @Parameter(description = "Filtro por ID de un producto específico") @RequestParam(required = false) Integer idProducto) {
         return ResponseEntity.ok(pedidoService.listarPedidosConfirmados(idProducto, estado));
+=======
+            @Parameter(description = "Filtro por estado del pedido (ej: en preparacion, en camino, entregado, cancelado)") @RequestParam(required = false) String estado,
+            @Parameter(description = "Filtro por ID de un producto específico") @RequestParam(required = false) Integer idProducto,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+
+        List<DTOPedido> pedidos = pedidoService.listarPedidosConfirmados(idProducto, estado);
+        
+        return ResponseEntity.ok(pedidos);
+>>>>>>> bc1e3c5ec08c54fb0c0583029df601f1dd206c2e
     }
 
     @PostMapping("/confirmar")
