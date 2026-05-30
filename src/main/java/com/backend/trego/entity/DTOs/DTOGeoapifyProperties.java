@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DTOGeoapifyProperties {
 
+    // --- Campos de geocoding (reverse geocode) ---
     @JsonProperty("street")
     private String calle;
 
@@ -12,6 +13,15 @@ public class DTOGeoapifyProperties {
 
     @JsonProperty("suburb")
     private String barrio;
+
+    // --- Campos de routing ---
+    // distancia en metros
+    @JsonProperty("distance")
+    private Double distancia;
+
+    // tiempo estimado en segundos
+    @JsonProperty("time")
+    private Double tiempo;
 
     public String getCalle() {
         return calle;
@@ -23,5 +33,13 @@ public class DTOGeoapifyProperties {
 
     public String getBarrio() {
         return barrio;
+    }
+
+    public Double getDistancia() {
+        return distancia;
+    }
+
+    public Double getTiempo() {
+        return tiempo;
     }
 }
