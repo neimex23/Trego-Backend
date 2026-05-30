@@ -1,6 +1,6 @@
 package com.backend.trego.controller;
 
-import com.backend.trego.entity.DTOs.DTOConfirmarPedidoRequest;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
 import com.backend.trego.exception.SinProductoException;
@@ -37,11 +37,8 @@ public class PedidoController {
             description = "Recibe el carrito, la dirección de entrega y el restaurante. Persiste el pedido en estado pendiente y devuelve la preferencia de pago de MercadoPago con la URL de checkout.")
     @ApiResponse(responseCode = "200", description = "Preferencia de pago generada correctamente")
     @ApiResponse(responseCode = "400", description = "Carrito vacío, restaurante inválido o dirección no asociada al cliente")
-    public ResponseEntity<DTOPreferenciaMP> confirmarPedido(@RequestBody DTOConfirmarPedidoRequest request) {
-        DTOPreferenciaMP preferencia = pedidoService.confirmarPedido(
-                request.getCarrito(),
-                request.getDireccion(),
-                String.valueOf(request.getRestauranteId()));
+    public ResponseEntity<DTOPreferenciaMP> confirmarPedido(@RequestBody DTODireccion dirreccionEnvio) {
+        DTOPreferenciaMP preferencia = pedidoService.confirmarPedido(dirreccionEnvio);
         return ResponseEntity.ok(preferencia);
     }
 

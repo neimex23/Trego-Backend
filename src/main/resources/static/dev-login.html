@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Trego - Login Firebase (DEV)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+    h2 { font-size: 1rem; margin: 0 0 0.5rem; }
+    .sub { color: #666; margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .card { border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background: #fafafa; }
+    button { font: inherit; padding: 0.5rem 0.9rem; border: 1px solid #444; background: #fff; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #f0f0f0; }
+    button.primary { background: #1a73e8; color: white; border-color: #1a73e8; }
+    button.primary:hover { background: #1557b0; }
+    textarea, input[type="text"] { width: 100%; font-family: ui-monospace, Consolas, monospace; font-size: 0.8rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    textarea { min-height: 80px; }
+    label { display: block; font-weight: 600; margin: 0.5rem 0 0.25rem; font-size: 0.85rem; }
+    .row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .ok { color: #1a7a1a; font-size: 0.85rem; }
+    .err { color: #b00020; white-space: pre-wrap; font-size: 0.85rem; }
+    code.inline { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 0.85em; }
+    p { font-size: 0.9rem; line-height: 1.45; }
+    .step-num { display: inline-block; background: #1a73e8; color: white; width: 22px; height: 22px; border-radius: 50%; text-align: center; font-size: 0.8rem; line-height: 22px; margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Trego - Login Firebase (DEV)</h1>
+  <p class="sub">Página solo para pruebas locales. Login real con Google -> idToken de Firebase -> JWT de Trego para usar en Swagger.</p>
+
+  <div class="card">
+    <h2><span class="step-num">1</span>Configurar Firebase Web SDK</h2>
+    <p style="margin-top: 0.25rem;">Si no hay una <em>Web App</em> registrada en Firebase, registrala en Console -> Project Settings -> Your apps -> Web. Copiá el objeto <code class="inline">firebaseConfig</code> y pegalo abajo. El config se guarda en <code class="inline">localStorage</code> para no tener que pegarlo cada vez.</p>
+    <label>firebaseConfig (JSON)</label>
+    <textarea id="firebaseConfig">{
+  "apiKey": "AIzaSy...REEMPLAZAR...",
+  "authDomain": "trego-finalproject.firebaseapp.com",
+  "projectId": "trego-finalproject",
+  "storageBucket": "trego-finalproject.appspot.com",
+  "messagingSenderId": "REEMPLAZAR",
+  "appId": "1:REEMPLAZAR:web:REEMPLAZAR"
+}</textarea>
+    <div class="row" style="margin-top: 0.5rem;">
+      <button onclick="initFirebase()">Inicializar Firebase</button>
+      <button onclick="saveConfig()">Guardar config</button>
+      <span id="initStatus"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-num">2</span>Login con Google</h2>
+    <div class="row">
+      <button class="primary" onclick="loginGoogle()">Iniciar sesion con Google</button>
+      <button onclick="signOutFb()">Cerrar sesion Firebase</button>
+    </div>
+    <label style="margin-top: 1rem;">idToken (Firebase)</label>
+    <textarea id="idToken" readonly placeholder="Aparece aca tras el login..."></textarea>
+    <div class="row" style="margin-top: 0.5rem;">
+      <button onclick="copyField('idToken')">Copiar idToken</button>
+      <span id="loginStatus"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-num">3</span>Canjear por JWT de Trego</h2>
+    <p style="margin-top: 0.25rem;">Envia el idToken a <code class="inline">POST /api/auth/google</code>.</p>
+    <div class="row">
+      <label style="margin: 0; min-width: 100px;">Backend URL</label>
+      <input type="text" id="backendUrl" value="http://localhost:8080" style="flex: 1;">
+    </div>
+    <div class="row" style="margin-top: 0.5rem;">
+      <button class="primary" onclick="exchangeForJwt()">Canjear idToken por JWT</button>
+      <span id="exchangeStatus"></span>
+    </div>
+    <label style="margin-top: 1rem;">JWT de Trego</label>
+    <textarea id="tregoJwt" readonly placeholder="Aparece aca tras canjear..."></textarea>
+    <div class="row" style="margin-top: 0.5rem;">
+      <button onclick="copyField('tregoJwt')">Copiar JWT</button>
+      <button onclick="openSwagger()">Abrir Swagger UI</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-num">4</span>Usar en Swagger</h2>
+    <p style="margin: 0;">Abri <code class="inline">/swagger-ui/index.html</code>, click en el boton <strong>Authorize</strong>, pega el JWT (sin el prefijo <code class="inline">Bearer</code>), Authorize -> Close.</p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
+    let app, auth;
+
+    // Restaurar config guardado
+    const saved = localStorage.getItem("trego_firebase_config");
+    if (saved) document.getElementById("firebaseConfig").value = saved;
+
+    window.saveConfig = function () {
+      localStorage.setItem("trego_firebase_config", document.getElementById("firebaseConfig").value);
+      setStatus("initStatus", "Config guardado en localStorage.", "ok");
+    };
+
+    window.initFirebase = function () {
+      try {
+        const cfg = JSON.parse(document.getElementById("firebaseConfig").value);
+        app = initializeApp(cfg);
+        auth = getAuth(app);
+        setStatus("initStatus", "Firebase inicializado para projectId=" + cfg.projectId, "ok");
+      } catch (e) {
+        setStatus("initStatus", "Error: " + e.message, "err");
+      }
+    };
+
+    window.loginGoogle = async function () {
+      if (!auth) { alert("Primero inicializa Firebase."); return; }
+      try {
+        const result = await signInWithPopup(auth, new GoogleAuthProvider());
+        const idToken = await result.user.getIdToken();
+        document.getElementById("idToken").value = idToken;
+        setStatus("loginStatus", "Logueado como " + result.user.email, "ok");
+      } catch (e) {
+        document.getElementById("idToken").value = "";
+        setStatus("loginStatus", "Error: " + (e.code || "") + " - " + e.message, "err");
+      }
+    };
+
+    window.signOutFb = async function () {
+      if (auth) await fbSignOut(auth);
+      document.getElementById("idToken").value = "";
+      document.getElementById("tregoJwt").value = "";
+      setStatus("loginStatus", "Sesion Firebase cerrada.", "ok");
+    };
+
+    window.exchangeForJwt = async function () {
+      const idToken = document.getElementById("idToken").value.trim();
+      const backend = document.getElementById("backendUrl").value.trim().replace(/\/$/, "");
+      if (!idToken) { setStatus("exchangeStatus", "Falta el idToken. Hacé login primero.", "err"); return; }
+      try {
+        const res = await fetch(backend + "/api/auth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken })
+        });
+        const body = await res.text();
+        if (!res.ok) { setStatus("exchangeStatus", "HTTP " + res.status + ": " + body, "err"); return; }
+        let data;
+        try { data = JSON.parse(body); } catch { data = { jwtToken: body }; }
+        const jwt = data.jwtToken || data.token || data.jwt || JSON.stringify(data);
+        document.getElementById("tregoJwt").value = jwt;
+        setStatus("exchangeStatus", "OK - rol=" + (data.rol || "?") + " nombre=" + (data.nombre || "?"), "ok");
+      } catch (e) {
+        setStatus("exchangeStatus", "Error: " + e.message, "err");
+      }
+    };
+
+    window.copyField = function (id) {
+      const el = document.getElementById(id);
+      el.select();
+      navigator.clipboard.writeText(el.value);
+    };
+
+    window.openSwagger = function () {
+      const backend = document.getElementById("backendUrl").value.trim().replace(/\/$/, "");
+      window.open(backend + "/swagger-ui/index.html", "_blank");
+    };
+
+    function setStatus(id, msg, cls) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = cls;
+    }
+  </script>
+</body>
+</html>

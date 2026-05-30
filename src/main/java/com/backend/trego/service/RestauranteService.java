@@ -412,9 +412,9 @@ public class RestauranteService {
         }
 
         restaurante.setHabilitado(true);
-        Restaurante guardado = restauranteRepository.save(restaurante);
+        restauranteRepository.save(restaurante);
 
-        notificacionesService.notificarRestauranteHabilitado(guardado);
+        notificacionesService.notificarRestauranteHabilitado(restaurante);
     }
 
     public void noHabilitarRestaurante(Integer restauranteId, String motivo){

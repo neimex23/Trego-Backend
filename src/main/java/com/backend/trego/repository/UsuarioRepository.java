@@ -19,15 +19,12 @@ import com.backend.trego.entity.Enums.EnumCategoriaRestaurante;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
-    // ---- Usuario (base) ----
-    Optional<Usuario> findByFirebaseUid(String firebaseUid);
-
     boolean existsByEmail(String email);
 
     Optional<Usuario> findByEmail(String email);
 
-    @Query("SELECT d FROM Cliente c JOIN c.direcciones d WHERE c.firebaseUid = :uid")
-    List<DTODireccion> findDireccionesByFirebaseUid(@Param("uid") String uid);
+    @Query("SELECT d FROM Cliente c JOIN c.direcciones d WHERE c.uidCliente = :uid")
+    List<DTODireccion> findDireccionesByUid(@Param("uid") String uid);
 
     // ---- Administrador ----
     @Query("SELECT a FROM Administrador a WHERE a.email = :email")
@@ -51,6 +48,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Cliente c WHERE c.idUsuario = :id")
     boolean existsClienteById(@Param("id") Integer id);
+
+    @Query("Select c FROM Cliente c WHERE c.uidCliente = :uidCliente")
+    Optional<Cliente> findByUidCliente(@Param("uidCliente") String uidCliente);
 
     // ---- Restaurante ----
     @Query("SELECT r FROM Restaurante r WHERE r.email = :email")

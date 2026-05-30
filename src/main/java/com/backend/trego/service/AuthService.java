@@ -3,6 +3,7 @@ package com.backend.trego.service;
 import com.backend.trego.entity.Usuario;
 import com.backend.trego.entity.Enums.EnumRoles;
 import com.backend.trego.entity.Administrador;
+import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTOLogin;
 import com.backend.trego.entity.DTOs.DTOLoginResponse;
@@ -22,6 +23,7 @@ import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.FirebaseAuthException;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -98,7 +100,7 @@ public class AuthService {
                 fotoPerfil = decodedToken.getPicture();
             }
 
-            Optional<Usuario> usuarioOpt = usuarioRepository.findByFirebaseUid(uid);
+            Optional<Cliente> usuarioOpt = usuarioRepository.findByUidCliente(uid);
             Usuario usuario;
 
             if (usuarioOpt.isEmpty()) {
@@ -119,7 +121,7 @@ public class AuthService {
             }
 
             int idUsuarioInt = usuario.getIdUsuario();
-            String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), usuario.getFirebaseUid(), idUsuarioInt);
+            String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), uid, idUsuarioInt);
             
             return new DTOLoginResponse(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
 
@@ -135,7 +137,7 @@ public class AuthService {
             String uid = decodedToken.getUid();
             String telefono = (String) decodedToken.getClaims().get("phone_number");
 
-            Optional<Usuario> usuarioOpt = usuarioRepository.findByFirebaseUid(uid);
+            Optional<Cliente> usuarioOpt = usuarioRepository.findByUidCliente(uid);
             Usuario usuario;
 
             if (usuarioOpt.isEmpty()) {
@@ -154,10 +156,10 @@ public class AuthService {
                 usuario = usuarioOpt.get();
             }
 
-            String identificador = usuario.getEmail() != null ? usuario.getEmail() : usuario.getFirebaseUid();
+            String identificador = usuario.getEmail() != null ? usuario.getEmail() : uid;
             int idUsuarioInt = usuario.getIdUsuario();
             
-            String jwt = jwtUtil.generateToken(identificador, usuario.getRol().name(), usuario.getFirebaseUid(), idUsuarioInt);
+            String jwt = jwtUtil.generateToken(identificador, usuario.getRol().name(), uid, idUsuarioInt);
             
             return new DTOLoginResponse(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
 
@@ -193,7 +195,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El UID de Firebase es obligatorio");
         }
 
-        Optional<Usuario> existente = usuarioRepository.findByFirebaseUid(dto.getUid());
+        Optional<Cliente> existente = usuarioRepository.findByUidCliente(dto.getUid());
         if (existente.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El cliente ya se encuentra registrado");
         }

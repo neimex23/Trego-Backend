@@ -11,7 +11,7 @@ public class DTOProductoSimplificado {
     private Integer idProducto;
     private Integer idRestaurante;
     private String nombre;
-    private float precio;
+    private Float precio;
     private String urlImagen;
     private Float precioOferta;
     private List<DTOIngrediente> ingredientes = new ArrayList<>();
@@ -28,7 +28,7 @@ public class DTOProductoSimplificado {
         return nombre;
     }
 
-    public float getPrecio() {
+    public Float getPrecio() {
         return precio;
     }
 
