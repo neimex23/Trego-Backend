@@ -3,6 +3,7 @@ package com.backend.trego.controller;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
+import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.service.PedidoService;
 import com.backend.trego.service.RestauranteService;
@@ -38,9 +39,9 @@ public class PedidoController {
             description = "Devuelve la lista de pedidos del restaurante autenticado, excluyendo los pendientes. Permite aplicar un filtro opcional por estado y por producto.")
     @ApiResponse(responseCode = "200", description = "Lista de pedidos obtenida correctamente")
     public ResponseEntity<List<DTOPedido>> listarPedidos(
-            @Parameter(description = "Filtro por estado del pedido (ej: en preparacion, en camino, entregado, cancelado)") @RequestParam(required = false) String estado,
+            @Parameter(description = "Filtro por estado del pedido (ej: en preparacion, en camino, entregado, cancelado)") @RequestParam(required = false) EnumEstadoPedido estado,
             @Parameter(description = "Filtro por ID de un producto específico") @RequestParam(required = false) Integer idProducto) {
-        return ResponseEntity.ok(pedidoService.listarPedidosConfirmados(estado, idProducto));
+        return ResponseEntity.ok(pedidoService.listarPedidosConfirmados(idProducto, estado));
     }
 
     @PostMapping("/confirmar")

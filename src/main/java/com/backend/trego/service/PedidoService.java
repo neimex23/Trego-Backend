@@ -143,8 +143,9 @@ public class PedidoService {
                 d.getEsquina(), d.getLatitud(), d.getLongitud());
     }
 
-    public List<DTOPedido> listarPedidosConfirmados(String restauranteId) {
-        // TODO: implementar
+    public List<DTOPedido> listarPedidosConfirmados(EnumEstadoPedido estado, Integer idProducto) {
+        var restauranteId = currentUserService.getCurrentId();
+
         return List.of();
     }
 
