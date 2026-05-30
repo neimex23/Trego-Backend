@@ -11,6 +11,7 @@ import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.repository.UsuarioRepository;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -32,14 +33,17 @@ public class RestauranteService {
     private final ProductosService productosService;
     private final CloudinaryService cloudinaryService;
     private final NotificacionesService notificacionesService;
+    private final GeoapifyService geoapifyService;
 
-    public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService, ProductosService productosService,
-            CloudinaryService cloudinaryService, NotificacionesService notificacionesService) {
+    public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService,
+            @Lazy ProductosService productosService,
+            CloudinaryService cloudinaryService, NotificacionesService notificacionesService, GeoapifyService geoapifyService) {
         this.restauranteRepository = restauranteRepository;
         this.currentUserService = currentUserService;
         this.productosService = productosService;
         this.cloudinaryService = cloudinaryService;
         this.notificacionesService = notificacionesService;
+        this.geoapifyService = geoapifyService;
     }
 
     public boolean abrirLocal(String idRestaurante, Date horaServicio) {
@@ -84,14 +88,15 @@ public class RestauranteService {
 
             double radioEntrega = dtoRestaurante.getRadioEntrega(); // en KM
 
-            double distancia = calcularDistanciaKm(
+            double distancia = geoapifyService.calcularDistanciaKm(
                     latitud,
                     longitud,
                     latitudResto,
                     longitudResto
             );
 
-            if (distancia <= radioEntrega) {
+            // Si Geoapify no pudo calcular la ruta, descartamos el restaurante.
+            if (distancia >= 0 && distancia <= radioEntrega) {
                 restaurantesFiltro.add(dtoRestaurante);
             }
         }
@@ -104,29 +109,6 @@ public class RestauranteService {
         }
 
         return restaurantesFiltro;
-    }
-
-    private double calcularDistanciaKm(
-        double lat1,
-        double lon1,
-        double lat2,
-        double lon2) {
-
-        final int RADIO_TIERRA_KM = 6371;
-
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-
-        double a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                        + Math.cos(Math.toRadians(lat1))
-                        * Math.cos(Math.toRadians(lat2))
-                        * Math.sin(dLon / 2)
-                        * Math.sin(dLon / 2);
-
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        return RADIO_TIERRA_KM * c;
     }
 
     // Lista los restaurantes registrados y habilitados, en su forma pública (sin
@@ -262,7 +244,7 @@ public class RestauranteService {
         String id = String.valueOf(restauranteId);
         Restaurante restaurante = buscarRestaurante(id);
 
-        List<DTOProducto> productos = productosService.listarProductos(id);
+        List<DTOProducto> productos = productosService.listarProductos(id, false);
 
         if (categoria != null && !categoria.isBlank()) {
             productos = aplicarFiltro(productos, categoria);

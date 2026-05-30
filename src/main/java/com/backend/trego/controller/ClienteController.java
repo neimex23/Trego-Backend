@@ -7,6 +7,7 @@ import com.backend.trego.service.ClienteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("api/clientes")
 @CrossOrigin("*")
+@Tag(name = "Clientes", description = "Gestión de clientes")
 public class ClienteController {
 
     private final ClienteService service;
