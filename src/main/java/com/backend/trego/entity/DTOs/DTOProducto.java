@@ -32,6 +32,10 @@ public class DTOProducto {
     private DTOPlato plato;
     private DTOArticulo articulo;
     private DTOCombo combo;
+    // Entrada en alta/edición: id de la SubCategoria a la que se cuelga el producto.
+    private Integer idSubCategoria;
+    // Salida en listado: subcategoria resuelta a DTO.
+    private DTOSubCategoria subCategoria;
 
 
     public DTOProducto() {
@@ -41,7 +45,7 @@ public class DTOProducto {
     public DTOProducto(Integer idProducto, String nombre, String descripcion, float precio, String urlImagen,
             EnumCategoriaProducto categoria, Boolean disponible, Integer idRestaurante,
             List<DTOIngrediente> ingredientes, EnumTipoProducto tipo, DTOOferta oferta, DTOPlato plato,
-            DTOArticulo articulo, DTOCombo combo) {
+            DTOArticulo articulo, DTOCombo combo, DTOSubCategoria subCategoria) {
         this.idProducto = idProducto;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -58,6 +62,10 @@ public class DTOProducto {
         this.plato = plato;
         this.articulo = articulo;
         this.combo = combo;
+        this.subCategoria = subCategoria;
+        if (subCategoria != null) {
+            this.idSubCategoria = subCategoria.getIdSubCategoria();
+        }
     }
 
 
@@ -115,6 +123,22 @@ public class DTOProducto {
 
     public DTOOferta getOferta() {
         return oferta;
+    }
+
+    public Integer getIdSubCategoria() {
+        return idSubCategoria;
+    }
+
+    public void setIdSubCategoria(Integer idSubCategoria) {
+        this.idSubCategoria = idSubCategoria;
+    }
+
+    public DTOSubCategoria getSubCategoria() {
+        return subCategoria;
+    }
+
+    public void setSubCategoria(DTOSubCategoria subCategoria) {
+        this.subCategoria = subCategoria;
     }
 
     /**

@@ -11,6 +11,7 @@ import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.repository.UsuarioRepository;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,8 @@ public class RestauranteService {
     private final NotificacionesService notificacionesService;
     private final GeoapifyService geoapifyService;
 
-    public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService, ProductosService productosService,
+    public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService,
+            @Lazy ProductosService productosService,
             CloudinaryService cloudinaryService, NotificacionesService notificacionesService, GeoapifyService geoapifyService) {
         this.restauranteRepository = restauranteRepository;
         this.currentUserService = currentUserService;
@@ -242,7 +244,7 @@ public class RestauranteService {
         String id = String.valueOf(restauranteId);
         Restaurante restaurante = buscarRestaurante(id);
 
-        List<DTOProducto> productos = productosService.listarProductos(id);
+        List<DTOProducto> productos = productosService.listarProductos(id, false);
 
         if (categoria != null && !categoria.isBlank()) {
             productos = aplicarFiltro(productos, categoria);
