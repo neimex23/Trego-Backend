@@ -21,6 +21,7 @@ public abstract class Producto {
     private String descripcion;
     private String urlImagen;
     private boolean ofertaActiva = false;
+    private boolean disponible = true; 
 
     @ManyToOne
     @JoinColumn(name = "oferta_id")
@@ -110,5 +111,13 @@ public abstract class Producto {
 
     public void setRestaurante(Restaurante restaurante) {
         this.restaurante = restaurante;
+    }
+
+    public boolean getDisponible() {
+        return disponible;
+    }
+
+    public void setDisponible(boolean disponible) {
+        this.disponible = disponible;
     }
 }

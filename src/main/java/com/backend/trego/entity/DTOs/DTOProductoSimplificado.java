@@ -7,14 +7,19 @@ import com.backend.trego.entity.Producto;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Vista reducida del producto usada en carrito/pedidos.
+ * Para el catálogo completo usar {@link DTOProducto}.
+ */
 public class DTOProductoSimplificado {
     private Integer idProducto;
     private Integer idRestaurante;
     private String nombre;
     private Float precio;
     private String urlImagen;
-    private Float precioOferta;
-    private Integer tiempoPreparacion = 0; // Valor por defecto si no se encuentra el producto o no tiene tiempo definido, seteado cuando es un plato
+    private DTOOferta oferta;
+    // Solo aplica a Plato. 0 para Articulo/Combo.
+    private Integer tiempoPreparacion = 0;
 
     private List<DTOIngrediente> ingredientes = new ArrayList<>();
 
@@ -38,8 +43,8 @@ public class DTOProductoSimplificado {
         return urlImagen;
     }
 
-    public Float getPrecioOferta() {
-        return precioOferta;
+    public DTOOferta getOferta() {
+        return oferta;
     }
 
     public List<DTOIngrediente> getIngredientes() {
@@ -49,18 +54,18 @@ public class DTOProductoSimplificado {
     public Integer getTiempoPreparacion() {
         return tiempoPreparacion;
     }
-    
+
     public DTOProductoSimplificado() {
     }
 
     public DTOProductoSimplificado(Integer idProducto, Integer idRestaurante, String nombre, float precio,
-            String urlImagen, Float precioOferta, Integer tiempoPreparacion) {
+            String urlImagen, DTOOferta oferta, Integer tiempoPreparacion) {
         this.idProducto = idProducto;
         this.idRestaurante = idRestaurante;
         this.nombre = nombre;
         this.precio = precio;
         this.urlImagen = urlImagen;
-        this.precioOferta = precioOferta;
+        this.oferta = oferta;
         if (tiempoPreparacion != null) {
             this.tiempoPreparacion = tiempoPreparacion;
         }
@@ -73,14 +78,23 @@ public class DTOProductoSimplificado {
         Integer idRestaurante = producto.getRestaurante() != null
                 ? producto.getRestaurante().getIdUsuario()
                 : null;
+
+        DTOOferta dtoOferta = producto.isOfertaActiva()
+                ? DTOOferta.desde(producto.getOferta())
+                : null;
+
+        Integer tiempoPreparacion = (producto instanceof Plato plato)
+                ? plato.getTiempoPreparacionMinutos()
+                : null;
+
         DTOProductoSimplificado dto = new DTOProductoSimplificado(
                 producto.getIdProducto(),
                 idRestaurante,
                 producto.getNombre(),
                 producto.getPrecio(),
                 producto.getUrlImagen(),
-                calcularPrecioOferta(producto),
-                (producto instanceof Plato) ? ((Plato) producto).getTiempoPreparacionMinutos() : null);
+                dtoOferta,
+                tiempoPreparacion);
 
         // Los ingredientes solo existen en Plato
         if (producto instanceof Plato plato) {
@@ -95,13 +109,4 @@ public class DTOProductoSimplificado {
         return dto;
     }
 
-    private static Float calcularPrecioOferta(Producto producto) {
-        if (!producto.isOfertaActiva() || producto.getOferta() == null) {
-            return null;
-        }
-        float descuento = producto.getOferta().getDescuento();
-        return producto.getPrecio() * (1f - descuento / 100f);
-    }
-
- 
 }

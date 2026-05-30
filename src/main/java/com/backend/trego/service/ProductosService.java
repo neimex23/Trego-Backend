@@ -4,8 +4,12 @@ import com.backend.trego.entity.Articulo;
 import com.backend.trego.entity.Combo;
 import com.backend.trego.entity.Plato;
 import com.backend.trego.entity.Producto;
+import com.backend.trego.entity.DTOs.DTOArticulo;
+import com.backend.trego.entity.DTOs.DTOCombo;
 import com.backend.trego.entity.DTOs.DTOFirma;
 import com.backend.trego.entity.DTOs.DTOIngrediente;
+import com.backend.trego.entity.DTOs.DTOOferta;
+import com.backend.trego.entity.DTOs.DTOPlato;
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.Enums.EnumCategoriaProducto;
 import com.backend.trego.entity.Enums.EnumTipoProducto;
@@ -59,6 +63,8 @@ public class ProductosService {
                 ? producto.getRestaurante().getIdUsuario()
                 : null;
 
+        EnumTipoProducto tipo = tipoDe(producto);
+
         return new DTOProducto(
                 producto.getIdProducto(),
                 producto.getNombre(),
@@ -66,11 +72,39 @@ public class ProductosService {
                 producto.getPrecio(),
                 producto.getUrlImagen(),
                 categoria,
-                true, // disponible: el modelo actual no maneja stock por unidad
+                producto.getDisponible(),
                 idRestaurante,
-                null, // cantidadDisponible: no modelado
                 mapearIngredientes(producto),
-                tipoDe(producto));
+                tipo,
+                DTOOferta.desde(producto.getOferta()),
+                mapearPlato(producto),
+                mapearArticulo(producto),
+                mapearCombo(producto)
+        );
+    }
+
+    private DTOPlato mapearPlato(Producto producto) {
+        if (producto instanceof Plato plato) {
+            return new DTOPlato(plato.getTiempoPreparacionMinutos());
+        }
+        return null;
+    }
+
+    private DTOArticulo mapearArticulo(Producto producto) {
+        if (producto instanceof Articulo) {
+            return new DTOArticulo();
+        }
+        return null;
+    }
+
+    private DTOCombo mapearCombo(Producto producto) {
+        if (producto instanceof Combo combo) {
+            List<Integer> ids = combo.getProductosIncluidos().stream()
+                    .map(Producto::getIdProducto)
+                    .collect(Collectors.toList());
+            return new DTOCombo(ids);
+        }
+        return null;
     }
 
     // Solo los platos tienen ingredientes asociados en el modelo actual.
