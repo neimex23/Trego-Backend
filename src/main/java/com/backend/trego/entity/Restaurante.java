@@ -14,6 +14,7 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
 @Entity
@@ -36,10 +37,14 @@ public class Restaurante extends Usuario {
     @ElementCollection
     private List<LocalTime> horarioAtencion = new ArrayList<>();
 
-    private int radioEntrega;
+    private int radioEntrega = 10;
 
     @OneToMany(mappedBy = "restaurante", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Producto> productos = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "restaurante_id")
+    private List<Ingrediente> ingredientesDisponibles = new ArrayList<>();
 
     protected Restaurante() {
     }
@@ -52,7 +57,7 @@ public class Restaurante extends Usuario {
     public Restaurante(String nombre, String email, String urlImagen, String password, String rut,
             String telefono, DTODireccion direccion, String descripcion, float calificacionProm,
             EnumCategoriaRestaurante categoria, LocalTime apertura, LocalTime cierre, int radioEntrega) {
-        super(nombre, email, urlImagen, EnumRoles.Restaurante, null);
+        super(nombre, email, urlImagen, EnumRoles.Restaurante);
         this.password = password;
         this.rut = rut;
         this.telefono = telefono;
@@ -68,6 +73,18 @@ public class Restaurante extends Usuario {
     public void addProducto(Producto producto) {
         this.productos.add(producto);
         producto.setRestaurante(this);
+    }
+
+    public List<Ingrediente> getIngredientesDisponibles() {
+        return ingredientesDisponibles;
+    }
+
+    public void setIngredientesDisponibles(List<Ingrediente> ingredientesDisponibles) {
+        this.ingredientesDisponibles = ingredientesDisponibles;
+    }
+
+    public void addIngredienteDisponible(Ingrediente ingrediente) {
+        this.ingredientesDisponibles.add(ingrediente);
     }
 
     public void setProductos(List<Producto> productos) {
@@ -114,4 +131,9 @@ public class Restaurante extends Usuario {
 
     public int getRadioEntrega() { return radioEntrega; }
     public void setRadioEntrega(int radioEntrega) { this.radioEntrega = radioEntrega; }
+
+    public boolean existeIngrediente(String nombre) {
+        return ingredientesDisponibles.stream()
+            .anyMatch(i -> i.getNombre().equalsIgnoreCase(nombre));
+    }
 }

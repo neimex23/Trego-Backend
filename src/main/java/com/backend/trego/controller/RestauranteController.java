@@ -1,5 +1,6 @@
 package com.backend.trego.controller;
 
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.service.RestauranteService;
 
@@ -27,14 +28,22 @@ public class RestauranteController {
 
     // CU-CLI: Listar restaurantes registrados. Si se pasa 'nombre' se filtra por
     // coincidencia parcial; si no, devuelve todos los habilitados.
-    @GetMapping
+    @GetMapping("/listar")
     @Operation(summary = "Listar restaurantes", description = "Devuelve los restaurantes habilitados. Acepta un filtro opcional por nombre.")
-    @ApiResponse(responseCode = "200", description = "Listado de restaurantes")
+    @ApiResponse(responseCode = "200", description = "Listado de restaurantes obtenido")
     public ResponseEntity<List<DTORestaurante>> listar(@RequestParam(required = false) String nombre) {
         List<DTORestaurante> restaurantes = (nombre == null || nombre.isBlank())
                 ? restauranteService.listarRestaurantes()
                 : restauranteService.buscarRestaurantePorNombre(nombre);
         return ResponseEntity.ok(restaurantes);
+    }
+
+    @PostMapping("/listarXdirreccion")
+    @Operation(summary = "Listar restaurantes dado una direccion", description = "Lista todos los restaurantes con cobertura segun la dirrecion provista")
+    @ApiResponse(responseCode = "200", description =  "Listado de restaurantes obtenido")
+    @ApiResponse(responseCode = "404", description = "Ningun restaurante obtenido")
+    public ResponseEntity<List<DTORestaurante>> listarRestaurantesDirreccion (@RequestBody DTODireccion dirreccionBusqueda){
+        return ResponseEntity.ok(restauranteService.listarRestaurantesZona(dirreccionBusqueda));
     }
 
     // Devuelve los datos del restaurante autenticado (extraídos del JWT).
@@ -48,7 +57,7 @@ public class RestauranteController {
     }
 
     // CU-CLI: Ver datos de un restaurante puntual (sin el menú).
-    @GetMapping("/{id}")
+    @GetMapping("obtenerRestaurante/{id}")
     @Operation(summary = "Obtener restaurante", description = "Devuelve los datos públicos de un restaurante por id.")
     @ApiResponse(responseCode = "200", description = "Restaurante encontrado")
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
@@ -58,7 +67,7 @@ public class RestauranteController {
 
     // Actualizar datos de un restaurante. Sólo se aplican los campos no nulos del
     // DTO; id y habilitado no se modifican.
-    @PatchMapping("/{id}")
+    @PatchMapping("/actualizar")
     @Operation(summary = "Actualizar restaurante", description = "Actualiza los datos del restaurante actualmente logeado. Sólo se modifican los campos no nulos del DTO. No se puede cambiar id ni habilitado.")
     @ApiResponse(responseCode = "200", description = "Restaurante actualizado")
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")

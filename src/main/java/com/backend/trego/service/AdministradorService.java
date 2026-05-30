@@ -2,7 +2,8 @@ package com.backend.trego.service;
 
 import com.backend.trego.entity.Administrador;
 import com.backend.trego.entity.DTOs.DTOUsuario;
-import com.backend.trego.repository.AdministradorRepository;
+import com.backend.trego.entity.Enums.EnumRoles;
+import com.backend.trego.repository.UsuarioRepository;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,12 +13,12 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class AdministradorService {
 
-    private final AdministradorRepository administradorRepository;
+    private final UsuarioRepository usuarioRepository;
     private final CurrentUserService currentUserService;
 
-    public AdministradorService(AdministradorRepository administradorRepository,
+    public AdministradorService(UsuarioRepository usuarioRepository,
             CurrentUserService currentUserService) {
-        this.administradorRepository = administradorRepository;
+        this.usuarioRepository = usuarioRepository;
         this.currentUserService = currentUserService;
     }
 
@@ -30,18 +31,19 @@ public class AdministradorService {
         }
 
         Integer id = currentUserService.getCurrentId();
-        Administrador admin = administradorRepository.findById(id)
+        Administrador admin = usuarioRepository.findAdministradorById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Administrador autenticado no encontrado con id: " + id));
 
         return new DTOUsuario(
                 admin.getIdUsuario(),
-                admin.getFirebaseUid(),
+                null, // Admin no tine uid de Firebase, se ignora en el DTO.
                 admin.getNombre(),
                 admin.getEmail(),
-                null,
+                null, // Nunca se expone la contraseña, se ignora en el DTO.
                 admin.getFotoPerfil(),
-                null,
-                admin.getRol());
+                null, // Admin no tiene teléfono, se ignora en el DTO.
+                admin.getRol()
+        );
     }
 }

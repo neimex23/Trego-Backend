@@ -21,6 +21,7 @@ public abstract class Producto {
     private String descripcion;
     private String urlImagen;
     private boolean ofertaActiva = false;
+    private boolean disponible = true; 
 
     @ManyToOne
     @JoinColumn(name = "oferta_id")
@@ -29,11 +30,6 @@ public abstract class Producto {
     @ManyToOne
     @JoinColumn(name = "subcategoria_id")
     private SubCategoria subCategoria;
-
-    // Relación bidireccional, necesaria para el mappedBy del carrito.
-    @ManyToOne
-    @JoinColumn(name = "carrito_id")
-    private Carrito carrito;
 
     @ManyToOne
     @JoinColumn(name = "restaurante_id")
@@ -109,19 +105,19 @@ public abstract class Producto {
         this.subCategoria = subCategoria;
     }
 
-    public Carrito getCarrito() {
-        return carrito;
-    }
-
-    public void setCarrito(Carrito carrito) {
-        this.carrito = carrito;
-    }
-
     public Restaurante getRestaurante() {
         return restaurante;
     }
 
     public void setRestaurante(Restaurante restaurante) {
         this.restaurante = restaurante;
+    }
+
+    public boolean getDisponible() {
+        return disponible;
+    }
+
+    public void setDisponible(boolean disponible) {
+        this.disponible = disponible;
     }
 }

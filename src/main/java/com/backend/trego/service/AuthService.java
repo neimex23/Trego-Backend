@@ -3,18 +3,16 @@ package com.backend.trego.service;
 import com.backend.trego.entity.Usuario;
 import com.backend.trego.entity.Enums.EnumRoles;
 import com.backend.trego.entity.Administrador;
+import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTOLogin;
 import com.backend.trego.entity.DTOs.DTOLoginResponse;
 import com.backend.trego.entity.DTOs.DTOUsuario; 
 
 import com.backend.trego.repository.UsuarioRepository;
-import com.backend.trego.repository.AdministradorRepository;
-import com.backend.trego.repository.RestauranteRepository;
 import com.backend.trego.config.JWTUtil;
 
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,28 +23,23 @@ import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.FirebaseAuthException;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
 
-    private final AdministradorRepository adminRepo;
-    private final RestauranteRepository restauranteRepo;
     private final PasswordEncoder passwordEncoder;
     private final JWTUtil jwtUtil;
-    
-    private final UsuarioRepository usuarioRepository; 
+
+    private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
 	private final TokenBlacklistService tokenBlacklistService;
 
-    public AuthService(AdministradorRepository adminRepo, 
-                       RestauranteRepository restauranteRepo, 
-                       PasswordEncoder passwordEncoder, 
-                       JWTUtil jwtUtil, 
-                       UsuarioRepository usuarioRepository, 
+    public AuthService(PasswordEncoder passwordEncoder,
+                       JWTUtil jwtUtil,
+                       UsuarioRepository usuarioRepository,
                        UsuarioService usuarioService,
                        TokenBlacklistService tokenBlacklistService) {
-        this.adminRepo = adminRepo;
-        this.restauranteRepo = restauranteRepo;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.usuarioRepository = usuarioRepository;
@@ -59,7 +52,7 @@ public class AuthService {
         String email = loginDTO.getEmail();
         String password = loginDTO.getPassword();
         
-        Optional<Administrador> adminOpt = adminRepo.findByEmail(email);
+        Optional<Administrador> adminOpt = usuarioRepository.findAdministradorByEmail(email);
         if (adminOpt.isPresent()) {
             Administrador admin = adminOpt.get();
             
@@ -71,7 +64,7 @@ public class AuthService {
             return new DTOLoginResponse(token, admin.getRol().name(), admin.getNombre(), admin.getEmail());
         }
 
-        Optional<Restaurante> restOpt = restauranteRepo.findByEmail(email);
+        Optional<Restaurante> restOpt = usuarioRepository.findRestauranteByEmail(email);
         if (restOpt.isPresent()) {
             Restaurante rest = restOpt.get();
             if (!passwordEncoder.matches(password, rest.getPassword())) {
@@ -107,7 +100,7 @@ public class AuthService {
                 fotoPerfil = decodedToken.getPicture();
             }
 
-            Optional<Usuario> usuarioOpt = usuarioRepository.findByFirebaseUid(uid);
+            Optional<Cliente> usuarioOpt = usuarioRepository.findByUidCliente(uid);
             Usuario usuario;
 
             if (usuarioOpt.isEmpty()) {
@@ -128,7 +121,7 @@ public class AuthService {
             }
 
             int idUsuarioInt = usuario.getIdUsuario();
-            String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), usuario.getFirebaseUid(), idUsuarioInt);
+            String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), uid, idUsuarioInt);
             
             return new DTOLoginResponse(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
 
@@ -144,7 +137,7 @@ public class AuthService {
             String uid = decodedToken.getUid();
             String telefono = (String) decodedToken.getClaims().get("phone_number");
 
-            Optional<Usuario> usuarioOpt = usuarioRepository.findByFirebaseUid(uid);
+            Optional<Cliente> usuarioOpt = usuarioRepository.findByUidCliente(uid);
             Usuario usuario;
 
             if (usuarioOpt.isEmpty()) {
@@ -163,10 +156,10 @@ public class AuthService {
                 usuario = usuarioOpt.get();
             }
 
-            String identificador = usuario.getEmail() != null ? usuario.getEmail() : usuario.getFirebaseUid();
+            String identificador = usuario.getEmail() != null ? usuario.getEmail() : uid;
             int idUsuarioInt = usuario.getIdUsuario();
             
-            String jwt = jwtUtil.generateToken(identificador, usuario.getRol().name(), usuario.getFirebaseUid(), idUsuarioInt);
+            String jwt = jwtUtil.generateToken(identificador, usuario.getRol().name(), uid, idUsuarioInt);
             
             return new DTOLoginResponse(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
 
@@ -202,7 +195,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El UID de Firebase es obligatorio");
         }
 
-        Optional<Usuario> existente = usuarioRepository.findByFirebaseUid(dto.getUid());
+        Optional<Cliente> existente = usuarioRepository.findByUidCliente(dto.getUid());
         if (existente.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El cliente ya se encuentra registrado");
         }

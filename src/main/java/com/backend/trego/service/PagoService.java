@@ -13,6 +13,7 @@ import com.backend.trego.exception.PagoRechazadoException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mercadopago.resources.payment.Payment;
+import com.mercadopago.resources.payment.PaymentRefund;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -100,14 +101,18 @@ public class PagoService {
         }
         if (pago.getCard() != null && pago.getCard().getLastFourDigits() != null) {
             entidadPago.setNroUltimDigTarjeta(pago.getCard().getLastFourDigits());
+        } else {
+            // Pago con dinero en cuenta de MercadoPago (u otro medio sin tarjeta):
+            // no hay últimos dígitos disponibles.
+            entidadPago.setNroUltimDigTarjeta("Billetera Electronica");
         }
 
         pedido.setEstado(EnumEstadoPedido.Pagado);
         pedido.setFechaExpiracion(null);
-        carritoService.limpiarItemsCarrito();
-
         ordenesService.guardar(pedido);
 
+        carritoService.limpiarItemsCarrito(pedido.getCliente().getUidCliente());
+        
         enviarNotificacionConfirmacion(pedido);
         System.out.println("Pago aprobado para el pedido " + pedido.getIdPedido()
                 + " (transacción " + pago.getId() + "). Pedido marcado como Pagado.");
@@ -137,6 +142,25 @@ public class PagoService {
             // La notificación no debe romper el procesamiento del webhook.
             System.err.println("No se pudo enviar la notificación de confirmación: " + e.getMessage());
         }
+    }
+
+    // Reembolso "thin": va directo al servicio de MercadoPago. La lógica de
+    // negocio (validar estado, marcar el pedido como Reembolsado) vive en
+    // PedidoService. La idempotencyKey la arma el llamador (en general,
+    // "reembolso-pedido-{idPedido}") para que MP no genere reembolsos duplicados.
+    public PaymentRefund reembolsar(String idTransaccion, String idempotencyKey) {
+        if (idTransaccion == null || idTransaccion.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El pago no tiene idTransaccion para reembolsar");
+        }
+        Long paymentId;
+        try {
+            paymentId = Long.valueOf(idTransaccion);
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "idTransaccion inválido: " + idTransaccion);
+        }
+        return mercadoPagoService.reembolsarPago(paymentId, idempotencyKey);
     }
 
     // Estado de pago consultable por el front al volver del checkout (back_urls).

@@ -12,14 +12,20 @@ import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
 
 import com.mercadopago.client.payment.PaymentClient;
+import com.mercadopago.client.payment.PaymentRefundClient;
 import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
+import com.mercadopago.core.MPRequestOptions;
 import com.mercadopago.resources.payment.Payment;
+import com.mercadopago.resources.payment.PaymentRefund;
 import com.mercadopago.resources.preference.Preference;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class MercadoPagoService {
@@ -72,7 +78,6 @@ public class MercadoPagoService {
         PreferenceRequest.PreferenceRequestBuilder builder = PreferenceRequest.builder()
                 .items(items)
                 .backUrls(backUrls)
-                .autoReturn("approved")
                 .externalReference(String.valueOf(pedido.getIdPedido()));
 
         // notificationUrl solo se setea si está configurada (MP rechaza URLs vacías
@@ -106,6 +111,33 @@ public class MercadoPagoService {
     // Consulta el pago en MercadoPago por su id (el que llega en el webhook).
     // Devuelve el objeto Payment con el estado (approved/rejected/pending), el
     // externalReference (idPedido), el monto y los datos de la tarjeta.
+    // Realiza el reembolso total de un pago en MercadoPago a partir del id de
+    // pago (el que quedó guardado en Pago.idTransaccion). Se envía un header
+    // x-idempotency-key para que MercadoPago descarte reintentos del mismo
+    // reembolso: si se vuelve a llamar con la misma clave, MP devuelve el
+    // resultado original en lugar de generar un reembolso duplicado.
+    public PaymentRefund reembolsarPago(Long paymentId, String idempotencyKey) {
+        try {
+            PaymentRefundClient client = new PaymentRefundClient();
+            Map<String, String> headers = new HashMap<>();
+            if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+                headers.put("x-idempotency-key", idempotencyKey);
+            }
+            MPRequestOptions options = MPRequestOptions.builder()
+                    .customHeaders(headers)
+                    .build();
+            return client.refund(paymentId, options);
+        } catch (MPApiException e) {
+            throw new RuntimeException(
+                    "MP ERROR al reembolsar pago " + paymentId + ": " + e.getApiResponse().getContent(),
+                    e);
+        } catch (MPException e) {
+            throw new RuntimeException(
+                    "MP GENERAL ERROR al reembolsar pago " + paymentId + ": " + e.getMessage(),
+                    e);
+        }
+    }
+
     public Payment consultarPago(Long paymentId) {
         try {
             PaymentClient client = new PaymentClient();

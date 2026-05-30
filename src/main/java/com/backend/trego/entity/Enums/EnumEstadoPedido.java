@@ -7,5 +7,6 @@ public enum EnumEstadoPedido {
     Aprobado,
     EnCamino,
     Entregado,
-    Cancelado
+    Cancelado,
+    Reembolsado
 }
