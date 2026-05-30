@@ -44,11 +44,7 @@ public class PedidoController {
             @Parameter(description = "Filtro por ID de un producto específico") @RequestParam(required = false) Integer idProducto,
             @AuthenticationPrincipal AuthenticatedUser user) {
 
-        // Extrae el ID del restaurante directamente del token JWT de la sesión
-        String restauranteId = String.valueOf(user.getIdUsuario());
-
-        // Llama al servicio pasando el ID y los filtros
-        List<DTOPedido> pedidos = pedidoService.listarPedidosConfirmados(restauranteId, estado, idProducto);
+        List<DTOPedido> pedidos = pedidoService.listarPedidosConfirmados(idProducto, estado);
         
         return ResponseEntity.ok(pedidos);
     }

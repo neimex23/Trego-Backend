@@ -140,9 +140,36 @@ public class PedidoService {
                 d.getEsquina(), d.getLatitud(), d.getLongitud());
     }
 
+  /* obsoleto
     public List<DTOPedido> listarPedidosConfirmados(String restauranteId) {
         // TODO: implementar
         return List.of();
+    }
+*/ 
+
+	public List<DTOPedido> listarPedidosConfirmados(Integer idProducto, String estado) {
+        var restauranteId = currentUserService.getCurrentId();
+        Integer idRestaurante = Integer.valueOf(restauranteId);
+
+        List<Pedido> pedidos = pedidoRepository.findByRestauranteIdUsuarioAndEstadoNot(idRestaurante, EnumEstadoPedido.Pendiente);
+        List<DTOPedido> pedidosDTO = pedidos.stream().map(DTOPedido::desde).collect(Collectors.toList());
+        if (estado != null && !estado.isBlank()) {
+            pedidosDTO = pedidosDTO.stream()
+                    .filter(p -> p.getEstado().name().equalsIgnoreCase(estado.trim().replace(" ", "_")))
+                    .collect(Collectors.toList());
+        }
+        if (idProducto != null) {
+            pedidosDTO = filtrarPorProductos(pedidosDTO, idProducto);
+        }
+        return pedidosDTO;
+    }
+
+    // Método auxiliar privado para procesar el filtro por producto de forma limpia
+    private List<DTOPedido> filtrarPorProductos(List<DTOPedido> lista, Integer idProducto) {
+        return lista.stream()
+                .filter(pedido -> pedido.getProductos() != null && pedido.getProductos().stream()
+                        .anyMatch(linea -> idProducto.equals(linea.getIdProducto())))
+                .collect(Collectors.toList());
     }
 
     public DTOPedido actualizarEstadoPedido(DTOPedido pedidoDTO, EnumEstadoPedido estado) {
