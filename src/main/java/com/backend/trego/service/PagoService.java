@@ -101,14 +101,18 @@ public class PagoService {
         }
         if (pago.getCard() != null && pago.getCard().getLastFourDigits() != null) {
             entidadPago.setNroUltimDigTarjeta(pago.getCard().getLastFourDigits());
+        } else {
+            // Pago con dinero en cuenta de MercadoPago (u otro medio sin tarjeta):
+            // no hay últimos dígitos disponibles.
+            entidadPago.setNroUltimDigTarjeta("Billetera Electronica");
         }
 
         pedido.setEstado(EnumEstadoPedido.Pagado);
         pedido.setFechaExpiracion(null);
-        carritoService.limpiarItemsCarrito();
-
         ordenesService.guardar(pedido);
 
+        carritoService.limpiarItemsCarrito(pedido.getCliente().getUidCliente());
+        
         enviarNotificacionConfirmacion(pedido);
         System.out.println("Pago aprobado para el pedido " + pedido.getIdPedido()
                 + " (transacción " + pago.getId() + "). Pedido marcado como Pagado.");

@@ -153,7 +153,7 @@ public class PedidoService {
         return null;
     }
 
-    public Integer calcularTiempoPreparacion() {
+    public Integer calcularTiempoPreparacion(List<DTOProductoPedido> productos) {
         // TODO: implementar
         return 0;
     }

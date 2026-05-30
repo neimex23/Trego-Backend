@@ -1,10 +1,13 @@
 package com.backend.trego.service;
 
+import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.ProductoPedido;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.Usuario;
+import com.backend.trego.entity.DTOs.DTODireccion;
+import com.backend.trego.entity.Enums.EnumMoneda;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
 import org.springframework.core.io.ClassPathResource;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class ManejadorPDFService {
@@ -24,6 +28,9 @@ public class ManejadorPDFService {
     private static final Font FUENTE_CELDA = new Font(Font.HELVETICA, 9, Font.NORMAL, NEGRO);
     private static final Font FUENTE_TOTAL = new Font(Font.HELVETICA, 9, Font.BOLD, NEGRO);
     private static final Font FUENTE_EMPRESA = new Font(Font.HELVETICA, 9, Font.NORMAL, NEGRO);
+
+    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final String SIN_DATO = "—";
 
     public byte[] generarComprobante(Usuario datos, java.util.List<Producto> productos,
             Restaurante restaurante, Pedido pedido) {
@@ -61,13 +68,23 @@ public class ManejadorPDFService {
             celdaDerecha.setBorder(Rectangle.NO_BORDER);
             celdaDerecha.setPadding(4);
 
+            String rutEmisor = (restaurante != null) ? textoOGuion(restaurante.getRut()) : SIN_DATO;
+            String nombreCliente = (datos != null) ? textoOGuion(datos.getNombre()) : SIN_DATO;
+            String domicilio = formatearDireccion(pedido.getDireccionEntrega());
+            String fechaFormateada = pedido.getFechaCreacion() != null
+                    ? pedido.getFechaCreacion().format(FORMATO_FECHA)
+                    : SIN_DATO;
+            String moneda = (pedido.getPago() != null && pedido.getPago().getMoneda() != null)
+                    ? pedido.getPago().getMoneda().name()
+                    : EnumMoneda.UYU.name();
+
             celdaDerecha.addElement(
-                    crearTablaDobleColumna("RUT EMISOR", "TIPO DE DOCUMENTO", restaurante.getRut(), "e-Ticket"));
-            celdaDerecha.addElement(crearTablaUnaColumna("NOMBRE", datos.getNombre()));
-            celdaDerecha.addElement(crearTablaUnaColumna("DOMICILIO", pedido.getDireccionEntrega().toString()));
+                    crearTablaDobleColumna("RUT EMISOR", "TIPO DE DOCUMENTO", rutEmisor, "e-Ticket"));
+            celdaDerecha.addElement(crearTablaUnaColumna("NOMBRE", nombreCliente));
+            celdaDerecha.addElement(crearTablaUnaColumna("DOMICILIO", domicilio));
             celdaDerecha.addElement(crearTablaDobleColumna(
                     "FECHA", "MONEDA",
-                    pedido.getHorarioEntrega().toString(), "UYU"));
+                    fechaFormateada, moneda));
             seccionSuperior.addCell(celdaDerecha);
             doc.add(seccionSuperior);
             doc.add(new Paragraph(" "));
@@ -85,11 +102,24 @@ public class ManejadorPDFService {
             for (ProductoPedido pp : pedido.getProductos()) {
                 Producto p = pp.getProducto();
                 int cantidad = pp.getCantidad();
-                BigDecimal precioUnitario = new BigDecimal(String.valueOf(p.getPrecio()));
+                BigDecimal precioUnitario = (p != null)
+                        ? new BigDecimal(String.valueOf(p.getPrecio()))
+                        : BigDecimal.ZERO;
                 BigDecimal subtotal = new BigDecimal(String.valueOf(pp.getPrecioSuma()));
                 total = total.add(subtotal);
 
-                tablaProductos.addCell(celdaNormal(p.getDescripcion()));
+                // En el detalle preferimos el nombre del producto y caemos a la
+                // descripción si no hay nombre cargado.
+                String etiquetaProducto = SIN_DATO;
+                if (p != null) {
+                    if (p.getNombre() != null && !p.getNombre().isBlank()) {
+                        etiquetaProducto = p.getNombre();
+                    } else if (p.getDescripcion() != null && !p.getDescripcion().isBlank()) {
+                        etiquetaProducto = p.getDescripcion();
+                    }
+                }
+
+                tablaProductos.addCell(celdaNormal(etiquetaProducto));
                 tablaProductos.addCell(celdaNormal(String.valueOf(cantidad)));
                 tablaProductos.addCell(celdaNormal("$" + precioUnitario));
             }
@@ -104,9 +134,13 @@ public class ManejadorPDFService {
             doc.add(new Paragraph(" "));
 
             // Nro. de pedido y método de pago
+            Pago pago = pedido.getPago();
+            String metodoPago = (pago != null && pago.getMetodoDePago() != null)
+                    ? pago.getMetodoDePago().name()
+                    : SIN_DATO;
             doc.add(crearTablaDobleColumna(
                     "NRO. DE PEDIDO", "METODO DE PAGO",
-                    String.valueOf(pedido.getIdPedido()), pedido.getPago().getMetodoDePago().name()));
+                    String.valueOf(pedido.getIdPedido()), metodoPago));
 
             doc.close();
             return baos.toByteArray();
@@ -148,5 +182,13 @@ public class ManejadorPDFService {
         celda.setPadding(6);
         celda.setHorizontalAlignment(Element.ALIGN_CENTER);
         return celda;
+    }
+
+    private static String textoOGuion(String valor) {
+        return (valor == null || valor.isBlank()) ? SIN_DATO : valor;
+    }
+
+    private static String formatearDireccion(DTODireccion direccion) {
+        return direccion == null ? SIN_DATO : direccion.toString();
     }
 }

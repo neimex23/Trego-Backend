@@ -41,6 +41,10 @@ public class DTOProductoPedido {
         return producto;
     }
 
+    public double getTiempoPreparacion() {
+        return producto != null ? producto.getTiempoPreparacion() : 0;
+    }
+
     public DTOProductoPedido() {
     }
 
