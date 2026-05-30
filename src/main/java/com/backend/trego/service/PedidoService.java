@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 public class PedidoService {
@@ -143,9 +144,24 @@ public class PedidoService {
                 d.getEsquina(), d.getLatitud(), d.getLongitud());
     }
 
-    public List<DTOPedido> listarPedidosConfirmados(String restauranteId) {
-        // TODO: implementar
-        return List.of();
+    public List<DTOPedido> listarPedidosConfirmados(Integer idProducto, EnumEstadoPedido estado) {
+        Integer idRestaurante;
+        try {
+            idRestaurante = Integer.valueOf(currentUserService.getCurrentId());
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Usuario autenticado inválido");
+        }
+
+        EnumEstadoPedido estadoConsulta = (estado != null) ? estado : EnumEstadoPedido.Pagado;
+        List<Pedido> pedidos = ordenesService.listarPedidos(idRestaurante, estadoConsulta);
+
+        var stream = pedidos.stream().map(DTOPedido::desde);
+        if (idProducto != null) {
+            stream = stream.filter(p -> p.getProductos().stream()
+                    .anyMatch(prod -> idProducto.equals(prod.getIdProducto())));
+        }
+        return stream.collect(Collectors.toList());
     }
 
     public DTOPedido actualizarEstadoPedido(DTOPedido pedidoDTO, EnumEstadoPedido estado) {
