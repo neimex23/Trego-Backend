@@ -51,4 +51,31 @@ public class DTODireccion {
     public double getLongitud() {
         return longitud;
     }
+
+    // Representación legible de la dirección. Se usa en el PDF de comprobante y
+    // en los emails. Si no hay calle se cae a las coordenadas; si tampoco hay
+    // coordenadas devuelve "Sin dirección".
+    @Override
+    public String toString() {
+        boolean tieneCalle = calle != null && !calle.isBlank();
+        if (!tieneCalle) {
+            if (latitud != 0 || longitud != 0) {
+                return String.format("Lat %.5f, Lon %.5f", latitud, longitud);
+            }
+            return "Sin dirección";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(calle);
+        if (numero > 0) {
+            sb.append(" ").append(numero);
+        }
+        if (esquina != null && !esquina.isBlank()) {
+            sb.append(" esq. ").append(esquina);
+        }
+        if (apartamento > 0) {
+            sb.append(", apto ").append(apartamento);
+        }
+        return sb.toString();
+    }
 }

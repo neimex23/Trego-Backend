@@ -183,4 +183,12 @@ public class CarritoService {
         carritoRepository.save(carrito);
         return carrito.toDTO();
     }
+
+    public void limpiarItemsCarrito(String uidCliente) {
+        carritoRepository.findByUidCliente(uidCliente)
+                .ifPresent(carrito -> {
+                    carrito.vaciar();
+                    carritoRepository.save(carrito);
+                });
+    }
 }

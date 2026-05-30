@@ -14,6 +14,8 @@ public class DTOProductoSimplificado {
     private Float precio;
     private String urlImagen;
     private Float precioOferta;
+    private Integer tiempoPreparacion = 0; // Valor por defecto si no se encuentra el producto o no tiene tiempo definido, seteado cuando es un plato
+
     private List<DTOIngrediente> ingredientes = new ArrayList<>();
 
     public Integer getIdProducto() {
@@ -44,17 +46,24 @@ public class DTOProductoSimplificado {
         return ingredientes;
     }
 
+    public Integer getTiempoPreparacion() {
+        return tiempoPreparacion;
+    }
+    
     public DTOProductoSimplificado() {
     }
 
     public DTOProductoSimplificado(Integer idProducto, Integer idRestaurante, String nombre, float precio,
-            String urlImagen, Float precioOferta) {
+            String urlImagen, Float precioOferta, Integer tiempoPreparacion) {
         this.idProducto = idProducto;
         this.idRestaurante = idRestaurante;
         this.nombre = nombre;
         this.precio = precio;
         this.urlImagen = urlImagen;
         this.precioOferta = precioOferta;
+        if (tiempoPreparacion != null) {
+            this.tiempoPreparacion = tiempoPreparacion;
+        }
     }
 
     public static DTOProductoSimplificado desde(Producto producto) {
@@ -70,7 +79,8 @@ public class DTOProductoSimplificado {
                 producto.getNombre(),
                 producto.getPrecio(),
                 producto.getUrlImagen(),
-                calcularPrecioOferta(producto));
+                calcularPrecioOferta(producto),
+                (producto instanceof Plato) ? ((Plato) producto).getTiempoPreparacionMinutos() : null);
 
         // Los ingredientes solo existen en Plato
         if (producto instanceof Plato plato) {
