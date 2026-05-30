@@ -1,5 +1,6 @@
 package com.backend.trego.service;
 
+import com.backend.trego.entity.Carrito;
 import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
@@ -34,19 +35,22 @@ public class PedidoService {
     private final CurrentUserService currentUserService;
     private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
+    private final CarritoService carritoService;
 
     public PedidoService(RestauranteService restauranteService,
                          PagoService pagoService,
                          OrdenesService ordenesService,
                          CurrentUserService currentUserService,
                          UsuarioRepository usuarioRepository,
-                         ProductoRepository productoRepository) {
+                         ProductoRepository productoRepository,
+                         CarritoService carritoService) {
         this.restauranteService = restauranteService;
         this.pagoService = pagoService;
         this.ordenesService = ordenesService;
         this.currentUserService = currentUserService;
         this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
+        this.carritoService = carritoService;
     }
 
     // Flujo principal "realizar pedido": valida el restaurante, crea el pedido a
@@ -54,13 +58,15 @@ public class PedidoService {
     // en MercadoPago y devuelve la preferencia (con la URL de checkout) para que
     // el front redirija a la pasarela.
     @Transactional
-    public DTOPreferenciaMP confirmarPedido(DTOCarrito carritoDTO, DTODireccion direccionDTO,
-                                            String restauranteId) {
-        // Valida existencia del restaurante (404 si no existe).
-        DTORestaurante restauranteDTO = restauranteService.obtenerRestaurante(restauranteId);
+    public DTOPreferenciaMP confirmarPedido(DTODireccion direccionDTO) {
+        DTOCarrito carritoDTO = carritoService.obtenerCarrito(); //Obtener Carrito actual
 
-        // Crea y persiste el pedido. Lanza RestauranteCerradoException (409) si el
-        // restaurante no está operativo.
+        // Valida existencia del restaurante (404 si no existe).
+        DTORestaurante restauranteDTO = restauranteService.obtenerRestaurante(String.valueOf(carritoDTO.getIdRestaurante()));
+                if (restauranteDTO == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante no encontrado con id: " + carritoDTO.getIdRestaurante());
+                }
+        
         Pedido pedido = crearPedido(carritoDTO, direccionDTO, restauranteDTO);
 
         // Genera la preferencia de pago delegando en PagoService -> MercadoPagoService.
@@ -88,7 +94,7 @@ public class PedidoService {
         String restauranteId = String.valueOf(restauranteDTO.getIdRestaurante());
         if (!verificarRestauranteAbierto(restauranteId)) {
             throw new RestauranteCerradoException(
-                    "El restaurante " + restauranteDTO.getNombre() + " está cerrado en este momento");
+                   "El restaurante " + restauranteDTO.getNombre() + " está cerrado en este momento");
         }
 
         Cliente cliente = usuarioRepository.findClienteByUidCliente(currentUserService.getCurrentUid())

@@ -78,7 +78,6 @@ public class MercadoPagoService {
         PreferenceRequest.PreferenceRequestBuilder builder = PreferenceRequest.builder()
                 .items(items)
                 .backUrls(backUrls)
-                .autoReturn("approved")
                 .externalReference(String.valueOf(pedido.getIdPedido()));
 
         // notificationUrl solo se setea si está configurada (MP rechaza URLs vacías

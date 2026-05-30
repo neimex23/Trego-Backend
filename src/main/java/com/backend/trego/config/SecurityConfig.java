@@ -78,6 +78,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/pagos/estado/**").permitAll()
                 // Swagger
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                // Página DEV de login Firebase (solo testing local)
+                .requestMatchers("/dev-login.html").permitAll()
                 // Carrito
                 .requestMatchers("/api/carrito/**").authenticated()
                 // Pedidos

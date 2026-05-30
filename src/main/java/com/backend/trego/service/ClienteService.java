@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.DTOs.DTOCliente;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.Enums.EnumRoles;
 import com.backend.trego.repository.UsuarioRepository;
 
@@ -48,13 +49,13 @@ public class ClienteService {
 
     private Cliente desdeDto(DTOCliente dto) {
         return new Cliente(
-                dto.getNombre(),
-                dto.getEmail(),
-                dto.getUrlImagen(),
-                EnumRoles.Cliente,
-                dto.getUidCliente(),
-                dto.getTelefono(),
-                dto.getDirecciones());
+               dto.getNombre(),
+               dto.getEmail(),
+               dto.getUrlImagen(),
+               dto.getTelefono(),
+               dto.getDirecciones(),
+               dto.getUidCliente()
+        );
     }
 
     public Optional<Cliente> obtener(Integer id) {

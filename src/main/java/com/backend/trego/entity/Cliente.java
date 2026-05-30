@@ -31,10 +31,11 @@ public class Cliente extends Usuario {
     }
 
     // Para los flujos de Firebase (Google/SMS), con uid.
-    public Cliente(String nombre, String email, String urlImagen, EnumRoles rol, String firebaseUid,
-            String telefono, List<DTODireccion> direcciones) {
-        super(nombre, email, urlImagen, rol, firebaseUid);
+    public Cliente(String nombre, String email, String urlImagen,
+            String telefono, List<DTODireccion> direcciones, String uidCliente) {
+        super(nombre, email, urlImagen, EnumRoles.Cliente);
         this.telefono = telefono;
+        this.uidCliente = uidCliente;
         if (direcciones != null) {
             this.direcciones = direcciones;
         }
@@ -43,7 +44,7 @@ public class Cliente extends Usuario {
     // Para el registro clásico por formulario, sin uid.
     public Cliente(String nombre, String email, String urlImagen, EnumRoles rol,
             String telefono, List<DTODireccion> direcciones) {
-        super(nombre, email, urlImagen, rol, null);
+        super(nombre, email, urlImagen, EnumRoles.Cliente);
         this.telefono = telefono;
         if (direcciones != null) {
             this.direcciones = direcciones;

@@ -6,7 +6,9 @@ import com.backend.trego.repository.UsuarioRepository;
 import com.backend.trego.entity.RegistroTemporal;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.Usuario;
+import com.backend.trego.entity.Administrador;
 import com.backend.trego.entity.Cliente;
+import com.backend.trego.entity.Enums.EnumRoles;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,12 +41,45 @@ public class UsuarioService {
     public Usuario altaUsuario(DTOUsuario usuarioDTO) {
         Cliente nuevoCliente = new Cliente();
 
-        nuevoCliente.setFirebaseUid(usuarioDTO.getUid());
+        if (!usuarioDTO.getUid().isBlank()) {
+            ((Cliente) nuevoCliente).setUidCliente(usuarioDTO.getUid());
+        }
         nuevoCliente.setEmail(usuarioDTO.getEmail());
         nuevoCliente.setNombre(usuarioDTO.getNombre());
         nuevoCliente.setRol(usuarioDTO.getRol());
 
         return usuarioRepository.save(nuevoCliente);
+    }
+
+    // Da de alta un administrador con email y contraseña cifrada.
+    public Administrador altaAdministrador(String email, String password) {
+        if (existeUsuario(email)) {
+            throw new IllegalArgumentException("El correo electrónico ya se encuentra ingresado en el sistema.");
+        }
+
+        String passwordCifrada = passwordEncoder.encode(password);
+        Administrador nuevoAdmin = new Administrador(
+               "DefaultAdmin",
+                email,
+                null,
+                passwordCifrada
+        );
+        return usuarioRepository.save(nuevoAdmin);
+    }
+
+    public Administrador altaAdministrador(DTOUsuario adminDTO) {
+        if (existeUsuario(adminDTO.getEmail())) {
+            throw new IllegalArgumentException("El correo electrónico ya se encuentra ingresado en el sistema.");
+        }
+
+        String passwordCifrada = passwordEncoder.encode(adminDTO.getPassword());
+        Administrador nuevoAdmin = new Administrador(
+                adminDTO.getNombre(),
+                adminDTO.getEmail(),
+                adminDTO.getUrlImagen(),
+                passwordCifrada
+        );
+        return usuarioRepository.save(nuevoAdmin);
     }
 
     // Arranca el registro de un restaurante: chequea que el email no exista,
@@ -149,12 +184,14 @@ public class UsuarioService {
     public DTOUsuario obtenerUsuarioActual() {
         var auth = currentUserService.getCurrentUser();
         Usuario u = null;
+        String uid = "null";
 
         if (auth.getIdUsuario() != null) {
             u = usuarioRepository.findById(auth.getIdUsuario()).orElse(null);
         }
         if (u == null && auth.getUid() != null) {
-            u = usuarioRepository.findByFirebaseUid(auth.getUid()).orElse(null);
+            u = usuarioRepository.findByUidCliente(auth.getUid()).orElse(null);
+            uid = auth.getUid();
         }
         if (u == null && auth.getEmail() != null) {
             u = usuarioRepository.findByEmail(auth.getEmail()).orElse(null);
@@ -165,7 +202,7 @@ public class UsuarioService {
 
         return new DTOUsuario(
                 u.getIdUsuario(),
-                u.getFirebaseUid(),
+                uid,
                 u.getNombre(),
                 u.getEmail(),
                 null,
@@ -176,7 +213,7 @@ public class UsuarioService {
 
     public List<DTODireccion> obtenerDirecciones() {
         String uid = currentUserService.getCurrentUid();
-        return usuarioRepository.findDireccionesByFirebaseUid(uid);
+        return usuarioRepository.findDireccionesByUid(uid);
     }
 
 }

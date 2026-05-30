@@ -57,7 +57,7 @@ public class Restaurante extends Usuario {
     public Restaurante(String nombre, String email, String urlImagen, String password, String rut,
             String telefono, DTODireccion direccion, String descripcion, float calificacionProm,
             EnumCategoriaRestaurante categoria, LocalTime apertura, LocalTime cierre, int radioEntrega) {
-        super(nombre, email, urlImagen, EnumRoles.Restaurante, null);
+        super(nombre, email, urlImagen, EnumRoles.Restaurante);
         this.password = password;
         this.rut = rut;
         this.telefono = telefono;

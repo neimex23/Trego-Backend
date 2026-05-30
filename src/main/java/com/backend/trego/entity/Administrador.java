@@ -11,8 +11,8 @@ public class Administrador extends Usuario {
     protected Administrador() {
     }
 
-    public Administrador(String nombre, String email, String urlImagen, EnumRoles rol, String password) {
-        super(nombre, email, urlImagen, rol, null);
+    public Administrador(String nombre, String email, String urlImagen, String password) {
+        super(nombre, email, urlImagen, EnumRoles.Administrador);
         this.password = password;
     }
 
