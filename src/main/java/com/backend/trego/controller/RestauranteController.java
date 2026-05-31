@@ -92,4 +92,26 @@ public class RestauranteController {
         }
     }
 
+	@PatchMapping("/abrirLocal")
+    @Operation(summary = "Abrir el local", description = "Cambia el estado del restaurante a abierto y establece su hora de cierre. Valida que existan productos.")
+    @ApiResponse(responseCode = "200", description = "El local se encuentra abierto")
+    @ApiResponse(responseCode = "400", description = "Datos incompletos o erroneos")
+    @ApiResponse(responseCode = "409", description = "Restaurante sin productos")
+	
+	public ResponseEntity<?> abrirLocal(
+            @RequestBody(required = false) DTOAbrirLocalRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+
+        if (request == null || request.getHoraCierre() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Debe colocar una hora de cierre"));
+        }
+        String restauranteId = String.valueOf(user.getIdUsuario());
+        try {
+            restauranteService.abrirLocal(restauranteId, request.getHoraCierre());
+            return ResponseEntity.ok(Map.of("mensaje", "El local se encuentra abierto"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
+        }
+    }
+
 }

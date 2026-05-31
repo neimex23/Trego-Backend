@@ -44,9 +44,21 @@ public class RestauranteService {
         this.geoapifyService = geoapifyService;
     }
 
-    public boolean abrirLocal(String idRestaurante, Date horaServicio) {
-        // TODO: implementar
-        return false;
+public void abrirLocal(String restauranteId, LocalTime horaCierre) {
+        Integer idRestaurante = Integer.valueOf(restauranteId);
+
+        Restaurante restaurante = restauranteRepository.findById(idRestaurante).orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
+        List<Producto> productos = productoRepository.findByRestauranteIdUsuario(idRestaurante);
+        if (productos == null || productos.isEmpty()) {
+            throw new IllegalStateException("Debe tener algun producto para ofrecer");
+        }
+		cerrarRestaurante(restaurante, true, horaCierre);
+    }
+
+    private void cerrarRestaurante(Restaurante restaurante, boolean estadoAbierto, LocalTime horaCierre) {
+        restaurante.setAbierto(estadoAbierto);
+        restaurante.setHoraCierre(horaCierre);
+        restauranteRepository.save(restaurante);
     }
 
     public boolean cerrarLocal(String restauranteId) {
