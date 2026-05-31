@@ -23,6 +23,7 @@ public class JWTUtil {
     }
 
     // El email va como subject porque admin y restaurante no tienen uid de Firebase.
+    @SuppressWarnings("deprecation")
     public String generateToken(String email, String rol, String firebaseUid, Integer idUsuario) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", rol);

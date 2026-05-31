@@ -13,7 +13,6 @@ import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
 import com.backend.trego.entity.DTOs.DTORestaurante;
-import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.exception.PedidoCanceladoException;
 import com.backend.trego.exception.RestauranteCerradoException;
@@ -278,15 +277,13 @@ public class PedidoService {
         DTOPedido dtoActualizado = DTOPedido.desde(pedidoGuardado);
         try {
             if (nuevoEstado == EnumEstadoPedido.EnCamino) {
-                Integer tiempoViaje = obtenerTiempoViaje(pedidoGuardado);
                 notificacionesService.notificarPedidoEnCamino(dtoActualizado, pedidoGuardado.getTiempoPreparacion());
-                notificacionesService.notificarPushEnCamino(dtoActualizado, tiempoViaje);
+                notificacionesService.notificarPushEnCamino(dtoActualizado, pedidoGuardado.getTiempoPreparacion());
             } else if (nuevoEstado == EnumEstadoPedido.Entregado) {
                 notificacionesService.notificarPedidoEntregado(dtoActualizado);
                 notificacionesService.notificarPushEntregado(dtoActualizado);
             }
         } catch (Exception e) {
-            // Las notificaciones no deben romper la transición de estado.
             System.err.println("Error enviando notificación: " + e.getMessage());
         }
 
@@ -387,10 +384,5 @@ public class PedidoService {
         pedidoRepository.save(pedido);
 
         return DTOPedido.desde(pedido);
-    }
-
-    public DTOPedido actualizarHoraEntrega() {
-        // TODO: implementar
-        return null;
     }
 }
