@@ -65,7 +65,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     @Query("SELECT r FROM Restaurante r WHERE r.habilitado = true")
     List<Restaurante> findRestaurantesHabilitados();
 
-    @Query("SELECT r FROM Restaurante r WHERE r.habilitado = false")
+    @Query("SELECT r FROM Restaurante r WHERE r.habilitado = false and r.rut IS NOT NULL")
     List<Restaurante> findRestaurantesNoHabilitados();
 
     @Query("SELECT r FROM Restaurante r WHERE r.habilitado = true AND LOWER(r.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
