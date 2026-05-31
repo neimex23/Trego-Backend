@@ -1,5 +1,6 @@
 package com.backend.trego.controller;
 
+import com.backend.trego.entity.DTOs.DTOActualizarEstadoRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
@@ -45,7 +46,7 @@ public class PedidoController {
     }
 
     @PostMapping("/confirmar")
-    @Operation(summary = "Confirmar pedido",
+    @Operation(summary = "Confirmar pedido por parte del cliente",
             description = "Recibe la dirección de envío (DTODireccion) y genera una preferencia de pago en MercadoPago con el Carrito Actual. Valida que el carrito no esté vacío, que el restaurante seleccionado sea válido.")
     @ApiResponse(responseCode = "200", description = "Preferencia de pago generada correctamente")
     @ApiResponse(responseCode = "400", description = "Carrito vacío, restaurante inválido o dirección no asociada al cliente")
@@ -54,12 +55,13 @@ public class PedidoController {
         return ResponseEntity.ok(preferencia);
     }
 
-	@PatchMapping("/confirmarRes/{pedidoId}")
-    @Operation(summary = "Confirmar pedido", description = "El restaurante confirma un pedido. Calcula tiempos de entrega mediante API externa y notifica al cliente.")
+	@PatchMapping("/confirmar/{pedidoId}")
+    @Operation(summary = "Confirmar pedido de usuario por parte del restaurante", description = "El restaurante confirma un pedido. Calcula tiempos de entrega mediante API externa y notifica al cliente.")
     @ApiResponse(responseCode = "200", description = "Pedido confirmado con exito")
     @ApiResponse(responseCode = "409", description = "El pedido ha sido cancelado previamente")
+    @ApiResponse(responseCode = "400", description = "El pedido no está en estado 'Pagado'")
+    @ApiResponse(responseCode = "409", description = "El pedido ya está confirmado y en preparación")
     public ResponseEntity<DTOPedido> confirmarPedidoRestaurante(@PathVariable Integer pedidoId) {
-		//no se si va a funcionar hay que probar con front
         return ResponseEntity.ok(pedidoService.confirmarPedidoPendiente(pedidoId));
     }
 

@@ -80,15 +80,16 @@ public class GeoapifyService {
     }
 
     // Tiempo estimado de llegada entre dos coordenadas, en minutos.
-    public int calcularTiempoLlegadaMinutos(
-            double lat1,
-            double lon1,
-            double lat2,
-            double lon2) {
+    public int calcularTiempoLlegadaMinutos(DTODireccion origen, DTODireccion destino) {
+        double lat1 = origen.getLatitud();
+        double lon1 = origen.getLongitud();
+        double lat2 = destino.getLatitud();
+        double lon2 = destino.getLongitud();
 
         DTOGeoapifyProperties props = consultarRuta(lat1, lon1, lat2, lon2);
         if (props == null || props.getTiempo() == null) {
-            return -1;
+            // Fallback cuando la API no responde
+            return 30;
         }
         // Geoapify devuelve el tiempo en segundos -> redondeo a minutos
         return (int) Math.round(props.getTiempo() / 60.0);

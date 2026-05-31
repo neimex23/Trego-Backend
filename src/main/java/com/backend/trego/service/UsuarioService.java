@@ -8,7 +8,6 @@ import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.Usuario;
 import com.backend.trego.entity.Administrador;
 import com.backend.trego.entity.Cliente;
-import com.backend.trego.entity.Enums.EnumRoles;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;

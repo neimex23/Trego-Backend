@@ -4,6 +4,7 @@ import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -32,6 +33,7 @@ public class Pedido {
     private float total;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 32, nullable = false)
     private EnumEstadoPedido estado;
 
     @Embedded
@@ -40,6 +42,8 @@ public class Pedido {
     private LocalDateTime horarioEntrega;
 
     private String razonCancelacion;
+
+    private Integer tiempoPreparacion; // Tiempo total estimado de preparación en minutos
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id")
@@ -197,6 +201,14 @@ public class Pedido {
 
     public void setRazonCancelacion(String razonCancelacion) {
         this.razonCancelacion = razonCancelacion;
+    }
+
+    public Integer getTiempoPreparacion() {
+        return tiempoPreparacion;
+    }
+
+    public void setTiempoPreparacion(Integer tiempoPreparacion) {
+        this.tiempoPreparacion = tiempoPreparacion;
     }
 
     public float calcularTotal() {

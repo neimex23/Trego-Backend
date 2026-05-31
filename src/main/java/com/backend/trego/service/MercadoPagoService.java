@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.backend.trego.entity.MPResponse;
 import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
+import com.backend.trego.repository.PedidoRepository;
 
 import com.mercadopago.client.payment.PaymentClient;
 import com.mercadopago.client.payment.PaymentRefundClient;
@@ -30,7 +31,7 @@ import java.util.Map;
 @Service
 public class MercadoPagoService {
 
-    private final OrdenesService ordenesService;
+    private final PedidoRepository pedidoRepository;
 
     // URL pública a la que MercadoPago enviará las notificaciones (webhook).
     // En producción debe apuntar al backend; en local se usa un túnel (ngrok) o
@@ -49,8 +50,8 @@ public class MercadoPagoService {
     @Value("${mercadopago.back.url.pending:http://localhost:5173/pending}")
     private String backUrlPending;
 
-    public MercadoPagoService(OrdenesService ordenesService) {
-        this.ordenesService = ordenesService;
+    public MercadoPagoService(PedidoRepository pedidoRepository) {
+        this.pedidoRepository = pedidoRepository;
     }
 
     // Crea la preferencia de pago en MercadoPago a partir del pedido y devuelve
@@ -91,7 +92,7 @@ public class MercadoPagoService {
         try {
             PreferenceClient client = new PreferenceClient();
             Preference preference = client.create(preferenceRequest);
-            ordenesService.guardar(pedido);
+            pedidoRepository.save(pedido);
 
             return new MPResponse(
                     preference.getId(),

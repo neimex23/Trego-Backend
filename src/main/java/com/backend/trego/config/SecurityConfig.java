@@ -113,11 +113,12 @@ public class SecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        PrintCorsConfig(configuration);
+        //PrintCorsConfig(configuration);
         return source;
     }
 
 
+    @SuppressWarnings("unused")
     private void PrintCorsConfig(CorsConfiguration config) {
         System.out.println("CORS Configuration:");
         System.out.println("Allowed Origins: " + config.getAllowedOrigins());

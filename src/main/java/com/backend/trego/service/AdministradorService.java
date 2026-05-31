@@ -2,7 +2,6 @@ package com.backend.trego.service;
 
 import com.backend.trego.entity.Administrador;
 import com.backend.trego.entity.DTOs.DTOUsuario;
-import com.backend.trego.entity.Enums.EnumRoles;
 import com.backend.trego.repository.UsuarioRepository;
 
 import org.springframework.http.HttpStatus;

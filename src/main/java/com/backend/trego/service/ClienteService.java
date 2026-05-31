@@ -9,8 +9,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.DTOs.DTOCliente;
-import com.backend.trego.entity.DTOs.DTODireccion;
-import com.backend.trego.entity.Enums.EnumRoles;
 import com.backend.trego.repository.UsuarioRepository;
 
 @Service

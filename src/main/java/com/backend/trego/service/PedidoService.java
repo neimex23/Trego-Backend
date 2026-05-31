@@ -1,9 +1,9 @@
 package com.backend.trego.service;
 
-import com.backend.trego.entity.Carrito;
 import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
+import com.backend.trego.entity.Plato;
 import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.ProductoPedido;
 import com.backend.trego.entity.Restaurante;
@@ -13,71 +13,158 @@ import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
 import com.backend.trego.entity.DTOs.DTORestaurante;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
+import com.backend.trego.exception.PedidoCanceladoException;
 import com.backend.trego.exception.RestauranteCerradoException;
+import com.backend.trego.repository.PedidoRepository;
 import com.backend.trego.repository.ProductoRepository;
 import com.backend.trego.repository.UsuarioRepository;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+// Servicio único de pedidos: combina el CRUD que antes vivía en OrdenesService
+// con la lógica de negocio (confirmación, actualización de estado, reembolso).
+// Trabaja directamente contra PedidoRepository.
 @Service
 public class PedidoService {
 
+    private final PedidoRepository pedidoRepository;
     private final RestauranteService restauranteService;
     private final PagoService pagoService;
-    private final OrdenesService ordenesService;
+    private final NotificacionesService notificacionesService;
     private final CurrentUserService currentUserService;
     private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
     private final CarritoService carritoService;
+    private final GeoapifyService geoapifyService;
 
-    public PedidoService(RestauranteService restauranteService,
+    public PedidoService(PedidoRepository pedidoRepository,
+                         RestauranteService restauranteService,
                          PagoService pagoService,
-                         OrdenesService ordenesService,
+                         NotificacionesService notificacionesService,
                          CurrentUserService currentUserService,
                          UsuarioRepository usuarioRepository,
                          ProductoRepository productoRepository,
-                         CarritoService carritoService) {
+                         CarritoService carritoService,
+                         GeoapifyService geoapifyService) {
+        this.pedidoRepository = pedidoRepository;
         this.restauranteService = restauranteService;
         this.pagoService = pagoService;
-        this.ordenesService = ordenesService;
+        this.notificacionesService = notificacionesService;
         this.currentUserService = currentUserService;
         this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
         this.carritoService = carritoService;
+        this.geoapifyService = geoapifyService;
     }
 
-    // Flujo principal "realizar pedido": valida el restaurante, crea el pedido a
-    // partir del carrito del cliente autenticado, genera la preferencia de pago
-    // en MercadoPago y devuelve la preferencia (con la URL de checkout) para que
-    // el front redirija a la pasarela.
+    public List<Pedido> listar() {
+        return pedidoRepository.findAll();
+    }
+
+    public Pedido guardar(Pedido pedido) {
+        return pedidoRepository.save(pedido);
+    }
+
+    public Optional<Pedido> obtener(Integer id) {
+        return pedidoRepository.findById(id);
+    }
+
+    public Pedido obtenerOFallar(Integer id) {
+        return pedidoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
+    }
+
+    public List<Pedido> listarPorCliente(int idCliente) {
+        return pedidoRepository.findByClienteIdUsuario(idCliente);
+    }
+
+    public List<Pedido> listarPorRestaurante(int idRestaurante) {
+        return pedidoRepository.findByRestauranteIdUsuario(idRestaurante);
+    }
+
+    public List<Pedido> listarPorEstado(EnumEstadoPedido estado) {
+        return pedidoRepository.findByEstado(estado);
+    }
+
+    public Pedido cambiarEstado(Integer id, EnumEstadoPedido nuevoEstado) {
+        Pedido p = obtenerOFallar(id);
+        p.setEstado(nuevoEstado);
+        return pedidoRepository.save(p);
+    }
+
+    public Pedido cancelar(Integer id, String razon) {
+        Pedido p = obtenerOFallar(id);
+        p.setEstado(EnumEstadoPedido.Cancelado);
+        p.setRazonCancelacion(razon != null ? razon : "Cancelado por el cliente");
+        return pedidoRepository.save(p);
+    }
+
+    public Pedido recalcularTotal(Integer id) {
+        Pedido p = obtenerOFallar(id);
+        p.setTotal(p.calcularTotal());
+        return pedidoRepository.save(p);
+    }
+
+    public void eliminar(Integer id) {
+        if (!pedidoRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado");
+        }
+        pedidoRepository.deleteById(id);
+    }
+
+    public List<Pedido> listarPedidos(Integer idRestaurante, EnumEstadoPedido estado) {
+        if (estado != null) {
+            return pedidoRepository.findByRestauranteIdUsuarioAndEstado(idRestaurante, estado);
+        }
+        return pedidoRepository.findByRestauranteIdUsuario(idRestaurante);
+    }
+
+    @Transactional
+    public int cancelarPedidosExpirados() {
+        List<Pedido> expirados = pedidoRepository
+                .findByFechaExpiracionNotNullAndFechaExpiracionBefore(LocalDateTime.now());
+        for (Pedido pedido : expirados) {
+            pedido.setEstado(EnumEstadoPedido.Cancelado);
+            pedido.setRazonCancelacion("Expirado: plazo de pago de 24 horas vencido");
+            pedido.setFechaExpiracion(null);
+        }
+        pedidoRepository.saveAll(expirados);
+        return expirados.size();
+    }
+
+
+    // Valida el restaurante, crea el pedido a partir del carrito del cliente
+    // autenticado, genera la preferencia de pago en MercadoPago y devuelve la
+    // preferencia (con la URL de checkout) para que el front redirija a la pasarela.
     @Transactional
     public DTOPreferenciaMP confirmarPedido(DTODireccion direccionDTO) {
-        DTOCarrito carritoDTO = carritoService.obtenerCarrito(); //Obtener Carrito actual
+        DTOCarrito carritoDTO = carritoService.obtenerCarrito();
 
-        // Valida existencia del restaurante (404 si no existe).
-        DTORestaurante restauranteDTO = restauranteService.obtenerRestaurante(String.valueOf(carritoDTO.getIdRestaurante()));
-                if (restauranteDTO == null) {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante no encontrado con id: " + carritoDTO.getIdRestaurante());
-                }
-        
+        DTORestaurante restauranteDTO = restauranteService
+                .obtenerRestaurante(String.valueOf(carritoDTO.getIdRestaurante()));
+        if (restauranteDTO == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Restaurante no encontrado con id: " + carritoDTO.getIdRestaurante());
+        }
+
         Pedido pedido = crearPedido(carritoDTO, direccionDTO, restauranteDTO);
 
-        // Genera la preferencia de pago delegando en PagoService -> MercadoPagoService.
         DTOPedido pedidoDTO = new DTOPedido(
                 pedido.getIdPedido(),
                 (double) pedido.getTotal(),
                 carritoDTO.getProductos());
-        DTOPreferenciaMP preferencia = pagoService.crearPreferencia(pedidoDTO);
-
-        return preferencia;
+        return pagoService.crearPreferencia(pedidoDTO);
     }
 
     // Construye el pedido a partir del carrito y lo guarda. Antes de crearlo
@@ -95,7 +182,7 @@ public class PedidoService {
         String restauranteId = String.valueOf(restauranteDTO.getIdRestaurante());
         if (!verificarRestauranteAbierto(restauranteId)) {
             throw new RestauranteCerradoException(
-                   "El restaurante " + restauranteDTO.getNombre() + " está cerrado en este momento");
+                    "El restaurante " + restauranteDTO.getNombre() + " está cerrado en este momento");
         }
 
         Cliente cliente = usuarioRepository.findClienteByUidCliente(currentUserService.getCurrentUid())
@@ -125,7 +212,7 @@ public class PedidoService {
         }
 
         pedido.setTotal(pedido.calcularTotal());
-        return ordenesService.guardar(pedido);
+        return pedidoRepository.save(pedido);
     }
 
     public DTORestaurante obtenerRestaurante(String idRestaurante) {
@@ -144,7 +231,8 @@ public class PedidoService {
                 d.getEsquina(), d.getLatitud(), d.getLongitud());
     }
 
-    // Lista los pedidos confirmados (pagados) de un cliente, con opción de filtrar por producto incluido en el pedido.
+    // Lista los pedidos del restaurante autenticado, filtrando por estado (default
+    // Pagado) y opcionalmente por producto incluido en el pedido.
     public List<DTOPedido> listarPedidosConfirmados(Integer idProducto, EnumEstadoPedido estado) {
         Integer idRestaurante;
         try {
@@ -155,7 +243,7 @@ public class PedidoService {
         }
 
         EnumEstadoPedido estadoConsulta = (estado != null) ? estado : EnumEstadoPedido.Pagado;
-        List<Pedido> pedidos = ordenesService.listarPedidos(idRestaurante, estadoConsulta);
+        List<Pedido> pedidos = listarPedidos(idRestaurante, estadoConsulta);
 
         var stream = pedidos.stream().map(DTOPedido::desde);
         if (idProducto != null) {
@@ -165,25 +253,20 @@ public class PedidoService {
         return stream.collect(Collectors.toList());
     }
 
-    public DTOPedido actualizarEstadoPedido(DTOPedido pedidoDTO, EnumEstadoPedido estado) {
-        // TODO: implementar
-        return null;
-    }
-
-    public Integer calcularTiempoPreparacion(List<DTOProductoPedido> productos) {
-        // TODO: implementar
-        return 0;
-    }
-
+    @Transactional
     public DTOPedido actualizarEstadoPedido(DTOPedido pedidoDTO, String estadoStr) {
-        Pedido pedido = pedidoRepository.findById(pedidoDTO.getIdPedido())
-                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+        if (pedidoDTO == null || pedidoDTO.getIdPedido() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "DTOPedido inválido");
+        }
+
+        Pedido pedido = obtenerOFallar(pedidoDTO.getIdPedido());
 
         EnumEstadoPedido estadoActual = pedido.getEstado();
         EnumEstadoPedido nuevoEstado = parsearEstado(estadoStr);
 
         if (!verificarSaltoEstado(estadoActual, nuevoEstado)) {
-            throw new RuntimeException("Salto de estado incorrecto: No se puede pasar de " + estadoActual + " a " + nuevoEstado);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Salto de estado incorrecto: No se puede pasar de " + estadoActual + " a " + nuevoEstado);
         }
 
         pedido.setEstado(nuevoEstado);
@@ -195,15 +278,14 @@ public class PedidoService {
         DTOPedido dtoActualizado = DTOPedido.desde(pedidoGuardado);
         try {
             if (nuevoEstado == EnumEstadoPedido.EnCamino) {
-            notificacionesService.notificarPedidoEnCamino(dtoActualizado, pedidoGuardado.getTiempoPreparacion());
-            
+                notificacionesService.notificarPedidoEnCamino(dtoActualizado, pedidoGuardado.getTiempoPreparacion());
             } else if (nuevoEstado == EnumEstadoPedido.Entregado) {
-                
                 String emailCliente = pedidoGuardado.getCliente().getEmail();
-                String tokenPush = "TOKEN_SIMULADO"; 
+                String tokenPush = "TOKEN_SIMULADO";
                 notificacionesService.enviarPush(tokenPush, 0, "Pedido Entregado", emailCliente);
             }
         } catch (Exception e) {
+            // Las notificaciones no deben romper la transición de estado.
             System.err.println("Error enviando notificación: " + e.getMessage());
         }
 
@@ -217,90 +299,72 @@ public class PedidoService {
     }
 
     private EnumEstadoPedido parsearEstado(String estadoStr) {
+        if (estadoStr == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El estado enviado no es válido.");
+        }
         try {
             return EnumEstadoPedido.valueOf(estadoStr.trim());
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("El estado enviado no es válido.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El estado enviado no es válido.");
         }
     }
 
-    public void guardarPedido(DTOPedido pedidoDTO) {
-        // TODO: implementar
-    }
-
-	public List<DTOPedido> listarPedidosPendientes(String restauranteId) {
-        Integer idRestaurante = Integer.valueOf(restauranteId);
-        //buscarPedidos(restauranteId, "Pendiente")
-        List<Pedido> pedidos = pedidoRepository.findByRestauranteIdUsuarioAndEstado(idRestaurante, EnumEstadoPedido.Pendiente);        
-        return pedidos.stream().map(DTOPedido::desde).collect(Collectors.toList());
-    }
-    
     @Transactional
     public DTOPedido confirmarPedidoPendiente(Integer pedidoId) {
-        Pedido pedido = pedidoRepository.findById(pedidoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
         if (pedido.getEstado() == EnumEstadoPedido.Cancelado) {
             throw new PedidoCanceladoException("El pedido ha sido cancelado");
         }
-        pedido.setEstado(EnumEstadoPedido.Confirmado);  //creo que no existe ese enum hay que crearlo si se puede o no se como se maneja
-        pedido = pedidoRepository.save(pedido);
-        Integer tiempoPreparacion = calcularTiempoPreparacion(pedido);
-        Integer tiempoViaje = obtenerTiempoViaje(pedido);
-        Integer tiempoEstimado = tiempoViaje + tiempoPreparacion;
+        if (pedido.getEstado() != EnumEstadoPedido.Pagado) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Solo se pueden confirmar pedidos en estado 'Pagado'");
+        }
+
+        pedido.setEstado(EnumEstadoPedido.EnPreparacion);
+
+        Integer tiempoEstimado = calcularTiempoEstimadoEntrega(pedido);
+        pedido.setTiempoPreparacion(tiempoEstimado);
+        pedidoRepository.save(pedido);
+     
         DTOPedido pedidoDTO = DTOPedido.desde(pedido);
         notificacionesService.notificarConfirmacionPedido(pedidoDTO, tiempoEstimado);
-        return pedidoDTO;   //tiene que ser 200 OK
+        return pedidoDTO;
     }
-    
-    // Lógica interna: Recorre productos buscando el tiempo mayor
+
+    // Recorre los productos del pedido buscando el mayor tiempo de preparación
+    // entre los que sean Plato (otros productos no tienen tiempo asociado).
     private Integer calcularTiempoPreparacion(Pedido pedido) {
-        if (pedido.getProductos() == null) return 0;
-        
+        if (pedido.getProductos() == null) {
+            return 0;
+        }
         return pedido.getProductos().stream()
                 .map(pp -> {
-                    // Extrae el tiempo si la entidad es un Plato
-                    if (pp.getProducto() != null && pp.getProducto() instanceof Plato plato) {
-                        return plato.getTiempoPreparacionMinutos() != null ? plato.getTiempoPreparacionMinutos() : 0;
+                    if (pp.getProducto() instanceof Plato plato) {
+                        return plato.getTiempoPreparacionMinutos();
                     }
                     return 0;
                 })
                 .max(Integer::compareTo)
                 .orElse(0);
     }
-    
+
+
     private Integer obtenerTiempoViaje(Pedido pedido) {
-        try {
-            RestTemplate restTemplate = new RestTemplate();
-            DTODireccion direccionCliente = DTODireccion.desde(pedido.getDireccionEntrega());
-            
-            // Construcción del Endpoint Geoapify según el diagrama
-            // mode=drive | waypoints=lat,lon|lat,lon
-            String urlGeoapify = String.format(
-                "https://api.geoapify.com/v1/routing?waypoints=%s,%s|%s,%s&mode=drive&apiKey=TU_API_KEY",
-                direccionCliente.getLatitud(), direccionCliente.getLongitud(),
-                pedido.getRestaurante().getLatitud(), pedido.getRestaurante().getLongitud()
-            );
-
-            // ALT 1.1: Simulamos la petición (Descomentar para entorno de producción real)
-            // ResponseEntity<Map> response = restTemplate.getForEntity(urlGeoapify, Map.class);
-            // Integer duracion = extraerDuracionDesdeRespuesta(response);
-            // return duracion;
-
-            // Para evitar que la app explote si no tienes Key o red, forzamos un fallo simulado
-            throw new RuntimeException("Forzando fallback de Geoapify");
-
-        } catch (Exception e) {
-            // ALT 1.2 - API no responde -> Retorna valor por defecto
-            System.err.println("Geoapify Routing API no responde o falló. Aplicando fallback de 30 min.");
-            return 30; 
+        DTODireccion origen = pedido.getRestaurante().getDireccion();
+        DTODireccion destino = pedido.getDireccionEntrega();
+        if (origen == null || destino == null) {
+            return 0;
         }
+        return geoapifyService.calcularTiempoLlegadaMinutos(origen, destino);
     }
 
-    public DTOPedido actualizarHoraEntrega() {
-        // TODO: implementar
-        return null;
+    private Integer calcularTiempoEstimadoEntrega(Pedido pedido) {
+        Integer tiempoPreparacion = calcularTiempoPreparacion(pedido);
+        Integer tiempoViaje = obtenerTiempoViaje(pedido);
+        return tiempoPreparacion + tiempoViaje;
     }
 
-    
     @Transactional
     public DTOPedido reembolsarPedido(DTOPedido pedidoDTO) {
         if (pedidoDTO == null || pedidoDTO.getIdPedido() == null) {
@@ -308,7 +372,7 @@ public class PedidoService {
                     "DTOPedido inválido para reembolsar");
         }
 
-        Pedido pedido = ordenesService.obtenerOFallar(pedidoDTO.getIdPedido());
+        Pedido pedido = obtenerOFallar(pedidoDTO.getIdPedido());
 
         Pago pago = pedido.getPago();
         if (pago == null || pago.getIdTransaccion() == null || pago.getIdTransaccion().isBlank()) {
@@ -317,8 +381,6 @@ public class PedidoService {
         }
 
         if (pedido.getEstado() == EnumEstadoPedido.Reembolsado) {
-            // Aun así dejamos pasar a MP por la idempotencia, pero cortamos acá
-            // para evitar trabajo innecesario y dar feedback claro al front.
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "El pedido " + pedido.getIdPedido() + " ya estaba reembolsado");
         }
@@ -327,8 +389,13 @@ public class PedidoService {
         pagoService.reembolsar(pago.getIdTransaccion(), idempotencyKey);
 
         pedido.setEstado(EnumEstadoPedido.Reembolsado);
-        ordenesService.guardar(pedido);
+        pedidoRepository.save(pedido);
 
         return DTOPedido.desde(pedido);
+    }
+
+    public DTOPedido actualizarHoraEntrega() {
+        // TODO: implementar
+        return null;
     }
 }

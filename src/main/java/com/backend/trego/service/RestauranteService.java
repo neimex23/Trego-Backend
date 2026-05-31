@@ -1,7 +1,6 @@
 package com.backend.trego.service;
 
 import com.backend.trego.entity.Ingrediente;
-import com.backend.trego.entity.Plato;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOFirma;
@@ -15,7 +14,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 
 import java.time.LocalTime;
 import java.util.ArrayList;

@@ -2,17 +2,12 @@ package com.backend.trego.controller;
 
 import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOProducto;
-import com.backend.trego.entity.DTOs.DTOSubCategoria;
-import com.backend.trego.entity.Enums.EnumCategoriaProducto;
-import com.backend.trego.entity.Enums.EnumTipoProducto;
 import com.backend.trego.service.ProductosService;
 import com.backend.trego.service.RestauranteService;
-import com.backend.trego.service.SubCategoriaService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.Table;
 
 import java.util.List;
 

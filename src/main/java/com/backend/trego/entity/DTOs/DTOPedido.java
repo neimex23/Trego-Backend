@@ -72,7 +72,7 @@ public class DTOPedido {
                 pedido.getFechaCreacion(),
                 pedido.getFechaExpiracion(),
                 pedido.getHorarioEntrega(),
-                null);
+                pedido.getTiempoPreparacion());
     }
 
     private static DTOProductoPedido mapearLinea(ProductoPedido pp) {
