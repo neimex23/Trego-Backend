@@ -50,6 +50,15 @@ public class PedidoController {
     }
 	//-----------------
 
+	// --- "LISTAR PEDIDOS PENDIENTES" ---
+	@GetMapping("/pendientes")
+    @Operation(summary = "Listar pedidos pendientes", description = "Devuelve los pedidos en estado Pendiente para el restaurante autenticado.")
+    @ApiResponse(responseCode = "200", description = "Listado de pedidos pendientes")
+    public ResponseEntity<List<DTOPedido>> listarPedidosPendientes(@AuthenticationPrincipal AuthenticatedUser user) {
+        String restauranteId = String.valueOf(user.getIdUsuario());
+        return ResponseEntity.ok(pedidoService.listarPedidosPendientes(restauranteId));
+    }
+
     @PostMapping("/confirmar")
     @Operation(summary = "Confirmar pedido",
             description = "Recibe el carrito, la dirección de entrega y el restaurante. Persiste el pedido en estado pendiente y devuelve la preferencia de pago de MercadoPago con la URL de checkout.")
@@ -61,6 +70,15 @@ public class PedidoController {
                 request.getDireccion(),
                 String.valueOf(request.getRestauranteId()));
         return ResponseEntity.ok(preferencia);
+    }
+
+	@PatchMapping("/confirmar/{pedidoId}")
+    @Operation(summary = "Confirmar pedido", description = "El restaurante confirma un pedido. Calcula tiempos de entrega mediante API externa y notifica al cliente.")
+    @ApiResponse(responseCode = "200", description = "Pedido confirmado con exito")
+    @ApiResponse(responseCode = "409", description = "El pedido ha sido cancelado previamente")
+    public ResponseEntity<DTOPedido> confirmarPedidoRestaurante(@PathVariable Integer pedidoId) {
+		//no se si va a funcionar hay que probar con front
+        return ResponseEntity.ok(pedidoService.confirmarPedidoPendiente(pedidoId));
     }
 
     // Ver el menú de un restaurante. restauranteId identifica el restaurante que

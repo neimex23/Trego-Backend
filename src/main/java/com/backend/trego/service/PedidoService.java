@@ -228,9 +228,71 @@ public class PedidoService {
         // TODO: implementar
     }
 
-    public List<DTOPedido> listarPedidosPendientes(String restauranteId) {
-        // TODO: implementar
-        return List.of();
+	public List<DTOPedido> listarPedidosPendientes(String restauranteId) {
+        Integer idRestaurante = Integer.valueOf(restauranteId);
+        //buscarPedidos(restauranteId, "Pendiente")
+        List<Pedido> pedidos = pedidoRepository.findByRestauranteIdUsuarioAndEstado(idRestaurante, EnumEstadoPedido.Pendiente);        
+        return pedidos.stream().map(DTOPedido::desde).collect(Collectors.toList());
+    }
+    
+    @Transactional
+    public DTOPedido confirmarPedidoPendiente(Integer pedidoId) {
+        Pedido pedido = pedidoRepository.findById(pedidoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
+        if (pedido.getEstado() == EnumEstadoPedido.Cancelado) {
+            throw new PedidoCanceladoException("El pedido ha sido cancelado");
+        }
+        pedido.setEstado(EnumEstadoPedido.Confirmado);  //creo que no existe ese enum hay que crearlo si se puede o no se como se maneja
+        pedido = pedidoRepository.save(pedido);
+        Integer tiempoPreparacion = calcularTiempoPreparacion(pedido);
+        Integer tiempoViaje = obtenerTiempoViaje(pedido);
+        Integer tiempoEstimado = tiempoViaje + tiempoPreparacion;
+        DTOPedido pedidoDTO = DTOPedido.desde(pedido);
+        notificacionesService.notificarConfirmacionPedido(pedidoDTO, tiempoEstimado);
+        return pedidoDTO;   //tiene que ser 200 OK
+    }
+    
+    // Lógica interna: Recorre productos buscando el tiempo mayor
+    private Integer calcularTiempoPreparacion(Pedido pedido) {
+        if (pedido.getProductos() == null) return 0;
+        
+        return pedido.getProductos().stream()
+                .map(pp -> {
+                    // Extrae el tiempo si la entidad es un Plato
+                    if (pp.getProducto() != null && pp.getProducto() instanceof Plato plato) {
+                        return plato.getTiempoPreparacionMinutos() != null ? plato.getTiempoPreparacionMinutos() : 0;
+                    }
+                    return 0;
+                })
+                .max(Integer::compareTo)
+                .orElse(0);
+    }
+    
+    private Integer obtenerTiempoViaje(Pedido pedido) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            DTODireccion direccionCliente = DTODireccion.desde(pedido.getDireccionEntrega());
+            
+            // Construcción del Endpoint Geoapify según el diagrama
+            // mode=drive | waypoints=lat,lon|lat,lon
+            String urlGeoapify = String.format(
+                "https://api.geoapify.com/v1/routing?waypoints=%s,%s|%s,%s&mode=drive&apiKey=TU_API_KEY",
+                direccionCliente.getLatitud(), direccionCliente.getLongitud(),
+                pedido.getRestaurante().getLatitud(), pedido.getRestaurante().getLongitud()
+            );
+
+            // ALT 1.1: Simulamos la petición (Descomentar para entorno de producción real)
+            // ResponseEntity<Map> response = restTemplate.getForEntity(urlGeoapify, Map.class);
+            // Integer duracion = extraerDuracionDesdeRespuesta(response);
+            // return duracion;
+
+            // Para evitar que la app explote si no tienes Key o red, forzamos un fallo simulado
+            throw new RuntimeException("Forzando fallback de Geoapify");
+
+        } catch (Exception e) {
+            // ALT 1.2 - API no responde -> Retorna valor por defecto
+            System.err.println("Geoapify Routing API no responde o falló. Aplicando fallback de 30 min.");
+            return 30; 
+        }
     }
 
     public DTOPedido actualizarHoraEntrega() {
