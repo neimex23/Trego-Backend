@@ -81,4 +81,15 @@ public class PedidoController {
             return ResponseEntity.ok(Map.of("mensaje", e.getMessage()));
         }
     }
+  // Nueva actualizar estado  
+    @PatchMapping("/estado")
+    @Operation(summary = "Actualizar estado del pedido", description = "Permite transicionar un pedido a En Camino o Entregado, validando los saltos de estado.")
+    @ApiResponse(responseCode = "200", description = "Estado actualizado correctamente")
+    @ApiResponse(responseCode = "400", description = "Salto de estado incorrecto")
+	public ResponseEntity<DTOPedido> actualizarEstado(@RequestBody DTOActualizarEstadoRequest request) {
+        DTOPedido pedidoActualizado = pedidoService.actualizarEstadoPedido(request.getPedido(), request.getEstado());
+    	return ResponseEntity.ok(pedidoActualizado);
+	}
+    
+    
 }

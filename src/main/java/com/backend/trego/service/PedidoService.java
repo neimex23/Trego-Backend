@@ -140,13 +140,6 @@ public class PedidoService {
                 d.getEsquina(), d.getLatitud(), d.getLongitud());
     }
 
-  /* obsoleto
-    public List<DTOPedido> listarPedidosConfirmados(String restauranteId) {
-        // TODO: implementar
-        return List.of();
-    }
-*/ 
-
 	public List<DTOPedido> listarPedidosConfirmados(Integer idProducto, String estado) {
         var restauranteId = currentUserService.getCurrentId();
         Integer idRestaurante = Integer.valueOf(restauranteId);
@@ -182,9 +175,53 @@ public class PedidoService {
         return 0;
     }
 
-    public DTOPedido actualizarPedido(DTOPedido pedidoDTO) {
-        // TODO: implementar
-        return null;
+    public DTOPedido actualizarEstadoPedido(DTOPedido pedidoDTO, String estadoStr) {
+        Pedido pedido = pedidoRepository.findById(pedidoDTO.getIdPedido())
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        EnumEstadoPedido estadoActual = pedido.getEstado();
+        EnumEstadoPedido nuevoEstado = parsearEstado(estadoStr);
+
+        if (!verificarSaltoEstado(estadoActual, nuevoEstado)) {
+            throw new RuntimeException("Salto de estado incorrecto: No se puede pasar de " + estadoActual + " a " + nuevoEstado);
+        }
+
+        pedido.setEstado(nuevoEstado);
+        if (nuevoEstado == EnumEstadoPedido.Entregado) {
+            pedido.setHorarioEntrega(LocalDateTime.now());
+        }
+
+        Pedido pedidoGuardado = pedidoRepository.save(pedido);
+        DTOPedido dtoActualizado = DTOPedido.desde(pedidoGuardado);
+        try {
+            if (nuevoEstado == EnumEstadoPedido.EnCamino) {
+            notificacionesService.notificarPedidoEnCamino(dtoActualizado, pedidoGuardado.getTiempoPreparacion());
+            
+            } else if (nuevoEstado == EnumEstadoPedido.Entregado) {
+                
+                String emailCliente = pedidoGuardado.getCliente().getEmail();
+                String tokenPush = "TOKEN_SIMULADO"; 
+                notificacionesService.enviarPush(tokenPush, 0, "Pedido Entregado", emailCliente);
+            }
+        } catch (Exception e) {
+            System.err.println("Error enviando notificación: " + e.getMessage());
+        }
+
+        return dtoActualizado;
+    }
+
+    private boolean verificarSaltoEstado(EnumEstadoPedido actual, EnumEstadoPedido nuevo) {
+        if (actual == EnumEstadoPedido.EnPreparacion && nuevo == EnumEstadoPedido.EnCamino) return true;
+        if (actual == EnumEstadoPedido.EnCamino && nuevo == EnumEstadoPedido.Entregado) return true;
+        return false;
+    }
+
+    private EnumEstadoPedido parsearEstado(String estadoStr) {
+        try {
+            return EnumEstadoPedido.valueOf(estadoStr.trim());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("El estado enviado no es válido.");
+        }
     }
 
     public void guardarPedido(DTOPedido pedidoDTO) {
