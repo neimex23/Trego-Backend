@@ -11,7 +11,11 @@ import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
 import com.backend.trego.entity.DTOs.DTOProductoSimplificado;
 import com.backend.trego.repository.UsuarioRepository;
-// import com.backend.trego.entity.DTOs.DTORestaurante;
+
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.Notification;
 
 import jakarta.mail.internet.MimeMessage;
 
@@ -24,7 +28,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
@@ -50,9 +56,7 @@ public class NotificacionesService {
     }
 
     // Notifica al cliente que su pedido fue confirmado por el restaurante, con el
-    // tiempo estimado de entrega (preparación + viaje). Si el cliente no se puede
-    // resolver o falla el envío, se loguea pero no se propaga la excepción para
-    // no abortar la confirmación del pedido.
+    // tiempo estimado de entrega (preparación + viaje).
     public void notificarConfirmacionPedido(DTOPedido pedidoDTO, Integer tiempoEstimado) {
         if (pedidoDTO == null) {
             System.err.println("[Notificacion] pedidoDTO nulo, se omite el envio.");
@@ -94,8 +98,7 @@ public class NotificacionesService {
     }
 
     // Cuerpo HTML del mail de confirmación: nombre del cliente, productos del
-    // pedido, total, tiempo estimado y, si está disponible, la hora estimada de
-    // entrega ya calculada por PedidoService.
+    // pedido, total, tiempo estimado y, si está disponible, la hora estimada de entrega
     private String construirCuerpoConfirmacion(DTOPedido pedidoDTO, Integer tiempoEstimado) {
         String nombreCliente = textoOGuion(pedidoDTO.getNombreCliente());
         String direccionEntrega = formatearDireccion(pedidoDTO.getDireccionEntrega());
@@ -177,20 +180,205 @@ public class NotificacionesService {
         return sb.toString();
     }
 
-    // Notifica al cliente que su pedido ya está en camino.
+    // Notifica al cliente que su pedido salió del restaurante y está en camino,
+    // con el tiempo estimado de viaje. 
     public void notificarPedidoEnCamino(DTOPedido pedidoDTO, Integer tiempoViaje) {
-        // TODO: implementar envío real (mail/push). Stub para no bloquear el flujo.
-        System.out.println("[Notificacion] Pedido " + (pedidoDTO != null ? pedidoDTO.getIdPedido() : null)
-                + " en camino. Tiempo de viaje: " + tiempoViaje + " min.");
+        if (pedidoDTO == null) {
+            System.err.println("[Notificacion] pedidoDTO nulo, se omite el envio.");
+            return;
+        }
+
+        Integer idCliente = pedidoDTO.getIdCliente();
+        if (idCliente == null) {
+            System.err.println("[Notificacion] Pedido " + pedidoDTO.getIdPedido()
+                    + " sin idCliente, se omite el envio.");
+            return;
+        }
+
+        Optional<Cliente> clienteOpt = usuarioRepository.findClienteById(idCliente);
+        if (clienteOpt.isEmpty() || clienteOpt.get().getEmail() == null
+                || clienteOpt.get().getEmail().isBlank()) {
+            System.err.println("[Notificacion] Cliente " + idCliente
+                    + " no encontrado o sin email; pedido " + pedidoDTO.getIdPedido());
+            return;
+        }
+        Cliente cliente = clienteOpt.get();
+
+        try {
+            MimeMessage mail = mailSender.createMimeMessage();
+            MimeMessageHelper estructuraMail = new MimeMessageHelper(mail, false, "UTF-8");
+
+            estructuraMail.setTo(cliente.getEmail());
+            estructuraMail.setFrom(mailFrom, mailFromName);
+            estructuraMail.setSubject("Tu pedido #" + pedidoDTO.getIdPedido() + " está en camino");
+            estructuraMail.setText(construirCuerpoEnCamino(pedidoDTO, tiempoViaje), true);
+
+            mailSender.send(mail);
+            System.out.println("Mail de en-camino enviado al cliente: " + cliente.getEmail()
+                    + " (pedido " + pedidoDTO.getIdPedido() + ")");
+        } catch (Exception e) {
+            System.err.println("Error al enviar mail de en-camino del pedido "
+                    + pedidoDTO.getIdPedido() + ": " + e.getMessage());
+        }
     }
 
-    // Envío de push genérico (stub). idDestino se reserva para el id del usuario
-    // destinatario cuando se integre el proveedor real.
-    public void enviarPush(String token, int idDestino, String titulo, String destinatario) {
-        // TODO: integrar con FCM/APNs.
-        System.out.println("[Push] token=" + token + " idDestino=" + idDestino
-                + " titulo='" + titulo + "' destinatario=" + destinatario);
+    // Cuerpo HTML del mail de "en camino": nombre del cliente, número de pedido,
+    // tiempo estimado de viaje, dirección de entrega y, si está disponible, la hora estimada de llegada 
+    private String construirCuerpoEnCamino(DTOPedido pedidoDTO, Integer tiempoViaje) {
+        String nombreCliente = textoOGuion(pedidoDTO.getNombreCliente());
+        String direccionEntrega = formatearDireccion(pedidoDTO.getDireccionEntrega());
+
+        String tiempoMostrado = (tiempoViaje != null && tiempoViaje > 0)
+                ? tiempoViaje + " min"
+                : "—";
+
+        LocalDateTime horaEntrega = pedidoDTO.getHoraEntregaEstimada();
+        String horaEntregaMostrada = horaEntrega != null
+                ? horaEntrega.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                : null;
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
+        sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
+        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("</div>");
+
+        sb.append("<div style='padding: 32px;'>");
+        sb.append("<h2 style='color: #333;'>").append(nombreCliente)
+                .append(", tu pedido está en camino</h2>");
+
+        sb.append("<p style='color: #555; font-size: 16px;'>")
+                .append("Tu pedido <strong>#")
+                .append(pedidoDTO.getIdPedido())
+                .append("</strong> ya salió del restaurante y se dirige a tu dirección.")
+                .append("</p>");
+
+        sb.append("<div style='background-color: #f9f9f9; border-left: 4px solid #FF6600; padding: 12px 16px; color: #555; margin: 16px 0;'>")
+                .append("<p style='margin: 0;'><strong>Tiempo estimado de viaje:</strong> ")
+                .append(tiempoMostrado)
+                .append("</p>");
+        if (horaEntregaMostrada != null) {
+            sb.append("<p style='margin: 8px 0 0 0;'><strong>Llegada aproximada:</strong> ")
+                    .append(horaEntregaMostrada)
+                    .append("</p>");
+        }
+        sb.append("</div>");
+
+        sb.append("<p style='color: #555;'><strong>Dirección de entrega:</strong> ")
+                .append(direccionEntrega)
+                .append("</p>");
+
+        sb.append("<p style='color: #555;'>Podés seguir el recorrido en tiempo real desde la app.</p>");
+        sb.append("<hr style='border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;'>");
+        sb.append("<p style='color: #555;'><strong>El equipo de Trego</strong></p>");
+        sb.append("</div>");
+
+        sb.append("<div style='background-color: #f5f5f5; padding: 16px; text-align: center;'>");
+        sb.append("<p style='color: #999; font-size: 12px; margin: 0;'>© 2026 Trego. Todos los derechos reservados.</p>");
+        sb.append("</div>");
+        sb.append("</div>");
+
+        return sb.toString();
     }
+
+    // Notifica al cliente que su pedido fue entregado. Igual que las demás
+    // notificaciones de pedido, los errores se loguean sin propagar para no
+    // bloquear el cambio de estado.
+    public void notificarPedidoEntregado(DTOPedido pedidoDTO) {
+        if (pedidoDTO == null) {
+            System.err.println("[Notificacion] pedidoDTO nulo, se omite el envio.");
+            return;
+        }
+
+        Integer idCliente = pedidoDTO.getIdCliente();
+        if (idCliente == null) {
+            System.err.println("[Notificacion] Pedido " + pedidoDTO.getIdPedido()
+                    + " sin idCliente, se omite el envio.");
+            return;
+        }
+
+        Optional<Cliente> clienteOpt = usuarioRepository.findClienteById(idCliente);
+        if (clienteOpt.isEmpty() || clienteOpt.get().getEmail() == null
+                || clienteOpt.get().getEmail().isBlank()) {
+            System.err.println("[Notificacion] Cliente " + idCliente
+                    + " no encontrado o sin email; pedido " + pedidoDTO.getIdPedido());
+            return;
+        }
+        Cliente cliente = clienteOpt.get();
+
+        try {
+            MimeMessage mail = mailSender.createMimeMessage();
+            MimeMessageHelper estructuraMail = new MimeMessageHelper(mail, false, "UTF-8");
+
+            estructuraMail.setTo(cliente.getEmail());
+            estructuraMail.setFrom(mailFrom, mailFromName);
+            estructuraMail.setSubject("Tu pedido #" + pedidoDTO.getIdPedido() + " fue entregado");
+            estructuraMail.setText(construirCuerpoEntregado(pedidoDTO), true);
+
+            mailSender.send(mail);
+            System.out.println("Mail de entrega enviado al cliente: " + cliente.getEmail()
+                    + " (pedido " + pedidoDTO.getIdPedido() + ")");
+        } catch (Exception e) {
+            System.err.println("Error al enviar mail de entrega del pedido "
+                    + pedidoDTO.getIdPedido() + ": " + e.getMessage());
+        }
+    }
+
+    // Cuerpo HTML del mail de entrega: confirma la entrega, muestra el total,
+    // la dirección y la hora real de entrega (se usa LocalDateTime.now() porque
+    // el DTO no transporta la marca de tiempo del cambio de estado).
+    private String construirCuerpoEntregado(DTOPedido pedidoDTO) {
+        String nombreCliente = textoOGuion(pedidoDTO.getNombreCliente());
+        String direccionEntrega = formatearDireccion(pedidoDTO.getDireccionEntrega());
+        String horaEntrega = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
+        sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
+        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("</div>");
+
+        sb.append("<div style='padding: 32px;'>");
+        sb.append("<h2 style='color: #333;'>").append(nombreCliente)
+                .append(", tu pedido fue entregado</h2>");
+
+        sb.append("<p style='color: #555; font-size: 16px;'>")
+                .append("Confirmamos la entrega de tu pedido <strong>#")
+                .append(pedidoDTO.getIdPedido())
+                .append("</strong>. ¡Que lo disfrutes!")
+                .append("</p>");
+
+        sb.append("<div style='background-color: #f9f9f9; border-left: 4px solid #FF6600; padding: 12px 16px; color: #555; margin: 16px 0;'>")
+                .append("<p style='margin: 0;'><strong>Entregado:</strong> ")
+                .append(horaEntrega)
+                .append("</p>")
+                .append("<p style='margin: 8px 0 0 0;'><strong>Dirección:</strong> ")
+                .append(direccionEntrega)
+                .append("</p>");
+        if (pedidoDTO.getTotal() != null) {
+            sb.append("<p style='margin: 8px 0 0 0;'><strong>Total:</strong> $")
+                    .append(pedidoDTO.getTotal())
+                    .append("</p>");
+        }
+        sb.append("</div>");
+
+        sb.append("<p style='color: #555;'>Si algo no salió como esperabas, podés dejarnos tu comentario desde la app.</p>");
+        sb.append("<hr style='border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;'>");
+        sb.append("<p style='color: #555;'>Gracias por elegirnos.</p>");
+        sb.append("<p style='color: #555;'><strong>El equipo de Trego</strong></p>");
+        sb.append("</div>");
+
+        sb.append("<div style='background-color: #f5f5f5; padding: 16px; text-align: center;'>");
+        sb.append("<p style='color: #999; font-size: 12px; margin: 0;'>© 2026 Trego. Todos los derechos reservados.</p>");
+        sb.append("</div>");
+        sb.append("</div>");
+
+        return sb.toString();
+    }
+
 
     // Manda el correo de confirmación con el cuerpo HTML y el comprobante en PDF.
     public void notificarConfirmacionPedidoConPDF(Usuario usuario, List<Producto> productos, Restaurante restaurante,
@@ -419,5 +607,121 @@ public class NotificacionesService {
 
     private static String formatearDireccion(DTODireccion direccion) {
         return direccion == null ? "—" : direccion.toString();
+    }
+
+
+    // Notificaciones push
+    // ============================================================
+
+    private boolean enviarPushFCM(String token, String titulo, String cuerpo,
+                                  Map<String, String> data) {
+        if (token == null || token.isBlank()) {
+            System.err.println("[Push] Token FCM vacío, se omite el envío.");
+            return false;
+        }
+        try {
+            Notification notification = Notification.builder()
+                    .setTitle(titulo)
+                    .setBody(cuerpo)
+                    .build();
+
+            Message.Builder builder = Message.builder()
+                    .setToken(token)
+                    .setNotification(notification);
+
+            if (data != null) {
+                for (Map.Entry<String, String> e : data.entrySet()) {
+                    if (e.getKey() != null && e.getValue() != null) {
+                        builder.putData(e.getKey(), e.getValue());
+                    }
+                }
+            }
+
+            String response = FirebaseMessaging.getInstance().send(builder.build());
+            System.out.println("[Push] Enviado a token=" + acortar(token)
+                    + " messageId=" + response + " titulo='" + titulo + "'");
+            return true;
+        } catch (FirebaseMessagingException e) {
+            System.err.println("[Push] Error FCM al enviar a token=" + acortar(token)
+                    + " : " + e.getMessagingErrorCode() + " - " + e.getMessage());
+            return false;
+        } catch (Exception e) {
+            System.err.println("[Push] Error inesperado al enviar push: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Resuelve el token FCM del cliente dueño del pedido. Devuelve null si el
+    // cliente no se puede ubicar o no registró todavía un dispositivo.
+    private String obtenerTokenCliente(DTOPedido pedidoDTO) {
+        if (pedidoDTO == null || pedidoDTO.getIdCliente() == null) {
+            return null;
+        }
+        Optional<Cliente> clienteOpt = usuarioRepository.findClienteById(pedidoDTO.getIdCliente());
+        if (clienteOpt.isEmpty()) {
+            System.err.println("[Push] Cliente " + pedidoDTO.getIdCliente()
+                    + " no encontrado; pedido " + pedidoDTO.getIdPedido());
+            return null;
+        }
+        String token = clienteOpt.get().getFcmToken();
+        if (token == null || token.isBlank()) {
+            System.err.println("[Push] Cliente " + pedidoDTO.getIdCliente()
+                    + " sin token FCM; pedido " + pedidoDTO.getIdPedido());
+            return null;
+        }
+        return token;
+    }
+
+    // Construye el payload data común a todas las notificaciones de cambio de
+    // estado: idPedido y estado, suficientes para que la app abra el detalle.
+    private Map<String, String> dataPedido(DTOPedido pedidoDTO, String estado) {
+        Map<String, String> data = new HashMap<>();
+        if (pedidoDTO != null && pedidoDTO.getIdPedido() != null) {
+            data.put("idPedido", String.valueOf(pedidoDTO.getIdPedido()));
+        }
+        data.put("estado", estado);
+        data.put("tipo", "ESTADO_PEDIDO");
+        return data;
+    }
+
+    private static String acortar(String token) {
+        if (token == null || token.length() <= 12) {
+            return token;
+        }
+        return token.substring(0, 6) + "…" + token.substring(token.length() - 4);
+    }
+
+    public void notificarPushEnPreparacion(DTOPedido pedidoDTO, Integer tiempoEstimado) {
+        String token = obtenerTokenCliente(pedidoDTO);
+        if (token == null) {
+            return;
+        }
+        String titulo = "Tu pedido está en preparación";
+        String cuerpo = (tiempoEstimado != null && tiempoEstimado > 0)
+                ? "El restaurante ya está preparando tu pedido. Tiempo estimado: " + tiempoEstimado + " min."
+                : "El restaurante ya está preparando tu pedido.";
+        enviarPushFCM(token, titulo, cuerpo, dataPedido(pedidoDTO, "EnPreparacion"));
+    }
+
+    public void notificarPushEnCamino(DTOPedido pedidoDTO, Integer tiempoViaje) {
+        String token = obtenerTokenCliente(pedidoDTO);
+        if (token == null) {
+            return;
+        }
+        String titulo = "Tu pedido está en camino";
+        String cuerpo = (tiempoViaje != null && tiempoViaje > 0)
+                ? "Tu pedido salió del restaurante. Llega en aprox. " + tiempoViaje + " min."
+                : "Tu pedido salió del restaurante.";
+        enviarPushFCM(token, titulo, cuerpo, dataPedido(pedidoDTO, "EnCamino"));
+    }
+
+    public void notificarPushEntregado(DTOPedido pedidoDTO) {
+        String token = obtenerTokenCliente(pedidoDTO);
+        if (token == null) {
+            return;
+        }
+        String titulo = "Tu pedido fue entregado";
+        String cuerpo = "Confirmamos la entrega de tu pedido. ¡Que lo disfrutes!";
+        enviarPushFCM(token, titulo, cuerpo, dataPedido(pedidoDTO, "Entregado"));
     }
 }

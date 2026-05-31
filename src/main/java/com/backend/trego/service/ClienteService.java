@@ -98,4 +98,13 @@ public class ClienteService {
         c.setHabilitado(habilitado);
         return repo.save(c);
     }
+
+    // Persiste el token de FCM del dispositivo del cliente para poder enviarle
+    // notificaciones push. Si el token viene vacío se interpreta como un logout
+    // y se limpia el campo para evitar enviar a un dispositivo que ya no aplica.
+    public Cliente actualizarFcmToken(Integer id, String fcmToken) {
+        Cliente c = obtenerOFallar(id);
+        c.setFcmToken((fcmToken == null || fcmToken.isBlank()) ? null : fcmToken);
+        return repo.save(c);
+    }
 }

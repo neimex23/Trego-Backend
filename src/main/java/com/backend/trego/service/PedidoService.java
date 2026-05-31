@@ -254,22 +254,22 @@ public class PedidoService {
     }
 
     @Transactional
-    public DTOPedido actualizarEstadoPedido(DTOPedido pedidoDTO, String estadoStr) {
+    public DTOPedido actualizarEstadoPedido(DTOPedido pedidoDTO, EnumEstadoPedido estado) {
         if (pedidoDTO == null || pedidoDTO.getIdPedido() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "DTOPedido inválido");
         }
 
         Pedido pedido = obtenerOFallar(pedidoDTO.getIdPedido());
 
+        EnumEstadoPedido nuevoEstado = estado;
         EnumEstadoPedido estadoActual = pedido.getEstado();
-        EnumEstadoPedido nuevoEstado = parsearEstado(estadoStr);
 
         if (!verificarSaltoEstado(estadoActual, nuevoEstado)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Salto de estado incorrecto: No se puede pasar de " + estadoActual + " a " + nuevoEstado);
         }
 
-        pedido.setEstado(nuevoEstado);
+        pedido.setEstado(estado);
         if (nuevoEstado == EnumEstadoPedido.Entregado) {
             pedido.setHorarioEntrega(LocalDateTime.now());
         }
@@ -278,11 +278,12 @@ public class PedidoService {
         DTOPedido dtoActualizado = DTOPedido.desde(pedidoGuardado);
         try {
             if (nuevoEstado == EnumEstadoPedido.EnCamino) {
+                Integer tiempoViaje = obtenerTiempoViaje(pedidoGuardado);
                 notificacionesService.notificarPedidoEnCamino(dtoActualizado, pedidoGuardado.getTiempoPreparacion());
+                notificacionesService.notificarPushEnCamino(dtoActualizado, tiempoViaje);
             } else if (nuevoEstado == EnumEstadoPedido.Entregado) {
-                String emailCliente = pedidoGuardado.getCliente().getEmail();
-                String tokenPush = "TOKEN_SIMULADO";
-                notificacionesService.enviarPush(tokenPush, 0, "Pedido Entregado", emailCliente);
+                notificacionesService.notificarPedidoEntregado(dtoActualizado);
+                notificacionesService.notificarPushEntregado(dtoActualizado);
             }
         } catch (Exception e) {
             // Las notificaciones no deben romper la transición de estado.
@@ -296,17 +297,6 @@ public class PedidoService {
         if (actual == EnumEstadoPedido.EnPreparacion && nuevo == EnumEstadoPedido.EnCamino) return true;
         if (actual == EnumEstadoPedido.EnCamino && nuevo == EnumEstadoPedido.Entregado) return true;
         return false;
-    }
-
-    private EnumEstadoPedido parsearEstado(String estadoStr) {
-        if (estadoStr == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El estado enviado no es válido.");
-        }
-        try {
-            return EnumEstadoPedido.valueOf(estadoStr.trim());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El estado enviado no es válido.");
-        }
     }
 
     @Transactional
@@ -329,6 +319,11 @@ public class PedidoService {
      
         DTOPedido pedidoDTO = DTOPedido.desde(pedido);
         notificacionesService.notificarConfirmacionPedido(pedidoDTO, tiempoEstimado);
+        try {
+            notificacionesService.notificarPushEnPreparacion(pedidoDTO, tiempoEstimado);
+        } catch (Exception e) {
+            System.err.println("Error enviando push EnPreparacion: " + e.getMessage());
+        }
         return pedidoDTO;
     }
 
