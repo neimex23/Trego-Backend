@@ -9,6 +9,7 @@ import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.exception.PagoRechazadoException;
+import com.backend.trego.repository.PedidoRepository;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,19 +30,24 @@ import java.time.LocalDateTime;
 public class PagoService {
 
     private final MercadoPagoService mercadoPagoService;
-    private final OrdenesService ordenesService;
+    private final PedidoRepository pedidoRepository;
     private final NotificacionesService notificacionesService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final CarritoService carritoService;
 
     public PagoService(MercadoPagoService mercadoPagoService,
-                       OrdenesService ordenesService,
+                       PedidoRepository pedidoRepository,
                        NotificacionesService notificacionesService,
                        CarritoService carritoService) {
         this.mercadoPagoService = mercadoPagoService;
-        this.ordenesService = ordenesService;
+        this.pedidoRepository = pedidoRepository;
         this.notificacionesService = notificacionesService;
         this.carritoService = carritoService;
+    }
+
+    private Pedido obtenerPedidoOFallar(Integer idPedido) {
+        return pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
     }
 
     // Recibe el pedido ya creado (con id), recupera la entidad y genera la
@@ -51,7 +57,7 @@ public class PagoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pedido inválido para generar la preferencia");
         }
 
-        Pedido pedido = ordenesService.obtenerOFallar(pedidoDTO.getIdPedido());
+        Pedido pedido = obtenerPedidoOFallar(pedidoDTO.getIdPedido());
 
         MPResponse mpResponse = mercadoPagoService.crearOrden(pedido);
 
@@ -71,7 +77,7 @@ public class PagoService {
 
         Payment pago = mercadoPagoService.consultarPago(paymentId);
         Integer idPedido = resolverIdPedido(pago);
-        Pedido pedido = ordenesService.obtenerOFallar(idPedido);
+        Pedido pedido = obtenerPedidoOFallar(idPedido);
 
         String estado = pago.getStatus() == null ? "" : pago.getStatus().toLowerCase();
         switch (estado) {
@@ -109,7 +115,7 @@ public class PagoService {
 
         pedido.setEstado(EnumEstadoPedido.Pagado);
         pedido.setFechaExpiracion(null);
-        ordenesService.guardar(pedido);
+        pedidoRepository.save(pedido);
 
         carritoService.limpiarItemsCarrito(pedido.getCliente().getUidCliente());
         
@@ -125,7 +131,7 @@ public class PagoService {
         pedido.setEstado(EnumEstadoPedido.PagoRechazado);
         pedido.setRazonCancelacion(motivo);
         pedido.setFechaExpiracion(null);
-        ordenesService.guardar(pedido);
+        pedidoRepository.save(pedido);
         System.out.println("Pago RECHAZADO para el pedido " + pedido.getIdPedido()
                 + " (transacción " + pago.getId() + "). Motivo: " + motivo
                 + ". Pedido marcado como PagoRechazado.");
@@ -165,7 +171,7 @@ public class PagoService {
 
     // Estado de pago consultable por el front al volver del checkout (back_urls).
     public DTOEstadoPago consultarEstadoPedido(Integer idPedido) {
-        Pedido pedido = ordenesService.obtenerOFallar(idPedido);
+        Pedido pedido = obtenerPedidoOFallar(idPedido);
         boolean pagado = pedido.getEstado() == EnumEstadoPedido.Pagado;
         String idTransaccion = pedido.getPago() != null ? pedido.getPago().getIdTransaccion() : null;
         return new DTOEstadoPago(

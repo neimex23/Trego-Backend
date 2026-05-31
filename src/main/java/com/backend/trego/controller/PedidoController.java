@@ -1,5 +1,6 @@
 package com.backend.trego.controller;
 
+import com.backend.trego.entity.DTOs.DTOActualizarEstadoRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
@@ -45,13 +46,23 @@ public class PedidoController {
     }
 
     @PostMapping("/confirmar")
-    @Operation(summary = "Confirmar pedido",
-            description = "Recibe el carrito, la dirección de entrega y el restaurante. Persiste el pedido en estado pendiente y devuelve la preferencia de pago de MercadoPago con la URL de checkout.")
+    @Operation(summary = "Confirmar pedido por parte del cliente",
+            description = "Recibe la dirección de envío (DTODireccion) y genera una preferencia de pago en MercadoPago con el Carrito Actual. Valida que el carrito no esté vacío, que el restaurante seleccionado sea válido.")
     @ApiResponse(responseCode = "200", description = "Preferencia de pago generada correctamente")
     @ApiResponse(responseCode = "400", description = "Carrito vacío, restaurante inválido o dirección no asociada al cliente")
     public ResponseEntity<DTOPreferenciaMP> confirmarPedido(@RequestBody DTODireccion dirreccionEnvio) {
         DTOPreferenciaMP preferencia = pedidoService.confirmarPedido(dirreccionEnvio);
         return ResponseEntity.ok(preferencia);
+    }
+
+	@PatchMapping("/confirmar/{pedidoId}")
+    @Operation(summary = "Confirmar pedido de usuario por parte del restaurante", description = "El restaurante confirma un pedido. Calcula tiempos de entrega mediante API externa y notifica al cliente.")
+    @ApiResponse(responseCode = "200", description = "Pedido confirmado con exito")
+    @ApiResponse(responseCode = "409", description = "El pedido ha sido cancelado previamente")
+    @ApiResponse(responseCode = "400", description = "El pedido no está en estado 'Pagado'")
+    @ApiResponse(responseCode = "409", description = "El pedido ya está confirmado y en preparación")
+    public ResponseEntity<DTOPedido> confirmarPedidoRestaurante(@PathVariable Integer pedidoId) {
+        return ResponseEntity.ok(pedidoService.confirmarPedidoPendiente(pedidoId));
     }
 
     @PostMapping("/reembolsar")
@@ -82,4 +93,15 @@ public class PedidoController {
             return ResponseEntity.ok(Map.of("mensaje", e.getMessage()));
         }
     }
+  // Nueva actualizar estado  
+    @PatchMapping("/estado")
+    @Operation(summary = "Actualizar estado del pedido", description = "Permite transicionar un pedido a En Camino o Entregado, validando los saltos de estado.")
+    @ApiResponse(responseCode = "200", description = "Estado actualizado correctamente")
+    @ApiResponse(responseCode = "400", description = "Salto de estado incorrecto")
+	public ResponseEntity<DTOPedido> actualizarEstado(@RequestBody DTOActualizarEstadoRequest request) {
+        DTOPedido pedidoActualizado = pedidoService.actualizarEstadoPedido(request.getPedido(), request.getEstado());
+    	return ResponseEntity.ok(pedidoActualizado);
+	}
+    
+    
 }

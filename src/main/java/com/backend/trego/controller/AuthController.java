@@ -6,13 +6,11 @@ import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.entity.DTOs.DTOLogin;
 import com.backend.trego.entity.DTOs.DTOLoginResponse;
 import com.backend.trego.service.AuthService;
-import com.google.firebase.auth.FirebaseAuth;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;

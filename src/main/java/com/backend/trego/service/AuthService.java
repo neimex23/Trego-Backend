@@ -23,7 +23,6 @@ import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.FirebaseAuthException;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class AuthService {

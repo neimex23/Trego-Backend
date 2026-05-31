@@ -5,8 +5,12 @@ import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.Usuario;
+import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.DTOs.DTODireccion;
-// import com.backend.trego.entity.DTOs.DTOPedido;
+import com.backend.trego.entity.DTOs.DTOPedido;
+import com.backend.trego.entity.DTOs.DTOProductoPedido;
+import com.backend.trego.entity.DTOs.DTOProductoSimplificado;
+import com.backend.trego.repository.UsuarioRepository;
 // import com.backend.trego.entity.DTOs.DTORestaurante;
 
 import jakarta.mail.internet.MimeMessage;
@@ -18,7 +22,10 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 // Envío de notificaciones a clientes y restaurantes (email, y a futuro push/SMS).
@@ -27,6 +34,7 @@ public class NotificacionesService {
 
     private final JavaMailSender mailSender;
     private final ManejadorPDFService generarPDF;
+    private final UsuarioRepository usuarioRepository;
 
     @Value("${mail.from}")
     private String mailFrom;
@@ -34,38 +42,155 @@ public class NotificacionesService {
     @Value("${mail.from.name}")
     private String mailFromName;
 
-    public NotificacionesService(JavaMailSender mailSender, ManejadorPDFService generarPDF) {
+    public NotificacionesService(JavaMailSender mailSender, ManejadorPDFService generarPDF,
+            UsuarioRepository usuarioRepository) {
         this.mailSender = mailSender;
         this.generarPDF = generarPDF;
+        this.usuarioRepository = usuarioRepository;
     }
 
-    // /**
-    // * Notifica al cliente que su pedido fue confirmado, con el tiempo estimado.
-    // */
-    // public void notificarConfirmacionPedido(DTOPedido pedidoDTO, Integer
-    // tiempoEstimado) {
-    // // TODO: implementar
-    // }
+    // Notifica al cliente que su pedido fue confirmado por el restaurante, con el
+    // tiempo estimado de entrega (preparación + viaje). Si el cliente no se puede
+    // resolver o falla el envío, se loguea pero no se propaga la excepción para
+    // no abortar la confirmación del pedido.
+    public void notificarConfirmacionPedido(DTOPedido pedidoDTO, Integer tiempoEstimado) {
+        if (pedidoDTO == null) {
+            System.err.println("[Notificacion] pedidoDTO nulo, se omite el envio.");
+            return;
+        }
 
-    // /**
-    // * Notifica al cliente que su pedido ya está en camino.
-    // */
-    // public void notificarPedidoEnCamino(DTOPedido pedidoDTO, Integer tiempoViaje)
-    // {
-    // // TODO: implementar
-    // }
+        Integer idCliente = pedidoDTO.getIdCliente();
+        if (idCliente == null) {
+            System.err.println("[Notificacion] Pedido " + pedidoDTO.getIdPedido()
+                    + " sin idCliente, se omite el envio.");
+            return;
+        }
 
-    // /**
-    // * Notifica al restaurante que su alta fue aprobada con éxito.
-    // */
-    // public void notificarAltaExitosa(DTORestaurante restauranteDTO) {
-    // // TODO: implementar
-    // }
+        Optional<Cliente> clienteOpt = usuarioRepository.findClienteById(idCliente);
+        if (clienteOpt.isEmpty() || clienteOpt.get().getEmail() == null
+                || clienteOpt.get().getEmail().isBlank()) {
+            System.err.println("[Notificacion] Cliente " + idCliente
+                    + " no encontrado o sin email; pedido " + pedidoDTO.getIdPedido());
+            return;
+        }
+        Cliente cliente = clienteOpt.get();
 
-    // public void solicitudRechazada(DTORestaurante restauranteDTO, String motivo)
-    // {
-    // // TODO: implementar
-    // }
+        try {
+            MimeMessage mail = mailSender.createMimeMessage();
+            MimeMessageHelper estructuraMail = new MimeMessageHelper(mail, false, "UTF-8");
+
+            estructuraMail.setTo(cliente.getEmail());
+            estructuraMail.setFrom(mailFrom, mailFromName);
+            estructuraMail.setSubject("Tu pedido #" + pedidoDTO.getIdPedido() + " fue confirmado");
+            estructuraMail.setText(construirCuerpoConfirmacion(pedidoDTO, tiempoEstimado), true);
+
+            mailSender.send(mail);
+            System.out.println("Mail de confirmación enviado al cliente: " + cliente.getEmail()
+                    + " (pedido " + pedidoDTO.getIdPedido() + ")");
+        } catch (Exception e) {
+            System.err.println("Error al enviar mail de confirmación del pedido "
+                    + pedidoDTO.getIdPedido() + ": " + e.getMessage());
+        }
+    }
+
+    // Cuerpo HTML del mail de confirmación: nombre del cliente, productos del
+    // pedido, total, tiempo estimado y, si está disponible, la hora estimada de
+    // entrega ya calculada por PedidoService.
+    private String construirCuerpoConfirmacion(DTOPedido pedidoDTO, Integer tiempoEstimado) {
+        String nombreCliente = textoOGuion(pedidoDTO.getNombreCliente());
+        String direccionEntrega = formatearDireccion(pedidoDTO.getDireccionEntrega());
+
+        String tiempoMostrado = (tiempoEstimado != null && tiempoEstimado > 0)
+                ? tiempoEstimado + " min"
+                : "—";
+
+        LocalDateTime horaEntrega = pedidoDTO.getHoraEntregaEstimada();
+        String horaEntregaMostrada = horaEntrega != null
+                ? horaEntrega.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                : null;
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
+        sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
+        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("</div>");
+
+        sb.append("<div style='padding: 32px;'>");
+        sb.append("<h2 style='color: #333;'>¡").append(nombreCliente)
+                .append(", tu pedido fue confirmado!</h2>");
+
+        sb.append("<p style='color: #555; font-size: 16px;'>")
+                .append("El restaurante ya recibió tu pedido <strong>#")
+                .append(pedidoDTO.getIdPedido())
+                .append("</strong> y empezó a prepararlo.")
+                .append("</p>");
+
+        sb.append("<div style='background-color: #f9f9f9; border-left: 4px solid #FF6600; padding: 12px 16px; color: #555; margin: 16px 0;'>")
+                .append("<p style='margin: 0;'><strong>Tiempo estimado:</strong> ")
+                .append(tiempoMostrado)
+                .append("</p>");
+        if (horaEntregaMostrada != null) {
+            sb.append("<p style='margin: 8px 0 0 0;'><strong>Entrega aproximada:</strong> ")
+                    .append(horaEntregaMostrada)
+                    .append("</p>");
+        }
+        sb.append("</div>");
+
+        List<DTOProductoPedido> productos = pedidoDTO.getProductos();
+        if (productos != null && !productos.isEmpty()) {
+            sb.append("<p style='color: #555; font-size: 16px;'><strong>Detalle del pedido:</strong></p>");
+            sb.append("<ul style='color: #555;'>");
+            for (DTOProductoPedido linea : productos) {
+                DTOProductoSimplificado prod = linea.getProducto();
+                String nombreProducto = (prod != null) ? textoOGuion(prod.getNombre()) : "—";
+                Integer cantidad = linea.getCantidad();
+                sb.append("<li>")
+                        .append(nombreProducto)
+                        .append(" x ")
+                        .append(cantidad != null ? cantidad : 1)
+                        .append("</li>");
+            }
+            sb.append("</ul>");
+        }
+
+        if (pedidoDTO.getTotal() != null) {
+            sb.append("<p style='color: #555; font-size: 16px;'><strong>Total:</strong> $")
+                    .append(pedidoDTO.getTotal())
+                    .append("</p>");
+        }
+
+        sb.append("<p style='color: #555;'><strong>Dirección de entrega:</strong> ")
+                .append(direccionEntrega)
+                .append("</p>");
+
+        sb.append("<p style='color: #555;'>Podrás seguir el estado de tu pedido desde la app.</p>");
+        sb.append("<hr style='border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;'>");
+        sb.append("<p style='color: #555;'><strong>El equipo de Trego</strong></p>");
+        sb.append("</div>");
+
+        sb.append("<div style='background-color: #f5f5f5; padding: 16px; text-align: center;'>");
+        sb.append("<p style='color: #999; font-size: 12px; margin: 0;'>© 2026 Trego. Todos los derechos reservados.</p>");
+        sb.append("</div>");
+        sb.append("</div>");
+
+        return sb.toString();
+    }
+
+    // Notifica al cliente que su pedido ya está en camino.
+    public void notificarPedidoEnCamino(DTOPedido pedidoDTO, Integer tiempoViaje) {
+        // TODO: implementar envío real (mail/push). Stub para no bloquear el flujo.
+        System.out.println("[Notificacion] Pedido " + (pedidoDTO != null ? pedidoDTO.getIdPedido() : null)
+                + " en camino. Tiempo de viaje: " + tiempoViaje + " min.");
+    }
+
+    // Envío de push genérico (stub). idDestino se reserva para el id del usuario
+    // destinatario cuando se integre el proveedor real.
+    public void enviarPush(String token, int idDestino, String titulo, String destinatario) {
+        // TODO: integrar con FCM/APNs.
+        System.out.println("[Push] token=" + token + " idDestino=" + idDestino
+                + " titulo='" + titulo + "' destinatario=" + destinatario);
+    }
 
     // Manda el correo de confirmación con el cuerpo HTML y el comprobante en PDF.
     public void notificarConfirmacionPedidoConPDF(Usuario usuario, List<Producto> productos, Restaurante restaurante,
