@@ -134,17 +134,18 @@ public class RestauranteService {
                 .collect(Collectors.toList());
     }
 
-    public void crearIngrediente(String nombre){
+    public DTOIngrediente crearIngrediente(String nombre){
         Integer actualID = currentUserService.getCurrentId();
         Restaurante restaurante = restauranteRepository.findRestauranteById(actualID)
                     .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + actualID));
         if (restaurante.existeIngrediente(nombre))
-            new ResponseStatusException( HttpStatus.CONFLICT, "Ingrediente ya existe");
+            throw new ResponseStatusException( HttpStatus.CONFLICT, "Ingrediente ya existe");
 
         Ingrediente ingrediente = new Ingrediente(nombre);
         restaurante.addIngredienteDisponible(ingrediente);
         restauranteRepository.save(restaurante);
+        return new DTOIngrediente(ingrediente.getIdIngrediente(), ingrediente.getNombre(), actualID);
     }
 
     // Devuelve el restaurante autenticado actualmente (lee el id del token).

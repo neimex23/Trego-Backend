@@ -49,9 +49,8 @@ public class ProductosController {
     @ApiResponse(responseCode = "200", description = "Ingrediente Agregado correctamente")
     @ApiResponse(responseCode = "404", description = "Restaurante no existe")
     @ApiResponse(responseCode = "409", description = "Ingrediente ya existe")
-    public ResponseEntity<Void> agregarIngrediente(@PathVariable String nombre){
-        restauranteService.crearIngrediente(nombre);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<DTOIngrediente> agregarIngrediente(@PathVariable String nombre){
+        return ResponseEntity.ok(restauranteService.crearIngrediente(nombre));
     }
 
     @GetMapping("/listarProductos")
