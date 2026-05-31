@@ -14,12 +14,14 @@ import jakarta.persistence.OneToMany;
 @Entity
 public class Cliente extends Usuario {
     private String uidCliente;
+    private String fcmToken;
     private String telefono;
 
     @ElementCollection
     private List<DTODireccion> direcciones = new ArrayList<>();
 
     private boolean habilitado = true;
+
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comentario> comentarios = new ArrayList<>();
@@ -94,5 +96,13 @@ public class Cliente extends Usuario {
 
     public void setHabilitado(boolean habilitado) {
         this.habilitado = habilitado;
+    }
+
+    public String getFcmToken() {
+        return fcmToken;
+    }
+
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 }

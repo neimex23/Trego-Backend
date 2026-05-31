@@ -73,4 +73,18 @@ public class ClienteController {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}/fcm-token")
+    @Operation(summary = "Registrar/actualizar token FCM del dispositivo del cliente")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Token actualizado"),
+            @ApiResponse(responseCode = "404", description = "Cliente no existe")
+    })
+    public ResponseEntity<Void> actualizarFcmToken(@PathVariable Integer id,
+                                                   @RequestBody FcmTokenRequest body) {
+        service.actualizarFcmToken(id, body != null ? body.token() : null);
+        return ResponseEntity.noContent().build();
+    }
+
+    public record FcmTokenRequest(String token) {}
 }
