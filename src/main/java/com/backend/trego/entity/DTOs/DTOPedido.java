@@ -12,6 +12,7 @@ public class DTOPedido {
 
     private Integer idPedido;
     private Integer idCliente;
+    private String nombreCliente;
     private Integer idRestaurante;
     private List<DTOProductoPedido> productos;
     private DTODireccion direccionEntrega;
@@ -26,22 +27,18 @@ public class DTOPedido {
     public DTOPedido() {
     }
 
-    public DTOPedido(Integer idPedido, Double total) {
-        this.idPedido = idPedido;
-        this.total = total;
-    }
-
     public DTOPedido(Integer idPedido, Double total, List<DTOProductoPedido> productos) {
         this.idPedido = idPedido;
         this.total = total;
         this.productos = productos;
     }
 
-    public DTOPedido(Integer idPedido, Integer idCliente, Integer idRestaurante, List<DTOProductoPedido> productos,
+    public DTOPedido(Integer idPedido, Integer idCliente, String nombreCliente, Integer idRestaurante, List<DTOProductoPedido> productos,
             DTODireccion direccionEntrega, Double total, EnumEstadoPedido estado, LocalDateTime fechaCreacion,
             LocalDateTime fechaExpiracion, LocalDateTime horaEntregaEstimada, Integer tiempoPreparacion) {
         this.idPedido = idPedido;
         this.idCliente = idCliente;
+        this.nombreCliente = nombreCliente;
         this.idRestaurante = idRestaurante;
         this.productos = productos;
         this.direccionEntrega = direccionEntrega;
@@ -62,9 +59,11 @@ public class DTOPedido {
                 .collect(Collectors.toList());
         Integer idCliente = pedido.getCliente() != null ? pedido.getCliente().getIdUsuario() : null;
         Integer idRestaurante = pedido.getRestaurante() != null ? pedido.getRestaurante().getIdUsuario() : null;
+        String nombreCliente = pedido.getCliente() != null ? pedido.getCliente().getNombre() : null;
         return new DTOPedido(
                 pedido.getIdPedido(),
                 idCliente,
+                nombreCliente,
                 idRestaurante,
                 lineas,
                 pedido.getDireccionEntrega(),
@@ -94,87 +93,47 @@ public class DTOPedido {
         return idPedido;
     }
 
-    public void setIdPedido(Integer idPedido) {
-        this.idPedido = idPedido;
-    }
-
     public Integer getIdCliente() {
         return idCliente;
-    }
-
-    public void setIdCliente(Integer idCliente) {
-        this.idCliente = idCliente;
     }
 
     public Integer getIdRestaurante() {
         return idRestaurante;
     }
 
-    public void setIdRestaurante(Integer idRestaurante) {
-        this.idRestaurante = idRestaurante;
-    }
-
     public List<DTOProductoPedido> getProductos() {
         return productos;
-    }
-
-    public void setProductos(List<DTOProductoPedido> productos) {
-        this.productos = productos;
     }
 
     public DTODireccion getDireccionEntrega() {
         return direccionEntrega;
     }
 
-    public void setDireccionEntrega(DTODireccion direccionEntrega) {
-        this.direccionEntrega = direccionEntrega;
-    }
-
     public Double getTotal() {
         return total;
-    }
-
-    public void setTotal(Double total) {
-        this.total = total;
     }
 
     public EnumEstadoPedido getEstado() {
         return estado;
     }
 
-    public void setEstado(EnumEstadoPedido estado) {
-        this.estado = estado;
-    }
-
     public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
-    }
-
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
     }
 
     public LocalDateTime getFechaExpiracion() {
         return fechaExpiracion;
     }
 
-    public void setFechaExpiracion(LocalDateTime fechaExpiracion) {
-        this.fechaExpiracion = fechaExpiracion;
-    }
-
     public LocalDateTime getHoraEntregaEstimada() {
         return horaEntregaEstimada;
-    }
-
-    public void setHoraEntregaEstimada(LocalDateTime horaEntregaEstimada) {
-        this.horaEntregaEstimada = horaEntregaEstimada;
     }
 
     public Integer getTiempoPreparacion() {
         return tiempoPreparacion;
     }
 
-    public void setTiempoPreparacion(Integer tiempoPreparacion) {
-        this.tiempoPreparacion = tiempoPreparacion;
+    public String getNombreCliente() {
+        return nombreCliente;
     }
 }

@@ -144,6 +144,7 @@ public class PedidoService {
                 d.getEsquina(), d.getLatitud(), d.getLongitud());
     }
 
+    // Lista los pedidos confirmados (pagados) de un cliente, con opción de filtrar por producto incluido en el pedido.
     public List<DTOPedido> listarPedidosConfirmados(Integer idProducto, EnumEstadoPedido estado) {
         Integer idRestaurante;
         try {
