@@ -9,7 +9,13 @@ import com.backend.trego.entity.Producto;
 import java.util.ArrayList;
 import java.util.List;
 
-/** DTO completo del catálogo (menú, alta/edición de productos). Para carrito y pedidos usar {@link DTOProductoPedido}. */
+/**
+ * DTO completo del catálogo (menú, alta/edición de productos).
+ * Para carrito y pedidos usar {@link DTOProductoPedido}.
+ *
+ * El campo {@code tipo} determina cuál de {@code plato}, {@code articulo} o {@code combo}
+ * debe estar poblado. Los otros dos se ignoran.
+ */
 public class DTOProducto {
 
     private Integer idProducto;
@@ -20,20 +26,26 @@ public class DTOProducto {
     private EnumCategoriaProducto categoria;
     private Boolean disponible = true;
     private Integer idRestaurante;
-    private Integer cantidadDisponible;
     private List<DTOIngrediente> ingredientes = new ArrayList<>();
     private EnumTipoProducto tipo;
     private DTOOferta oferta;
     private DTOPlato plato;
     private DTOArticulo articulo;
     private DTOCombo combo;
+    // Entrada en alta/edición: id de la SubCategoria a la que se cuelga el producto.
+    private Integer idSubCategoria;
+    // Salida en listado: subcategoria resuelta a DTO.
+    private DTOSubCategoria subCategoria;
+
 
     public DTOProducto() {
     }
 
+
     public DTOProducto(Integer idProducto, String nombre, String descripcion, float precio, String urlImagen,
-            EnumCategoriaProducto categoria, Boolean disponible, Integer idRestaurante, Integer cantidadDisponible,
-            List<DTOIngrediente> ingredientes, EnumTipoProducto tipo) {
+            EnumCategoriaProducto categoria, Boolean disponible, Integer idRestaurante,
+            List<DTOIngrediente> ingredientes, EnumTipoProducto tipo, DTOOferta oferta, DTOPlato plato,
+            DTOArticulo articulo, DTOCombo combo, DTOSubCategoria subCategoria) {
         this.idProducto = idProducto;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -42,26 +54,20 @@ public class DTOProducto {
         this.categoria = categoria;
         this.disponible = disponible;
         this.idRestaurante = idRestaurante;
-        this.cantidadDisponible = cantidadDisponible;
         if (ingredientes != null) {
             this.ingredientes = ingredientes;
         }
         this.tipo = tipo;
-    }
-
-    public DTOProducto(Integer idProducto, String nombre, String descripcion, float precio, String urlImagen,
-            EnumCategoriaProducto categoria, Integer idRestaurante, List<DTOIngrediente> ingredientes) {
-        this.idProducto = idProducto;
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.precio = precio;
-        this.urlImagen = urlImagen;
-        this.categoria = categoria;
-        this.idRestaurante = idRestaurante;
-        if (ingredientes != null) {
-            this.ingredientes = ingredientes;
+        this.oferta = oferta;
+        this.plato = plato;
+        this.articulo = articulo;
+        this.combo = combo;
+        this.subCategoria = subCategoria;
+        if (subCategoria != null) {
+            this.idSubCategoria = subCategoria.getIdSubCategoria();
         }
     }
+
 
     public Integer getIdProducto() {
         return idProducto;
@@ -77,10 +83,6 @@ public class DTOProducto {
 
     public float getPrecio() {
         return precio;
-    }
-
-    public Integer getCantidadDisponible() {
-        return cantidadDisponible;
     }
 
     public String getUrlImagen() {
@@ -123,27 +125,52 @@ public class DTOProducto {
         return oferta;
     }
 
-    public void setOferta(DTOOferta oferta) {
-        this.oferta = oferta;
+    public Integer getIdSubCategoria() {
+        return idSubCategoria;
     }
 
+    public void setIdSubCategoria(Integer idSubCategoria) {
+        this.idSubCategoria = idSubCategoria;
+    }
+
+    public DTOSubCategoria getSubCategoria() {
+        return subCategoria;
+    }
+
+    public void setSubCategoria(DTOSubCategoria subCategoria) {
+        this.subCategoria = subCategoria;
+    }
+
+    /**
+     * Construye la entidad Producto correspondiente al tipo.
+     * NOTA: este método solo arma los campos propios. La resolución de ingredientes
+     * del Plato y de productos incluidos en el Combo (que requieren acceso al repo)
+     * queda a cargo del service.
+     */
     public Producto toProducto() {
-        Producto newProducto = null;
+        if (this.tipo == null) {
+            throw new IllegalArgumentException("El tipo de producto es obligatorio");
+        }
+        Producto newProducto;
         switch (this.tipo) {
             case Plato:
-                newProducto = new Plato(this.getNombre(), this.getPrecio(), this.getDescripcion(),
-                        this.getUrlImagen(), this.getPlato().getTiempoPreparacionMinutos());
+                if (this.plato == null || this.plato.getTiempoPreparacionMinutos() == null) {
+                    throw new IllegalArgumentException("Plato requiere DTOPlato con tiempoPreparacionMinutos");
+                }
+                newProducto = new Plato(this.nombre, this.precio, this.descripcion,
+                        this.urlImagen, this.plato.getTiempoPreparacionMinutos());
                 break;
             case Articulo:
-                newProducto = new Articulo(this.getNombre(), this.getPrecio(), this.getDescripcion(),
-                        this.getUrlImagen());
+                newProducto = new Articulo(this.nombre, this.precio, this.descripcion, this.urlImagen);
                 break;
             case Combo:
-                newProducto = new Combo(this.getNombre(), this.getPrecio(), this.getDescripcion(),
-                        this.getUrlImagen());
+                newProducto = new Combo(this.nombre, this.precio, this.descripcion, this.urlImagen);
                 break;
             default:
                 throw new IllegalArgumentException("Tipo de producto no reconocido: " + this.tipo);
+        }
+        if (this.disponible != null) {
+            newProducto.setDisponible(this.disponible);
         }
         return newProducto;
     }

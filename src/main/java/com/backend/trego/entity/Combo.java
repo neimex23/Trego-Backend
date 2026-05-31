@@ -30,4 +30,8 @@ public class Combo extends Producto {
     public void removeProductoIncluido(Producto producto) {
         this.productosIncluidos.remove(producto);
     }
+
+    public void setProductosIncluidos(List<Producto> productosIncluidos) {
+        this.productosIncluidos = productosIncluidos;
+    }
 }

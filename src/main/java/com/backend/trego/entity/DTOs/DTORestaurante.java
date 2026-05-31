@@ -21,12 +21,13 @@ public class DTORestaurante {
     private String descripcion;
     private EnumCategoriaRestaurante categoria;
     private Float calificacionProm;
-    private Integer radioEntrega;
-    private Boolean habilitado;
-    private Boolean abierto;
+    private Integer radioEntrega = 10;
+    private Boolean habilitado = false;
+    private Boolean abierto = false;
     private LocalTime horaApertura;
     private LocalTime horaCierre;
     private List<DTOProducto> productos = new ArrayList<>();
+    private List<DTOIngrediente> ingredientesDisponibles = new ArrayList<>();
 
     public DTORestaurante() {
     }
@@ -57,7 +58,8 @@ public class DTORestaurante {
 
 
     public DTORestaurante(Integer idRestaurante, String nombre, String email, String telefono,
-            String fotoPortada, String fotoPerfil, String descripcion, EnumCategoriaRestaurante categoria, Float calificacionProm,
+            String fotoPortada, String fotoPerfil, DTODireccion direccion, String descripcion,
+            EnumCategoriaRestaurante categoria, Float calificacionProm,
             Integer radioEntrega, Boolean habilitado, Boolean abierto, LocalTime horaApertura, LocalTime horaCierre) {
         this.idRestaurante = idRestaurante;
         this.nombre = nombre;
@@ -65,6 +67,7 @@ public class DTORestaurante {
         this.telefono = telefono;
         this.fotoPortada = fotoPortada;
         this.fotoPerfil = fotoPerfil;
+        this.direccion = direccion;
         this.descripcion = descripcion;
         this.categoria = categoria;
         this.calificacionProm = calificacionProm;
@@ -94,4 +97,8 @@ public class DTORestaurante {
     public LocalTime getHoraCierre() { return horaCierre; }
     public List<DTOProducto> getProductos() { return productos; }
     public String getFotoPerfil() { return fotoPerfil; }
+    public List<DTOIngrediente> getIngredientesDisponibles() { return ingredientesDisponibles; }
+    public void setIngredientesDisponibles(List<DTOIngrediente> ingredientesDisponibles) {
+        this.ingredientesDisponibles = ingredientesDisponibles != null ? ingredientesDisponibles : new ArrayList<>();
+    }
 }

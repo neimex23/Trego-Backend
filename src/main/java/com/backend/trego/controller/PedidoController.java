@@ -1,9 +1,9 @@
 package com.backend.trego.controller;
 
-import com.backend.trego.config.AuthenticatedUser;
-import com.backend.trego.entity.DTOs.DTOConfirmarPedidoRequest;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
+import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.service.PedidoService;
 import com.backend.trego.service.RestauranteService;
@@ -34,51 +34,43 @@ public class PedidoController {
         this.restauranteService = restauranteService;
     }
 
-	// --- "LISTAR PEDIDOS" ---
-    @GetMapping
+    @GetMapping("/listarPedidos")
     @Operation(summary = "Listar pedidos del restaurante",
-            description = "Devuelve la lista de pedidos del restaurante autenticado, excluyendo los pendientes. Permite aplicar un filtro opcional por estado y por producto.")
+            description = "Devuelve la lista de pedidos del restaurante autenticado, Si no se establece estado los regresados por defecto son los 'Pagado' Permite aplicar un filtro opcional por estado y por producto.")
     @ApiResponse(responseCode = "200", description = "Lista de pedidos obtenida correctamente")
     public ResponseEntity<List<DTOPedido>> listarPedidos(
-            @Parameter(description = "Filtro por estado del pedido (ej: en preparacion, en camino, entregado, cancelado)") @RequestParam(required = false) String estado,
-            @Parameter(description = "Filtro por ID de un producto específico") @RequestParam(required = false) Integer idProducto,
-            @AuthenticationPrincipal AuthenticatedUser user) {
-
-        List<DTOPedido> pedidos = pedidoService.listarPedidosConfirmados(idProducto, estado);
-        
-        return ResponseEntity.ok(pedidos);
-    }
-	//-----------------
-
-	// --- "LISTAR PEDIDOS PENDIENTES" ---
-	@GetMapping("/pendientes")
-    @Operation(summary = "Listar pedidos pendientes", description = "Devuelve los pedidos en estado Pendiente para el restaurante autenticado.")
-    @ApiResponse(responseCode = "200", description = "Listado de pedidos pendientes")
-    public ResponseEntity<List<DTOPedido>> listarPedidosPendientes(@AuthenticationPrincipal AuthenticatedUser user) {
-        String restauranteId = String.valueOf(user.getIdUsuario());
-        return ResponseEntity.ok(pedidoService.listarPedidosPendientes(restauranteId));
+            @Parameter(description = "Filtro por estado del pedido") @RequestParam(required = false) EnumEstadoPedido estado,
+            @Parameter(description = "Filtro por ID de un producto específico") @RequestParam(required = false) Integer idProducto) {
+        return ResponseEntity.ok(pedidoService.listarPedidosConfirmados(idProducto, estado));
     }
 
     @PostMapping("/confirmar")
     @Operation(summary = "Confirmar pedido",
-            description = "Recibe el carrito, la dirección de entrega y el restaurante. Persiste el pedido en estado pendiente y devuelve la preferencia de pago de MercadoPago con la URL de checkout.")
+            description = "Recibe la dirección de envío (DTODireccion) y genera una preferencia de pago en MercadoPago con el Carrito Actual. Valida que el carrito no esté vacío, que el restaurante seleccionado sea válido.")
     @ApiResponse(responseCode = "200", description = "Preferencia de pago generada correctamente")
     @ApiResponse(responseCode = "400", description = "Carrito vacío, restaurante inválido o dirección no asociada al cliente")
-    public ResponseEntity<DTOPreferenciaMP> confirmarPedido(@RequestBody DTOConfirmarPedidoRequest request) {
-        DTOPreferenciaMP preferencia = pedidoService.confirmarPedido(
-                request.getCarrito(),
-                request.getDireccion(),
-                String.valueOf(request.getRestauranteId()));
+    public ResponseEntity<DTOPreferenciaMP> confirmarPedido(@RequestBody DTODireccion dirreccionEnvio) {
+        DTOPreferenciaMP preferencia = pedidoService.confirmarPedido(dirreccionEnvio);
         return ResponseEntity.ok(preferencia);
     }
 
-	@PatchMapping("/confirmar/{pedidoId}")
+	@PatchMapping("/confirmarRes/{pedidoId}")
     @Operation(summary = "Confirmar pedido", description = "El restaurante confirma un pedido. Calcula tiempos de entrega mediante API externa y notifica al cliente.")
     @ApiResponse(responseCode = "200", description = "Pedido confirmado con exito")
     @ApiResponse(responseCode = "409", description = "El pedido ha sido cancelado previamente")
     public ResponseEntity<DTOPedido> confirmarPedidoRestaurante(@PathVariable Integer pedidoId) {
 		//no se si va a funcionar hay que probar con front
         return ResponseEntity.ok(pedidoService.confirmarPedidoPendiente(pedidoId));
+    }
+
+    @PostMapping("/reembolsar")
+    @Operation(summary = "Reembolsar pedido",
+            description = "Recibe el DTOPedido a reembolsar. Recupera el pago asociado (idTransaccion de MercadoPago) y dispara el reembolso en MP usando una idempotencyKey")
+    @ApiResponse(responseCode = "200", description = "Reembolso ejecutado correctamente; el pedido queda en estado Reembolsado")
+    @ApiResponse(responseCode = "400", description = "DTOPedido inválido o el pedido no tiene un pago asociado")
+    @ApiResponse(responseCode = "409", description = "El pedido ya estaba reembolsado")
+    public ResponseEntity<DTOPedido> reembolsarPedido(@RequestBody DTOPedido pedidoDTO) {
+        return ResponseEntity.ok(pedidoService.reembolsarPedido(pedidoDTO));
     }
 
     // Ver el menú de un restaurante. restauranteId identifica el restaurante que

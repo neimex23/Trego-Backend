@@ -1,7 +1,5 @@
 package com.backend.trego.config;
 
-import com.backend.trego.entity.DTOs.DTOUsuario;
-import com.backend.trego.entity.Enums.EnumRoles;
 import com.backend.trego.service.UsuarioService;
 
 import jakarta.annotation.PostConstruct;
@@ -32,20 +30,7 @@ public class DefaultAdminConf {
     private void crearAdminDefault(String email, String password) {
 
         if (!usuarioService.existeUsuario(email)) {
-
-            DTOUsuario admin = new DTOUsuario(
-                    0,
-                    null,
-                    null,
-                    email,
-                    password,
-                    null,
-                    null,
-                    EnumRoles.Administrador
-            );
-
-            usuarioService.altaUsuario(admin);
-
+            usuarioService.altaAdministrador(email, password);
             System.out.println(">>> Admin por defecto creado: " + email);
         }
     }

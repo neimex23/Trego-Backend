@@ -1,6 +1,8 @@
 package com.backend.trego.service;
 
+import com.backend.trego.entity.Carrito;
 import com.backend.trego.entity.Cliente;
+import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.ProductoPedido;
@@ -13,9 +15,8 @@ import com.backend.trego.entity.DTOs.DTOProductoPedido;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.exception.RestauranteCerradoException;
-import com.backend.trego.repository.ClienteRepository;
 import com.backend.trego.repository.ProductoRepository;
-import com.backend.trego.repository.RestauranteRepository;
+import com.backend.trego.repository.UsuarioRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 public class PedidoService {
@@ -32,24 +34,24 @@ public class PedidoService {
     private final PagoService pagoService;
     private final OrdenesService ordenesService;
     private final CurrentUserService currentUserService;
-    private final ClienteRepository clienteRepository;
-    private final RestauranteRepository restauranteRepository;
+    private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
+    private final CarritoService carritoService;
 
     public PedidoService(RestauranteService restauranteService,
                          PagoService pagoService,
                          OrdenesService ordenesService,
                          CurrentUserService currentUserService,
-                         ClienteRepository clienteRepository,
-                         RestauranteRepository restauranteRepository,
-                         ProductoRepository productoRepository) {
+                         UsuarioRepository usuarioRepository,
+                         ProductoRepository productoRepository,
+                         CarritoService carritoService) {
         this.restauranteService = restauranteService;
         this.pagoService = pagoService;
         this.ordenesService = ordenesService;
         this.currentUserService = currentUserService;
-        this.clienteRepository = clienteRepository;
-        this.restauranteRepository = restauranteRepository;
+        this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
+        this.carritoService = carritoService;
     }
 
     // Flujo principal "realizar pedido": valida el restaurante, crea el pedido a
@@ -57,13 +59,15 @@ public class PedidoService {
     // en MercadoPago y devuelve la preferencia (con la URL de checkout) para que
     // el front redirija a la pasarela.
     @Transactional
-    public DTOPreferenciaMP confirmarPedido(DTOCarrito carritoDTO, DTODireccion direccionDTO,
-                                            String restauranteId) {
-        // Valida existencia del restaurante (404 si no existe).
-        DTORestaurante restauranteDTO = restauranteService.obtenerRestaurante(restauranteId);
+    public DTOPreferenciaMP confirmarPedido(DTODireccion direccionDTO) {
+        DTOCarrito carritoDTO = carritoService.obtenerCarrito(); //Obtener Carrito actual
 
-        // Crea y persiste el pedido. Lanza RestauranteCerradoException (409) si el
-        // restaurante no está operativo.
+        // Valida existencia del restaurante (404 si no existe).
+        DTORestaurante restauranteDTO = restauranteService.obtenerRestaurante(String.valueOf(carritoDTO.getIdRestaurante()));
+                if (restauranteDTO == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante no encontrado con id: " + carritoDTO.getIdRestaurante());
+                }
+        
         Pedido pedido = crearPedido(carritoDTO, direccionDTO, restauranteDTO);
 
         // Genera la preferencia de pago delegando en PagoService -> MercadoPagoService.
@@ -91,14 +95,14 @@ public class PedidoService {
         String restauranteId = String.valueOf(restauranteDTO.getIdRestaurante());
         if (!verificarRestauranteAbierto(restauranteId)) {
             throw new RestauranteCerradoException(
-                    "El restaurante " + restauranteDTO.getNombre() + " está cerrado en este momento");
+                   "El restaurante " + restauranteDTO.getNombre() + " está cerrado en este momento");
         }
 
-        Cliente cliente = clienteRepository.findByUidCliente(currentUserService.getCurrentUid())
+        Cliente cliente = usuarioRepository.findClienteByUidCliente(currentUserService.getCurrentUid())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Cliente no encontrado"));
 
-        Restaurante restaurante = restauranteRepository.findById(restauranteDTO.getIdRestaurante())
+        Restaurante restaurante = usuarioRepository.findRestauranteById(restauranteDTO.getIdRestaurante())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante no encontrado"));
 
@@ -140,29 +144,25 @@ public class PedidoService {
                 d.getEsquina(), d.getLatitud(), d.getLongitud());
     }
 
-	public List<DTOPedido> listarPedidosConfirmados(Integer idProducto, String estado) {
-        var restauranteId = currentUserService.getCurrentId();
-        Integer idRestaurante = Integer.valueOf(restauranteId);
-
-        List<Pedido> pedidos = pedidoRepository.findByRestauranteIdUsuarioAndEstadoNot(idRestaurante, EnumEstadoPedido.Pendiente);
-        List<DTOPedido> pedidosDTO = pedidos.stream().map(DTOPedido::desde).collect(Collectors.toList());
-        if (estado != null && !estado.isBlank()) {
-            pedidosDTO = pedidosDTO.stream()
-                    .filter(p -> p.getEstado().name().equalsIgnoreCase(estado.trim().replace(" ", "_")))
-                    .collect(Collectors.toList());
+    // Lista los pedidos confirmados (pagados) de un cliente, con opción de filtrar por producto incluido en el pedido.
+    public List<DTOPedido> listarPedidosConfirmados(Integer idProducto, EnumEstadoPedido estado) {
+        Integer idRestaurante;
+        try {
+            idRestaurante = Integer.valueOf(currentUserService.getCurrentId());
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Usuario autenticado inválido");
         }
+
+        EnumEstadoPedido estadoConsulta = (estado != null) ? estado : EnumEstadoPedido.Pagado;
+        List<Pedido> pedidos = ordenesService.listarPedidos(idRestaurante, estadoConsulta);
+
+        var stream = pedidos.stream().map(DTOPedido::desde);
         if (idProducto != null) {
-            pedidosDTO = filtrarPorProductos(pedidosDTO, idProducto);
+            stream = stream.filter(p -> p.getProductos().stream()
+                    .anyMatch(prod -> idProducto.equals(prod.getIdProducto())));
         }
-        return pedidosDTO;
-    }
-
-    // Método auxiliar privado para procesar el filtro por producto de forma limpia
-    private List<DTOPedido> filtrarPorProductos(List<DTOPedido> lista, Integer idProducto) {
-        return lista.stream()
-                .filter(pedido -> pedido.getProductos() != null && pedido.getProductos().stream()
-                        .anyMatch(linea -> idProducto.equals(linea.getIdProducto())))
-                .collect(Collectors.toList());
+        return stream.collect(Collectors.toList());
     }
 
     public DTOPedido actualizarEstadoPedido(DTOPedido pedidoDTO, EnumEstadoPedido estado) {
@@ -170,7 +170,7 @@ public class PedidoService {
         return null;
     }
 
-    public Integer calcularTiempoPreparacion() {
+    public Integer calcularTiempoPreparacion(List<DTOProductoPedido> productos) {
         // TODO: implementar
         return 0;
     }
@@ -300,7 +300,35 @@ public class PedidoService {
         return null;
     }
 
-    public void pagoConfirmado(DTOPreferenciaMP preferenciaDTO) {
-        // TODO: implementar
+    
+    @Transactional
+    public DTOPedido reembolsarPedido(DTOPedido pedidoDTO) {
+        if (pedidoDTO == null || pedidoDTO.getIdPedido() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "DTOPedido inválido para reembolsar");
+        }
+
+        Pedido pedido = ordenesService.obtenerOFallar(pedidoDTO.getIdPedido());
+
+        Pago pago = pedido.getPago();
+        if (pago == null || pago.getIdTransaccion() == null || pago.getIdTransaccion().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El pedido " + pedido.getIdPedido() + " no tiene un pago asociado para reembolsar");
+        }
+
+        if (pedido.getEstado() == EnumEstadoPedido.Reembolsado) {
+            // Aun así dejamos pasar a MP por la idempotencia, pero cortamos acá
+            // para evitar trabajo innecesario y dar feedback claro al front.
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "El pedido " + pedido.getIdPedido() + " ya estaba reembolsado");
+        }
+
+        String idempotencyKey = "reembolso-pedido-" + pedido.getIdPedido();
+        pagoService.reembolsar(pago.getIdTransaccion(), idempotencyKey);
+
+        pedido.setEstado(EnumEstadoPedido.Reembolsado);
+        ordenesService.guardar(pedido);
+
+        return DTOPedido.desde(pedido);
     }
 }

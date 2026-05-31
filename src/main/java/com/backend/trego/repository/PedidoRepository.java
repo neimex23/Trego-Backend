@@ -19,5 +19,5 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
 
     List<Pedido> findByFechaExpiracionNotNullAndFechaExpiracionBefore(LocalDateTime instante);
 
-	List<Pedido> findByRestauranteIdUsuarioAndEstado(Integer idRestaurante, EnumEstadoPedido estado);
+    List<Pedido> findByRestauranteIdUsuarioAndEstado(int idRestaurante, EnumEstadoPedido estado);
 }

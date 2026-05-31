@@ -1,18 +1,24 @@
 package com.backend.trego.service;
 
+import com.backend.trego.entity.Ingrediente;
+import com.backend.trego.entity.Plato;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOFirma;
+import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.exception.SinProductoException;
-import com.backend.trego.repository.RestauranteRepository;
+import com.backend.trego.repository.UsuarioRepository;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -22,19 +28,22 @@ import java.util.stream.Collectors;
 @Service
 public class RestauranteService {
 
-    private final RestauranteRepository restauranteRepository;
+    private final UsuarioRepository restauranteRepository;
     private final CurrentUserService currentUserService;
     private final ProductosService productosService;
     private final CloudinaryService cloudinaryService;
     private final NotificacionesService notificacionesService;
+    private final GeoapifyService geoapifyService;
 
-    public RestauranteService(RestauranteRepository restauranteRepository, CurrentUserService currentUserService, ProductosService productosService,
-            CloudinaryService cloudinaryService, NotificacionesService notificacionesService) {
+    public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService,
+            @Lazy ProductosService productosService,
+            CloudinaryService cloudinaryService, NotificacionesService notificacionesService, GeoapifyService geoapifyService) {
         this.restauranteRepository = restauranteRepository;
         this.currentUserService = currentUserService;
         this.productosService = productosService;
         this.cloudinaryService = cloudinaryService;
         this.notificacionesService = notificacionesService;
+        this.geoapifyService = geoapifyService;
     }
 
     public boolean abrirLocal(String idRestaurante, Date horaServicio) {
@@ -47,21 +56,67 @@ public class RestauranteService {
         return false;
     }
 
+        public Date actualizarHoraCierre(Date horaCierre) {
+        // TODO: implementar
+        return null;
+    }
+
     public List<DTORestaurante> listarRestaurantesZona(DTODireccion direccion) {
-        // TODO: implementar (filtrado por zona/dirección)
-        return List.of();
+
+        List<DTORestaurante> restaurantesHabilitados = listarRestaurantes();
+        if (restaurantesHabilitados.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "No hay restaurantes habilitados"
+            );
+        }
+
+        double latitud = direccion.getLatitud();
+        double longitud = direccion.getLongitud();
+
+        List<DTORestaurante> restaurantesFiltro = new ArrayList<>();
+
+        for (DTORestaurante dtoRestaurante : restaurantesHabilitados) {
+
+            DTODireccion direccionResto = dtoRestaurante.getDireccion();
+            if (direccionResto == null) {
+                continue;
+            }
+
+            double latitudResto = direccionResto.getLatitud();
+            double longitudResto = direccionResto.getLongitud();
+
+            double radioEntrega = dtoRestaurante.getRadioEntrega(); // en KM
+
+            double distancia = geoapifyService.calcularDistanciaKm(
+                    latitud,
+                    longitud,
+                    latitudResto,
+                    longitudResto
+            );
+
+            // Si Geoapify no pudo calcular la ruta, descartamos el restaurante.
+            if (distancia >= 0 && distancia <= radioEntrega) {
+                restaurantesFiltro.add(dtoRestaurante);
+            }
+        }
+
+        if (restaurantesFiltro.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "No hay restaurantes en la zona"
+            );
+        }
+
+        return restaurantesFiltro;
     }
 
     // Lista los restaurantes registrados y habilitados, en su forma pública (sin
     // password ni menú). Es el catálogo que ve el cliente.
     public List<DTORestaurante> listarRestaurantes() {
-        return restauranteRepository.findByHabilitadoTrue().stream()
+        return restauranteRepository.findRestaurantesHabilitados().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
-    }
-
-    public void verificarHoraCierre() {
-        // TODO: implementar
     }
 
     public DTORestaurante obtenerRestaurante(String restauranteId) {
@@ -69,10 +124,34 @@ public class RestauranteService {
         return toDTO(restaurante);
     }
 
+    public List<DTOIngrediente> obtenerIngredientesDisponibles() {
+        Integer id = currentUserService.getCurrentId();
+        Restaurante restaurante = restauranteRepository.findRestauranteById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + id));
+        return restaurante.getIngredientesDisponibles().stream()
+                .map(ing -> new DTOIngrediente(ing.getIdIngrediente(), ing.getNombre(), id))
+                .collect(Collectors.toList());
+    }
+
+    public DTOIngrediente crearIngrediente(String nombre){
+        Integer actualID = currentUserService.getCurrentId();
+        Restaurante restaurante = restauranteRepository.findRestauranteById(actualID)
+                    .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + actualID));
+        if (restaurante.existeIngrediente(nombre))
+            throw new ResponseStatusException( HttpStatus.CONFLICT, "Ingrediente ya existe");
+
+        Ingrediente ingrediente = new Ingrediente(nombre);
+        restaurante.addIngredienteDisponible(ingrediente);
+        restauranteRepository.save(restaurante);
+        return new DTOIngrediente(ingrediente.getIdIngrediente(), ingrediente.getNombre(), actualID);
+    }
+
     // Devuelve el restaurante autenticado actualmente (lee el id del token).
     public DTORestaurante obtenerRestauranteActual() {
         Integer id = currentUserService.getCurrentId();
-        Restaurante restaurante = restauranteRepository.findById(id)
+        Restaurante restaurante = restauranteRepository.findRestauranteById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + id));
         return toDTO(restaurante);
@@ -81,7 +160,7 @@ public class RestauranteService {
     // Carga la entidad o devuelve 404 si no existe.
     public Restaurante buscarRestaurante(String restauranteId) {
         Integer id = parseId(restauranteId);
-        return restauranteRepository.findById(id)
+        return restauranteRepository.findRestauranteById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante no encontrado con id: " + restauranteId));
     }
@@ -121,6 +200,7 @@ public class RestauranteService {
                 restaurante.getTelefono(),
                 restaurante.getFotoPortada(),
                 restaurante.getFotoPerfil(),
+                restaurante.getDireccion(),
                 restaurante.getDescripcion(),
                 restaurante.getCategoria(),
                 restaurante.getCalificacionProm(),
@@ -149,25 +229,11 @@ public class RestauranteService {
         return !ahora.isBefore(apertura) || !ahora.isAfter(cierre);
     }
 
-    public Date actualizarHoraCierre(Date horaCierre) {
-        // TODO: implementar
-        return null;
-    }
-
-    public void crearRestaurante(DTORestaurante restauranteDTO) {
-        // TODO: implementar
-    }
-
-    public DTORestaurante verRestauranteConProducto(String restauranteId) {
-        // TODO: implementar
-        return null;
-    }
-
     public List<DTORestaurante> buscarRestaurantePorNombre(String nombre) {
         if (nombre == null || nombre.isBlank()) {
             return listarRestaurantes();
         }
-        return restauranteRepository.findByHabilitadoTrueAndNombreContainingIgnoreCase(nombre.trim()).stream()
+        return restauranteRepository.findRestaurantesHabilitadosPorNombre(nombre.trim()).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -179,7 +245,7 @@ public class RestauranteService {
         String id = String.valueOf(restauranteId);
         Restaurante restaurante = buscarRestaurante(id);
 
-        List<DTOProducto> productos = productosService.listarProductos(id);
+        List<DTOProducto> productos = productosService.listarProductos(id, false);
 
         if (categoria != null && !categoria.isBlank()) {
             productos = aplicarFiltro(productos, categoria);
@@ -245,7 +311,7 @@ public class RestauranteService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: se requieren privilegios de administrador");
         }
 
-        List<Restaurante> restaurantesNoHabilitados = restauranteRepository.findByHabilitadoFalse();
+        List<Restaurante> restaurantesNoHabilitados = restauranteRepository.findRestaurantesNoHabilitados();
         return restaurantesNoHabilitados.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -329,9 +395,9 @@ public class RestauranteService {
         }
 
         restaurante.setHabilitado(true);
-        Restaurante guardado = restauranteRepository.save(restaurante);
+        restauranteRepository.save(restaurante);
 
-        notificacionesService.notificarRestauranteHabilitado(guardado);
+        notificacionesService.notificarRestauranteHabilitado(restaurante);
     }
 
     public void noHabilitarRestaurante(Integer restauranteId, String motivo){

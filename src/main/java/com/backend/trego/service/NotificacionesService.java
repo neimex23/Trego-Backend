@@ -1,9 +1,11 @@
 package com.backend.trego.service;
 
+import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.Usuario;
+import com.backend.trego.entity.DTOs.DTODireccion;
 // import com.backend.trego.entity.DTOs.DTOPedido;
 // import com.backend.trego.entity.DTOs.DTORestaurante;
 
@@ -16,7 +18,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
 
@@ -208,10 +209,21 @@ public class NotificacionesService {
         }
     }
 
-    // Arma el HTML del correo.
+    // Arma el HTML del correo. Tolera campos faltantes: si el restaurante todavía
+    // no completó su perfil o el pago no llegó con todos los datos, se imprime
+    // un guión en lugar de "null".
     private String construirCuerpoHtml(Usuario usuario, List<Producto> productos, Restaurante restaurante,
             Pedido pedido) {
-        String horaEstimada = pedido.getHorarioEntrega().format(DateTimeFormatter.ofPattern("HH:mm"));
+        String nombreCliente = textoOGuion(usuario != null ? usuario.getNombre() : null);
+        String nombreRestaurante = textoOGuion(restaurante != null ? restaurante.getNombre() : null);
+        String direccionRestaurante = formatearDireccion(restaurante != null ? restaurante.getDireccion() : null);
+
+        Pago pago = pedido.getPago();
+        // idTransaccion guarda el id que devuelve MercadoPago (no el id interno
+        // del Pago), que es el dato útil para referenciar el pago ante MP.
+        String idTransaccion = pago != null ? textoOGuion(pago.getIdTransaccion()) : "—";
+        String tarjeta = pago != null ? textoOGuion(pago.getNroUltimDigTarjeta()) : "—";
+
         StringBuilder sb = new StringBuilder();
 
         sb.append(
@@ -222,13 +234,44 @@ public class NotificacionesService {
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
-        sb.append("<h2 style='color: #333;'>¡").append(usuario.getNombre()).append(", gracias por tu pedido!</h2>");
+        sb.append("<h2 style='color: #333;'>¡")
+                .append(nombreCliente)
+                .append(", gracias por tu pedido!</h2>");
+
         sb.append("<p style='color: #555; font-size: 16px;'>")
-                .append("<strong>").append(restaurante.getNombre()).append("</strong>")
-                .append(" - ").append(restaurante.getDireccion())
-                .append(" ya está preparando tu pedido. La hora estimada de entrega es ")
-                .append("<strong>").append(horaEstimada).append("</strong>.")
+                .append("<strong>")
+                .append(nombreRestaurante)
+                .append("</strong> - ")
+                .append(direccionRestaurante)
+                .append(" ha recibido tu pedido #")
+                .append(pedido.getIdPedido())
+                .append(" con los siguientes productos:")
                 .append("</p>");
+
+        sb.append("<ul>");
+        pedido.getProductos().forEach(pp -> {
+            String nombreProducto = pp.getProducto() != null
+                    ? textoOGuion(pp.getProducto().getNombre())
+                    : "—";
+            sb.append("<li>")
+                    .append(nombreProducto)
+                    .append(" x ")
+                    .append(pp.getCantidad())
+                    .append("</li>");
+        });
+        sb.append("</ul>");
+
+        sb.append("<p style='color: #555; font-size: 16px;'>")
+                .append("<strong>Total:</strong> $")
+                .append(pedido.getTotal())
+                .append("<br>")
+                .append("<strong>Transacción:</strong> ")
+                .append(idTransaccion)
+                .append("<br>")
+                .append("<strong>Tarjeta:</strong> ****")
+                .append(tarjeta)
+                .append("</p>");
+        sb.append("</div>");
 
         sb.append("<p style='color: #555;'>Podrás seguir el estado de tu pedido desde la app.</p>");
         sb.append("<hr style='border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;'>");
@@ -243,5 +286,13 @@ public class NotificacionesService {
         sb.append("</div>");
 
         return sb.toString();
+    }
+
+    private static String textoOGuion(String valor) {
+        return (valor == null || valor.isBlank()) ? "—" : valor;
+    }
+
+    private static String formatearDireccion(DTODireccion direccion) {
+        return direccion == null ? "—" : direccion.toString();
     }
 }
