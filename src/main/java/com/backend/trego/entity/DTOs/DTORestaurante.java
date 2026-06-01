@@ -44,6 +44,7 @@ public class DTORestaurante {
         this.rut = rut;
         this.telefono = telefono;
         this.fotoPortada = fotoPortada;
+        this.fotoPerfil = fotoPerfil;
         this.direccion = direccion;
         this.descripcion = descripcion;
         this.categoria = categoria;

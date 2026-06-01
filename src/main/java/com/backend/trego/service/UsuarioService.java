@@ -49,6 +49,8 @@ public class UsuarioService {
         }
         nuevoCliente.setEmail(usuarioDTO.getEmail());
         nuevoCliente.setNombre(usuarioDTO.getNombre());
+        nuevoCliente.setFotoPerfil(usuarioDTO.getUrlImagen());
+        nuevoCliente.setTelefono(usuarioDTO.getTelefono());
         nuevoCliente.setRol(usuarioDTO.getRol());
 
         return usuarioRepository.save(nuevoCliente);

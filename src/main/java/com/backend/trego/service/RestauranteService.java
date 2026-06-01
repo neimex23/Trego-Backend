@@ -283,8 +283,8 @@ public class RestauranteService {
                 null, // password: nunca se expone al frontend
                 restaurante.getRut(),
                 restaurante.getTelefono(),
-                restaurante.getFotoPerfil(),
                 restaurante.getFotoPortada(),
+                restaurante.getFotoPerfil(),
                 restaurante.getDireccion(),
                 restaurante.getDescripcion(),
                 restaurante.getCategoria(),
