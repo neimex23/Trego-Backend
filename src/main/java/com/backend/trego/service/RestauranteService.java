@@ -29,17 +29,14 @@ public class RestauranteService {
     private final UsuarioRepository restauranteRepository;
     private final CurrentUserService currentUserService;
     private final ProductosService productosService;
-    private final CloudinaryService cloudinaryService;
     private final NotificacionesService notificacionesService;
     private final GeoapifyService geoapifyService;
 
     public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService,
-            @Lazy ProductosService productosService,
-            CloudinaryService cloudinaryService, NotificacionesService notificacionesService, GeoapifyService geoapifyService) {
+            @Lazy ProductosService productosService, NotificacionesService notificacionesService, GeoapifyService geoapifyService) {
         this.restauranteRepository = restauranteRepository;
         this.currentUserService = currentUserService;
         this.productosService = productosService;
-        this.cloudinaryService = cloudinaryService;
         this.notificacionesService = notificacionesService;
         this.geoapifyService = geoapifyService;
     }
@@ -315,9 +312,7 @@ public class RestauranteService {
                 .collect(Collectors.toList());
     }
 
-    public DTOFirma firmarArchivo(String nombreArchivo, String tipoArchivo) {
-        return cloudinaryService.firmar(nombreArchivo, tipoArchivo);
-    }
+
 
     // Actualiza los datos del restaurante aplicando sólo los campos no nulos del
     // DTO. No se permite modificar id ni habilitado.

@@ -1,6 +1,7 @@
 package com.backend.trego.service;
 
 import com.backend.trego.entity.DTOs.DTODireccion;
+import com.backend.trego.entity.DTOs.DTOFirma;
 import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.repository.UsuarioRepository;
 import com.backend.trego.entity.RegistroTemporal;
@@ -25,15 +26,18 @@ public class UsuarioService {
     private final NotificacionesService notificacionesService;
     private final PasswordEncoder passwordEncoder;
     private final CurrentUserService currentUserService;
+    private final CloudinaryService cloudinaryService;
+
     // Mapa en memoria: email -> datos del registro pendiente (código + contraseña)
     private final Map<String, RegistroTemporal> registrosPendientes = new ConcurrentHashMap<>();
 
     public UsuarioService(UsuarioRepository usuarioRepository, NotificacionesService notificacionesService,
-            PasswordEncoder passwordEncoder, CurrentUserService currentUserService) {
+            PasswordEncoder passwordEncoder, CurrentUserService currentUserService, CloudinaryService cloudinaryService) {
         this.usuarioRepository = usuarioRepository;
         this.notificacionesService = notificacionesService;
         this.passwordEncoder = passwordEncoder;
         this.currentUserService = currentUserService;
+        this.cloudinaryService = cloudinaryService;
     }
 
     // Da de alta un cliente nuevo a partir del DTO y lo devuelve ya con su id.
@@ -213,6 +217,10 @@ public class UsuarioService {
     public List<DTODireccion> obtenerDirecciones() {
         String uid = currentUserService.getCurrentUid();
         return usuarioRepository.findDireccionesByUid(uid);
+    }
+
+    public DTOFirma firmarArchivo(String nombreArchivo, String tipoArchivo) {
+        return cloudinaryService.firmar(nombreArchivo, tipoArchivo);
     }
 
 }

@@ -62,9 +62,8 @@ public class ProductosController {
     @ApiResponse(responseCode = "200", description = "Producto agregado correctamente")
     @ApiResponse(responseCode = "404", description = "Restaurante no existe")
     @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene rol Restaurante")
-    public ResponseEntity<Void> agregarProducto(@RequestBody DTOProducto producto){
-        productosService.crearProducto(producto);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<DTOProducto> agregarProducto(@RequestBody DTOProducto producto){
+        return ResponseEntity.ok(productosService.crearProducto(producto));
     }
 
 }

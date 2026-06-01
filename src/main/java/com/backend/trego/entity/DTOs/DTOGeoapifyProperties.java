@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DTOGeoapifyProperties {
 
+    @JsonProperty("name")
+    private String tag;
+
     // --- Campos de geocoding (reverse geocode) ---
     @JsonProperty("street")
     private String calle;
@@ -22,6 +25,10 @@ public class DTOGeoapifyProperties {
     // tiempo estimado en segundos
     @JsonProperty("time")
     private Double tiempo;
+
+    public String getTag() {
+        return tag;
+    }
 
     public String getCalle() {
         return calle;

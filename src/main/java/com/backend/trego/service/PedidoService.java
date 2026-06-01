@@ -226,7 +226,7 @@ public class PedidoService {
         if (d == null) {
             return null;
         }
-        return new DTODireccion(d.getCalle(), d.getNumero(), d.getApartamento(),
+        return new DTODireccion(d.getTag(), d.getCalle(), d.getNumero(), d.getApartamento(),
                 d.getEsquina(), d.getLatitud(), d.getLongitud());
     }
 

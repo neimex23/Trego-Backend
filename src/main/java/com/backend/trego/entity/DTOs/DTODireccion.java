@@ -4,6 +4,10 @@ import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class DTODireccion {
+
+    // Etiqueta opcional de la direccion (por ej. "Casa", "Trabajo" o el "name" que
+    // devuelve Geoapify cuando reconoce el lugar).
+    private String tag;
     private String calle;
     private int numero;
     private int apartamento;
@@ -14,7 +18,8 @@ public class DTODireccion {
     protected DTODireccion() {
     }
 
-    public DTODireccion(String calle, int numero, int apartamento, String esquina, double latitud, double longitud) {
+    public DTODireccion(String tag, String calle, int numero, int apartamento, String esquina, double latitud, double longitud) {
+        this.tag = tag;
         this.calle = calle;
         this.numero = numero;
         this.apartamento = apartamento;
@@ -26,6 +31,14 @@ public class DTODireccion {
     public DTODireccion(double latitud, double longitud) {
         this.latitud = latitud;
         this.longitud = longitud;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public void setTag(String tag) {
+        this.tag = tag;
     }
 
     public String getCalle() {
@@ -54,18 +67,25 @@ public class DTODireccion {
 
     // Representación legible de la dirección. Se usa en el PDF de comprobante y
     // en los emails. Si no hay calle se cae a las coordenadas; si tampoco hay
-    // coordenadas devuelve "Sin dirección".
+    // coordenadas devuelve "Sin dirección". Cuando hay tag se antepone como
+    // etiqueta (ej: "Casa - Av. Italia 1234").
     @Override
     public String toString() {
         boolean tieneCalle = calle != null && !calle.isBlank();
+        boolean tieneTag = tag != null && !tag.isBlank();
+
         if (!tieneCalle) {
             if (latitud != 0 || longitud != 0) {
-                return String.format("Lat %.5f, Lon %.5f", latitud, longitud);
+                String coords = String.format("Lat %.5f, Lon %.5f", latitud, longitud);
+                return tieneTag ? tag + " - " + coords : coords;
             }
-            return "Sin dirección";
+            return tieneTag ? tag : "Sin dirección";
         }
 
         StringBuilder sb = new StringBuilder();
+        if (tieneTag) {
+            sb.append(tag).append(" - ");
+        }
         sb.append(calle);
         if (numero > 0) {
             sb.append(" ").append(numero);

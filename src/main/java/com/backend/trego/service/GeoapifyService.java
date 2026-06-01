@@ -60,7 +60,7 @@ public class GeoapifyService {
         // esquina aproximada
         String esquina = props.getBarrio();
 
-        return new DTODireccion(calle, numero, apartamento, esquina, latitud, longitud);
+        return new DTODireccion(props.getTag(), calle, numero, apartamento, esquina, latitud, longitud);
     }
 
     // Distancia por ruta entre dos coordenadas, en kilometros.

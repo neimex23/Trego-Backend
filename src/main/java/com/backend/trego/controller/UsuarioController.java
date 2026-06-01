@@ -106,4 +106,20 @@ public class UsuarioController {
         }
     }
 
+    //Firmar imagen para Cloudinary
+    @PostMapping("/imagen/firma/{nombreArchivo}/{tipo}")
+    @Operation(summary = "Solicitar Firmar un Archivo en Cloudinary", description = "Solicita una firma para subir un archivo a Cloudinary. El nombreArchivo es el nombre del archivo a subir (sin extensión) y tipo es opcional (image, video o raw).")
+    @ApiResponse(responseCode = "200", description = "Firma generada correctamente")
+    @ApiResponse(responseCode = "400", description = "Parámetros inválidos")
+    @ApiResponse(responseCode = "500", description = "Error al generar la firma")
+    public ResponseEntity<?> solicitarFirmaCloudinary(@PathVariable String nombreArchivo, @PathVariable String tipo) {
+        try {
+            return ResponseEntity.ok(usuarioService.firmarArchivo(nombreArchivo, tipo));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al generar la firma: " + e.getMessage());
+        }
+    }
+
 }
