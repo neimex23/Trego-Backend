@@ -57,6 +57,18 @@ public class PedidoController {
         return ResponseEntity.ok(pedidoService.listarMisPedidosCliente());
     }
 
+
+    @GetMapping("/misPedidosActuales")
+    @Operation(summary = "Pedidos actuales del Cliente con sus respectivos productos.",
+            description = "Lista los pedidos del cliente autenticado (fecha, total, restaurante). "
+                    + "Excluye pedidos en estado Solicitado, PagoRechazado, Entregado, Cancelado o Reembolsado. ")
+    @ApiResponse(responseCode = "200", description = "Historial obtenido correctamente")
+    @ApiResponse(responseCode = "403", description = "El usuario autenticado no es un cliente")
+    @ApiResponse(responseCode = "404", description = "Cliente no encontrado")
+    public ResponseEntity<List<DTOPedido>> listarPedidosActualesCliente() {
+        return ResponseEntity.ok(pedidoService.listarMisPedidosActualesCliente());
+    }
+
     @PostMapping("/confirmar")
     @Operation(summary = "Confirmar pedido por parte del cliente",
             description = "Recibe la dirección de envío (DTODireccion) y genera una preferencia de pago en MercadoPago con el Carrito Actual. Valida que el carrito no esté vacío, que el restaurante seleccionado sea válido.")

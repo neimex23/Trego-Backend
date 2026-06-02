@@ -23,6 +23,19 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
             """)
     List<Pedido> findHistorialByClienteIdUsuario(@Param("idCliente") int idCliente);
 
+    @Query("""
+            SELECT DISTINCT p FROM Pedido p
+            LEFT JOIN FETCH p.restaurante
+            LEFT JOIN FETCH p.productos
+            WHERE p.cliente.idUsuario = :idCliente
+            AND p.estado IN :estadosPermitidos
+            ORDER BY p.fechaCreacion DESC
+            """)
+    List<Pedido> findPedidosActualesByCliente(
+            @Param("idCliente") int idCliente, 
+            @Param("estadosPermitidos") List<EnumEstadoPedido> estadosPermitidos
+    );
+
     List<Pedido> findByRestauranteIdUsuario(int idRestaurante);
 
     List<Pedido> findByEstado(EnumEstadoPedido estado);
