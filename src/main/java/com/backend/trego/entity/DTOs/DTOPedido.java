@@ -75,6 +75,31 @@ public class DTOPedido {
                 pedido.getTiempoPreparacion());
     }
 
+    /**
+     * Mapeo liviano para historial del cliente: no carga productos ni relaciones lazy extra.
+     */
+    public static DTOPedido desdeHistorial(Pedido pedido) {
+        if (pedido == null) {
+            return null;
+        }
+        Integer idRestaurante = pedido.getRestaurante() != null
+                ? pedido.getRestaurante().getIdUsuario()
+                : null;
+        return new DTOPedido(
+                pedido.getIdPedido(),
+                null,
+                null,
+                idRestaurante,
+                List.of(),
+                pedido.getDireccionEntrega(),
+                (double) pedido.getTotal(),
+                pedido.getEstado(),
+                pedido.getFechaCreacion(),
+                pedido.getFechaExpiracion(),
+                pedido.getHorarioEntrega(),
+                pedido.getTiempoPreparacion());
+    }
+
     private static DTOProductoPedido mapearLinea(ProductoPedido pp) {
         var producto = pp.getProducto();
         DTOProductoSimplificado simplificado = producto != null

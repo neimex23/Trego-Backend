@@ -252,6 +252,43 @@ public class PedidoService {
         return stream.collect(Collectors.toList());
     }
 
+    /**
+     * Historial de compras del cliente autenticado (CU cliente).
+     * No reutiliza listarPedidosConfirmados (ese CU es del restaurante).
+     */
+    @Transactional(readOnly = true)
+    public List<DTOPedido> listarMisPedidosCliente() {
+        if (!"Cliente".equals(currentUserService.getCurrentRol())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Solo clientes pueden consultar su historial de pedidos");
+        }
+
+        Cliente cliente = resolverClienteAutenticado();
+
+        return pedidoRepository.findHistorialByClienteIdUsuario(cliente.getIdUsuario()).stream()
+                .filter(p -> p.getEstado() != EnumEstadoPedido.Solicitado
+                        && p.getEstado() != EnumEstadoPedido.PagoRechazado)
+                .map(DTOPedido::desdeHistorial)
+                .collect(Collectors.toList());
+    }
+
+    private Cliente resolverClienteAutenticado() {
+        String uid = currentUserService.getCurrentUid();
+        if (uid != null && !uid.isBlank()) {
+            Optional<Cliente> porUid = usuarioRepository.findClienteByUidCliente(uid);
+            if (porUid.isPresent()) {
+                return porUid.get();
+            }
+        }
+        Integer idUsuario = currentUserService.getCurrentIdUsuario();
+        if (idUsuario != null) {
+            return usuarioRepository.findClienteById(idUsuario)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Cliente no encontrado"));
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado");
+    }
+
     @Transactional
     public DTOPedido actualizarEstadoPedido(DTOPedido pedidoDTO, EnumEstadoPedido estado) {
         if (pedidoDTO == null || pedidoDTO.getIdPedido() == null) {
