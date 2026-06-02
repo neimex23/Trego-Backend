@@ -9,8 +9,8 @@ public class DTODireccion {
     // devuelve Geoapify cuando reconoce el lugar).
     private String tag;
     private String calle;
-    private int numero;
-    private int apartamento;
+    private Integer numero;
+    private Integer apartamento;
     private String esquina;
     private double latitud;
     private double longitud;
@@ -18,7 +18,7 @@ public class DTODireccion {
     protected DTODireccion() {
     }
 
-    public DTODireccion(String tag, String calle, int numero, int apartamento, String esquina, double latitud, double longitud) {
+    public DTODireccion(String tag, String calle, Integer numero, Integer apartamento, String esquina, double latitud, double longitud) {
         this.tag = tag;
         this.calle = calle;
         this.numero = numero;
@@ -45,11 +45,11 @@ public class DTODireccion {
         return calle;
     }
 
-    public int getNumero() {
+    public Integer getNumero() {
         return numero;
     }
 
-    public int getApartamento() {
+    public Integer getApartamento() {
         return apartamento;
     }
 
@@ -87,13 +87,13 @@ public class DTODireccion {
             sb.append(tag).append(" - ");
         }
         sb.append(calle);
-        if (numero > 0) {
+        if (numero != null && numero > 0) {
             sb.append(" ").append(numero);
         }
         if (esquina != null && !esquina.isBlank()) {
             sb.append(" esq. ").append(esquina);
         }
-        if (apartamento > 0) {
+        if (apartamento != null && apartamento > 0) {
             sb.append(", apto ").append(apartamento);
         }
         return sb.toString();
