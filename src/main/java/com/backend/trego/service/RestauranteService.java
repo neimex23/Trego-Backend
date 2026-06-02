@@ -33,7 +33,8 @@ public class RestauranteService {
     private final GeoapifyService geoapifyService;
 
     public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService,
-            @Lazy ProductosService productosService, NotificacionesService notificacionesService, GeoapifyService geoapifyService) {
+            @Lazy ProductosService productosService, NotificacionesService notificacionesService,
+            GeoapifyService geoapifyService) {
         this.restauranteRepository = restauranteRepository;
         this.currentUserService = currentUserService;
         this.productosService = productosService;
@@ -51,7 +52,7 @@ public class RestauranteService {
         return false;
     }
 
-        public Date actualizarHoraCierre(Date horaCierre) {
+    public Date actualizarHoraCierre(Date horaCierre) {
         // TODO: implementar
         return null;
     }
@@ -62,8 +63,7 @@ public class RestauranteService {
         if (restaurantesHabilitados.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "No hay restaurantes habilitados"
-            );
+                    "No hay restaurantes habilitados");
         }
 
         double latitud = direccion.getLatitud();
@@ -87,8 +87,7 @@ public class RestauranteService {
                     latitud,
                     longitud,
                     latitudResto,
-                    longitudResto
-            );
+                    longitudResto);
 
             // Si Geoapify no pudo calcular la ruta, descartamos el restaurante.
             if (distancia >= 0 && distancia <= radioEntrega) {
@@ -99,8 +98,7 @@ public class RestauranteService {
         if (restaurantesFiltro.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "No hay restaurantes en la zona"
-            );
+                    "No hay restaurantes en la zona");
         }
 
         return restaurantesFiltro;
@@ -129,13 +127,13 @@ public class RestauranteService {
                 .collect(Collectors.toList());
     }
 
-    public DTOIngrediente crearIngrediente(String nombre){
+    public DTOIngrediente crearIngrediente(String nombre) {
         Integer actualID = currentUserService.getCurrentId();
         Restaurante restaurante = restauranteRepository.findRestauranteById(actualID)
-                    .orElseThrow(() -> new ResponseStatusException(
+                .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + actualID));
         if (restaurante.existeIngrediente(nombre))
-            throw new ResponseStatusException( HttpStatus.CONFLICT, "Ingrediente ya existe");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ingrediente ya existe");
 
         Ingrediente ingrediente = new Ingrediente(nombre);
         restaurante.addIngredienteDisponible(ingrediente);
@@ -301,9 +299,10 @@ public class RestauranteService {
         if (!currentUserService.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No autenticado: se requiere iniciar sesión");
         }
-        
+
         if (!currentUserService.isAdmin()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: se requieren privilegios de administrador");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Acceso denegado: se requieren privilegios de administrador");
         }
 
         List<Restaurante> restaurantesNoHabilitados = restauranteRepository.findRestaurantesNoHabilitados();
@@ -311,8 +310,6 @@ public class RestauranteService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
-
-
 
     // Actualiza los datos del restaurante aplicando sólo los campos no nulos del
     // DTO. No se permite modificar id ni habilitado.
@@ -362,20 +359,18 @@ public class RestauranteService {
         return toDTO(actualizado);
     }
 
-   public void habilitarRestaurante(Integer restauranteId) {
+    public void habilitarRestaurante(Integer restauranteId) {
 
         if (!currentUserService.isAuthenticated()) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "No autenticado: se requiere iniciar sesión"
-            );
+                    "No autenticado: se requiere iniciar sesión");
         }
 
         if (!currentUserService.isAdmin()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Acceso denegado: se requieren privilegios de administrador"
-            );
+                    "Acceso denegado: se requieren privilegios de administrador");
         }
 
         Restaurante restaurante = buscarRestaurante(String.valueOf(restauranteId));
@@ -383,8 +378,7 @@ public class RestauranteService {
         if (restaurante.isHabilitado()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "El restaurante ya se encuentra habilitado"
-            );
+                    "El restaurante ya se encuentra habilitado");
         }
 
         restaurante.setHabilitado(true);
@@ -393,22 +387,20 @@ public class RestauranteService {
         notificacionesService.notificarRestauranteHabilitado(restaurante);
     }
 
-    public void noHabilitarRestaurante(Integer restauranteId, String motivo){
-         if (!currentUserService.isAuthenticated()) {
+    public void noHabilitarRestaurante(Integer restauranteId, String motivo) {
+        if (!currentUserService.isAuthenticated()) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "No autenticado: se requiere iniciar sesión"
-            );
+                    "No autenticado: se requiere iniciar sesión");
         }
 
         if (!currentUserService.isAdmin()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Acceso denegado: se requieren privilegios de administrador"
-            );
+                    "Acceso denegado: se requieren privilegios de administrador");
         }
 
         Restaurante restaurante = buscarRestaurante(String.valueOf(restauranteId));
-        notificacionesService.notificarRestauranteNoHabilitado(restaurante,motivo);
+        notificacionesService.notificarRestauranteNoHabilitado(restaurante, motivo);
     }
 }
