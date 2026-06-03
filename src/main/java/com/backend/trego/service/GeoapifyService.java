@@ -47,15 +47,10 @@ public class GeoapifyService {
         String calle = props.getCalle();
 
         // el numero de puerta viene como string
-        int numero;
-        try {
-            numero = Integer.parseInt(props.getNumeroPuerta());
-        } catch (Exception e) {
-            numero = 0;
-        }
+        String numero = props.getNumeroPuerta();
 
         // Geoapify normalmente no devuelve apartamento
-        int apartamento = 0;
+        String apartamento = "";
 
         // esquina aproximada
         String esquina = props.getBarrio();
