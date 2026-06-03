@@ -7,6 +7,7 @@ import com.backend.trego.entity.DTOs.DTOFirma;
 import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTORestaurante;
+import com.backend.trego.exception.RestauranteCerradoException;
 import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.repository.UsuarioRepository;
 
@@ -55,13 +56,14 @@ public class RestauranteService {
         this.geoapifyService = geoapifyService;
     }
 
-    public void abrirLocal(Integer restauranteId, LocalTime horaCierre) {
+    public void abrirLocal(LocalTime horaCierre) {
+        Integer restauranteId = currentUserService.getCurrentId();
         Restaurante restaurante = restauranteRepository.findRestauranteById(restauranteId)
                 .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
         
         // Precondición: el local debe estar cerrado
         if (restaurante.getAbierto()) {
-            throw new IllegalStateException("El local ya se encuentra abierto");
+            throw new RestauranteCerradoException("El local ya se encuentra abierto");
         }
 
         List<DTOProducto> productos;
@@ -72,19 +74,20 @@ public class RestauranteService {
         }
 
         if (productos == null || productos.isEmpty()) {
-            throw new IllegalStateException("Debe tener algun producto para ofrecer");
+            throw new RestauranteCerradoException("Debe tener algun producto para ofrecer");
         }
         abrirCerrarRestaurante(restaurante, true, horaCierre);
         programarCierre(restauranteId, horaCierre);
     }
 
-    public void cerrarLocal(Integer restauranteId) {
+    public void cerrarLocal() {
+        Integer restauranteId = currentUserService.getCurrentId();
         Restaurante restaurante = restauranteRepository.findRestauranteById(restauranteId)
                 .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
         
         // Precondición: el local debe estar abierto
         if (!restaurante.getAbierto()) {
-            throw new IllegalStateException("El local ya se encontraba cerrado");
+            throw new RestauranteCerradoException("El local ya se encontraba cerrado");
         }        
 
         // Cancelar el cronómetro programado si existe
@@ -101,7 +104,8 @@ public class RestauranteService {
     }
 
     // Método para actualizar la hora del cierre automatico
-    public void actualizarHoraCierre(Integer restauranteId, LocalTime horaCierre) {
+    public void actualizarHoraCierre(LocalTime horaCierre) {
+        Integer restauranteId = currentUserService.getCurrentId();
         Restaurante restaurante = restauranteRepository.findRestauranteById(restauranteId)
                 .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
         abrirCerrarRestaurante(restaurante, true, horaCierre);
