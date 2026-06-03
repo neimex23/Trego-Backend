@@ -16,9 +16,11 @@ import com.backend.trego.repository.UsuarioRepository;
 public class ClienteService {
 
     private final UsuarioRepository repo;
+    private final CurrentUserService currentUserService;
 
-    public ClienteService(UsuarioRepository repo) {
+    public ClienteService(UsuarioRepository repo, CurrentUserService currentUserService) {
         this.repo = repo;
+        this.currentUserService = currentUserService;
     }
 
     public List<Cliente> listar() {
@@ -34,11 +36,6 @@ public class ClienteService {
     public Cliente crear(DTOCliente dto) {
         validarDto(dto);
         return guardar(desdeDto(dto));
-    }
-
-    @Transactional
-    public Cliente actualizar(Integer id, DTOCliente dto) {
-        return actualizar(id, desdeDto(dto));
     }
 
     private void validarDto(DTOCliente dto) {
@@ -77,16 +74,27 @@ public class ClienteService {
         return repo.findClienteByUidCliente(uidCliente);
     }
 
+    // Actualiza un cliente existente aplicando sólo los campos no nulos del DTO.
+    // Direcciones, Horarios y Contraseña se actualizan por endpoints específicos.
     @Transactional
-    public Cliente actualizar(Integer id, Cliente datos) {
-        Cliente existente = obtenerOFallar(id);
-        existente.setNombre(datos.getNombre());
-        existente.setEmail(datos.getEmail());
-        existente.setFotoPerfil(datos.getFotoPerfil());
-        existente.setTelefono(datos.getTelefono());
-        existente.setUidCliente(datos.getUidCliente());
-        if (datos.getDirecciones() != null) {
-            existente.setDirecciones(datos.getDirecciones());
+    public Cliente actualizar(DTOCliente dto) {
+        Cliente existente = obtenerOFallar(currentUserService.getCurrentId());
+        if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(existente.getEmail())) {
+            if (repo.findClienteByEmail(dto.getEmail()).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El correo electrónico ya se encuentra registrado");
+            }
+            existente.setEmail(dto.getEmail());
+        }
+        if (dto.getNombre() != null && !dto.getNombre().isBlank() && !dto.getNombre().equals(existente.getNombre())) {
+            existente.setNombre(dto.getNombre());
+        }
+
+        if (dto.getUrlImagen() != null && !dto.getUrlImagen().isBlank() && !dto.getUrlImagen().equals(existente.getFotoPerfil())) {
+            existente.setFotoPerfil(dto.getUrlImagen());
+        }
+
+        if (dto.getTelefono() != null && !dto.getTelefono().isBlank() && !dto.getTelefono().equals(existente.getTelefono())) {
+            existente.setTelefono(dto.getTelefono());
         }
         return repo.save(existente);
     }

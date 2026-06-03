@@ -77,7 +77,7 @@ public class AdministradorController {
         return ResponseEntity.ok().build();
     }
     
-// Nuevo metodo Post para generar Administrador ver NotificaionesService y UsuarioService
+
     @PostMapping("/CrearAdministrador")
     @Operation(summary = "Crear Administrador", description = "Crea nuevo administrador a partir de un DTOUsuario. Valida que el correo no este en uso por algun usuario u otro admin y cifra la contraseña.")
     @ApiResponse(responseCode = "200", description = "Administrador creado exitosamente")

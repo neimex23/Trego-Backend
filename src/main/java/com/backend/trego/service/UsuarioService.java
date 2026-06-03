@@ -1,5 +1,6 @@
 package com.backend.trego.service;
 
+import com.backend.trego.entity.DTOs.DTOCliente;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOFirma;
 import com.backend.trego.entity.DTOs.DTOUsuario;
@@ -226,11 +227,121 @@ public class UsuarioService {
 
     public List<DTODireccion> obtenerDirecciones() {
         String uid = currentUserService.getCurrentUid();
+        if (uid == null) {
+            throw new IllegalStateException("No se encontró el uid del usuario autenticado. Este endpoint es solo para clientes autenticados con Firebase.");
+        }
         return usuarioRepository.findDireccionesByUid(uid);
+    }
+
+    // Agrega una nueva direccion al cliente autenticado. Restaurante usa
+    // actualizarDireccion (tiene una sola); Administrador no maneja direcciones.
+    @Transactional
+    public void agregarDireccion(DTODireccion dto) {
+        var auth = currentUserService.getCurrentUser();
+        if (!"Cliente".equals(auth.getRol())) {
+            throw new IllegalStateException(
+                    "Solo los clientes pueden agregar direcciones (rol actual: " + auth.getRol() + ").");
+        }
+        String uid = auth.getUid();
+        if (uid == null || uid.isBlank()) {
+            throw new IllegalStateException(
+                    "El cliente autenticado no tiene UID de Firebase asociado.");
+        }
+        Cliente cliente = usuarioRepository.findByUidCliente(uid)
+                .orElseThrow(() ->
+                        new IllegalStateException("Cliente no encontrado para el UID: " + uid));
+        cliente.addDireccion(dto);
+        usuarioRepository.save(cliente);
+    }
+
+    public void actualizarDireccion(String tagModificar, DTODireccion dtoNueva) {
+        Integer id = currentUserService.getCurrentId();
+        Usuario u = usuarioRepository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalStateException("Usuario no encontrado para el ID: " + id));
+
+        if (u instanceof Cliente cliente) {
+            cliente.getDirecciones().removeIf(
+                    d -> d.getTag().equals(tagModificar));
+            cliente.getDirecciones().add(dtoNueva);
+            usuarioRepository.save(cliente);
+        }
+
+        if (u instanceof Restaurante restaurante) {
+            restaurante.setDireccion(dtoNueva);
+            usuarioRepository.save(restaurante);
+        }
+
+        throw new IllegalStateException(
+                "El usuario autenticado no es ni Cliente ni Restaurante");
+    }
+
+    public void eliminarDireccion(String tagEliminar) {
+        Integer id = currentUserService.getCurrentId();
+        Usuario u = usuarioRepository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalStateException("Usuario no encontrado para el ID: " + id));
+
+        if (u instanceof Cliente cliente) {
+            cliente.getDirecciones().removeIf(
+                    d -> d.getTag().equals(tagEliminar));
+            usuarioRepository.save(cliente);
+            return;
+        }
+
+        if (u instanceof Restaurante restaurante) {
+            throw new IllegalStateException("Los restaurantes no pueden no tener una dirección, para modificarla deben usar el endpoint de actualizar dirección con el tag de la dirección actual.");
+        }
+
+        throw new IllegalStateException(
+                "El usuario autenticado no es ni Cliente ni Restaurante");
     }
 
     public DTOFirma firmarArchivo(String nombreArchivo, String tipoArchivo) {
         return cloudinaryService.firmar(nombreArchivo, tipoArchivo);
+    }
+
+    // Actualiza la contraseña del usuario autenticado segun su rol.
+    // Cliente: delega en Firebase Auth (no se guarda contraseña local).
+    // Restaurante / Administrador: cifra con PasswordEncoder y persiste.
+    @Transactional
+    public void actualizarContraseña(String nuevaContraseña) {
+        if (nuevaContraseña == null || nuevaContraseña.length() < 8) {
+            throw new IllegalArgumentException("La contraseña debe tener al menos 8 caracteres.");
+        }
+
+        var auth = currentUserService.getCurrentUser();
+        String rol = auth.getRol();
+
+        if ("Cliente".equals(rol)) {
+            throw new IllegalStateException("Los clientes autenticados con Firebase deben cambiar su contraseña desde la aplicación google, delegando en Firebase Auth. Este endpoint es solo para usuarios con rol Restaurante o Administrador.");
+        }
+
+        Integer id = auth.getIdUsuario();
+        if (id == null) {
+            throw new IllegalStateException(
+                    "El token del usuario autenticado no contiene idUsuario (rol: " + rol + ").");
+        }
+        Usuario u = usuarioRepository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalStateException("Usuario no encontrado para el ID: " + id));
+
+        String passwordCifrada = passwordEncoder.encode(nuevaContraseña);
+
+        if (u instanceof Administrador admin) {
+            admin.setPassword(passwordCifrada);
+            usuarioRepository.save(admin);
+            return;
+        }
+
+        if (u instanceof Restaurante restaurante) {
+            restaurante.setPassword(passwordCifrada);
+            usuarioRepository.save(restaurante);
+            return;
+        }
+
+        throw new IllegalStateException(
+                "Rol no soportado para actualizacion de contraseña: " + rol);
     }
 
 }
