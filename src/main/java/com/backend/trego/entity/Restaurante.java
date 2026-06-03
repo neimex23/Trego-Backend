@@ -29,13 +29,14 @@ public class Restaurante extends Usuario {
     private String descripcion;
     private float calificacionProm;
     private boolean habilitado = false;
+    private boolean abierto = false;
     private String fotoPortada;
 
     @Enumerated(EnumType.STRING)
     private EnumCategoriaRestaurante categoria;
 
-    @ElementCollection
-    private List<LocalTime> horarioAtencion = new ArrayList<>();
+    private LocalTime horaApertura;
+    private LocalTime horaCierre;
 
     private int radioEntrega = 10;
 
@@ -65,8 +66,8 @@ public class Restaurante extends Usuario {
         this.descripcion = descripcion;
         this.calificacionProm = calificacionProm;
         this.categoria = categoria;
-        this.horarioAtencion.add(apertura);
-        this.horarioAtencion.add(cierre);
+        this.horaApertura = apertura;
+        this.horaCierre = cierre;
         this.radioEntrega = radioEntrega;
     }
 
@@ -109,24 +110,21 @@ public class Restaurante extends Usuario {
     public void setCalificacionProm(float calificacionProm) { this.calificacionProm = calificacionProm; }
     public boolean isHabilitado() { return habilitado; }
     public void setHabilitado(boolean habilitado) { this.habilitado = habilitado; }
+    public boolean getAbierto() { return abierto; }
+    public void setAbierto(boolean abierto) { this.abierto = abierto; }
     public String getFotoPortada() { return fotoPortada; }
     public void setFotoPortada(String fotoPortada) { this.fotoPortada = fotoPortada; }
     public EnumCategoriaRestaurante getCategoria() { return categoria; }
     public void setCategoria(EnumCategoriaRestaurante categoria) { this.categoria = categoria; }
-    public List<LocalTime> getHorarioAtencion() { return horarioAtencion; }
+    public LocalTime getApertura() { return horaApertura; }
+    public void setApertura(LocalTime apertura) { this.horaApertura = apertura; };
+    public LocalTime getCierre() { return horaCierre; }
+    public void setCierre(LocalTime cierre) { this.horaApertura = cierre; };
 
-    public LocalTime getApertura() {
-        return horarioAtencion.isEmpty() ? null : horarioAtencion.get(0);
-    }
-
-    public LocalTime getCierre() {
-        return horarioAtencion.size() < 2 ? null : horarioAtencion.get(1);
-    }
 
     public void setHorario(LocalTime apertura, LocalTime cierre) {
-        this.horarioAtencion.clear();
-        this.horarioAtencion.add(apertura);
-        this.horarioAtencion.add(cierre);
+        if (apertura != null) this.horaApertura = apertura;
+        if (cierre != null) this.horaCierre = cierre;
     }
 
     public int getRadioEntrega() { return radioEntrega; }
