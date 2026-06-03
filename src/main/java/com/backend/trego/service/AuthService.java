@@ -15,6 +15,7 @@ import com.backend.trego.config.JWTUtil;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -188,6 +189,7 @@ public class AuthService {
     }
 
     // FLUJO CU-CLI-01: Registro de Cliente (Google/SMS)
+    @Transactional
     public Usuario altaUsuario(DTOUsuario dto) {
         // Verificar si el cliente ya existe por UID
         if (dto.getUid() == null || dto.getUid().isBlank()) {

@@ -1,6 +1,7 @@
 package com.backend.trego.controller;
 
 import com.backend.trego.config.AuthenticatedUser;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTORegistroRestaurante;
 import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.service.UsuarioService;
@@ -71,6 +72,16 @@ public class UsuarioController {
         }
     }
 
+    @PostMapping("/actualizarContraseña")
+    @Operation(summary = "Actualizar Contraseña", description = "Actualiza la contraseña del usuario autenticado.")
+    @ApiResponse(responseCode = "200", description = "Contraseña actualizada exitosamente")
+    @ApiResponse(responseCode = "400", description = "Datos de contraseña inválidos")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    public ResponseEntity<Void> actualizarContraseña(@RequestParam String nuevaContraseña) {
+        usuarioService.actualizarContraseña(nuevaContraseña);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/obtenerDirecciones")
     @Operation(summary = "Obtener Direcciones", description = "Retorna las direcciones asociadas al cliente autenticado")
     @ApiResponse(responseCode = "200", description = "Direcciones obtenidas exitosamente")
@@ -82,6 +93,27 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autorizado");
         }
     }
+
+     @PostMapping("/agregarDireccion")
+    @Operation(summary = "Agregar Dirección", description = "Agrega una nueva dirección al cliente autenticado. Solo disponible para clientes.")
+    @ApiResponse(responseCode = "200", description = "Dirección agregada exitosamente")
+    @ApiResponse(responseCode = "400", description = "Datos de dirección inválidos")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    public ResponseEntity<Void> agregarDireccion(@RequestBody DTODireccion dto) {
+        usuarioService.agregarDireccion(dto);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/actualizarDireccion")
+    @Operation(summary = "Actualizar Dirección", description = "Actualiza la dirección del usuario autenticado.")
+    @ApiResponse(responseCode = "200", description = "Dirección actualizada exitosamente")
+    @ApiResponse(responseCode = "400", description = "Datos de dirección inválidos")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    public ResponseEntity<Void> actualizarDireccion(@RequestParam String tagModificar, @RequestBody DTODireccion dto) {
+        usuarioService.actualizarDireccion(tagModificar, dto);
+        return ResponseEntity.ok().build();
+    }
+
 
     @GetMapping("/perfil")
     @Operation(summary = "Obtener perfil del principal autenticado",

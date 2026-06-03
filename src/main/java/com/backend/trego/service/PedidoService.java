@@ -48,14 +48,14 @@ public class PedidoService {
     private final GeoapifyService geoapifyService;
 
     public PedidoService(PedidoRepository pedidoRepository,
-                         RestauranteService restauranteService,
-                         PagoService pagoService,
-                         NotificacionesService notificacionesService,
-                         CurrentUserService currentUserService,
-                         UsuarioRepository usuarioRepository,
-                         ProductoRepository productoRepository,
-                         CarritoService carritoService,
-                         GeoapifyService geoapifyService) {
+            RestauranteService restauranteService,
+            PagoService pagoService,
+            NotificacionesService notificacionesService,
+            CurrentUserService currentUserService,
+            UsuarioRepository usuarioRepository,
+            ProductoRepository productoRepository,
+            CarritoService carritoService,
+            GeoapifyService geoapifyService) {
         this.pedidoRepository = pedidoRepository;
         this.restauranteService = restauranteService;
         this.pagoService = pagoService;
@@ -71,6 +71,7 @@ public class PedidoService {
         return pedidoRepository.findAll();
     }
 
+    @Transactional
     public Pedido guardar(Pedido pedido) {
         return pedidoRepository.save(pedido);
     }
@@ -96,6 +97,7 @@ public class PedidoService {
         return pedidoRepository.findByEstado(estado);
     }
 
+    @Transactional
     public Pedido cambiarEstado(Integer id, EnumEstadoPedido nuevoEstado) {
         Pedido p = obtenerOFallar(id);
         p.setEstado(nuevoEstado);
@@ -109,12 +111,14 @@ public class PedidoService {
         return pedidoRepository.save(p);
     }
 
+    @Transactional
     public Pedido recalcularTotal(Integer id) {
         Pedido p = obtenerOFallar(id);
         p.setTotal(p.calcularTotal());
         return pedidoRepository.save(p);
     }
 
+    @Transactional
     public void eliminar(Integer id) {
         if (!pedidoRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado");
@@ -142,10 +146,10 @@ public class PedidoService {
         return expirados.size();
     }
 
-
     // Valida el restaurante, crea el pedido a partir del carrito del cliente
     // autenticado, genera la preferencia de pago en MercadoPago y devuelve la
-    // preferencia (con la URL de checkout) para que el front redirija a la pasarela.
+    // preferencia (con la URL de checkout) para que el front redirija a la
+    // pasarela.
     @Transactional
     public DTOPreferenciaMP confirmarPedido(DTODireccion direccionDTO) {
         DTOCarrito carritoDTO = carritoService.obtenerCarrito();
@@ -170,7 +174,7 @@ public class PedidoService {
     // verifica que el restaurante esté abierto.
     @Transactional
     public Pedido crearPedido(DTOCarrito carritoDTO, DTODireccion direccionDTO,
-                              DTORestaurante restauranteDTO) {
+            DTORestaurante restauranteDTO) {
         if (restauranteDTO == null || restauranteDTO.getIdRestaurante() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restaurante inválido");
         }
@@ -204,7 +208,8 @@ public class PedidoService {
                     .orElseThrow(() -> new NoSuchElementException(
                             "Producto no encontrado con id: " + linea.getIdProducto()));
             int cantidad = (linea.getCantidad() == null || linea.getCantidad() <= 0)
-                    ? 1 : linea.getCantidad();
+                    ? 1
+                    : linea.getCantidad();
             float precioSuma = producto.getPrecio() * cantidad;
             ProductoPedido pp = new ProductoPedido(producto, cantidad, precioSuma, linea.getObservaciones());
             pedido.addProductoPedido(pp);
@@ -272,6 +277,32 @@ public class PedidoService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Compras activas del cliente (Pagado, En preparacion, En Camino)
+     * Los filtros se definen dentro y retorna un pedido con sus correspondientes productos pedidos, para que el usuario pueda visualizar lo que pidio
+     */
+    @Transactional(readOnly = true)
+    public List<DTOPedido> listarMisPedidosActualesCliente() {
+        if (!"Cliente".equals(currentUserService.getCurrentRol())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Solo clientes pueden consultar su historial de pedidos");
+        }
+
+        Cliente cliente = resolverClienteAutenticado();
+
+        // Lista de estados que definen un pedido en espera para el cliente
+        List<EnumEstadoPedido> estadosActuales = List.of(
+                EnumEstadoPedido.Pagado,
+                EnumEstadoPedido.EnPreparacion,
+                EnumEstadoPedido.EnCamino);
+
+                // Envio esa lista al repositorio para que cree el filtro en db y no tenga que traer datos inecesarios
+        return pedidoRepository.findPedidosActualesByCliente(cliente.getIdUsuario(), estadosActuales)
+                .stream()
+                .map(DTOPedido::desde) // Se crea el DTO con los ProductosPedidos
+                .collect(Collectors.toList());
+    }
+
     private Cliente resolverClienteAutenticado() {
         String uid = currentUserService.getCurrentUid();
         if (uid != null && !uid.isBlank()) {
@@ -328,8 +359,10 @@ public class PedidoService {
     }
 
     private boolean verificarSaltoEstado(EnumEstadoPedido actual, EnumEstadoPedido nuevo) {
-        if (actual == EnumEstadoPedido.EnPreparacion && nuevo == EnumEstadoPedido.EnCamino) return true;
-        if (actual == EnumEstadoPedido.EnCamino && nuevo == EnumEstadoPedido.Entregado) return true;
+        if (actual == EnumEstadoPedido.EnPreparacion && nuevo == EnumEstadoPedido.EnCamino)
+            return true;
+        if (actual == EnumEstadoPedido.EnCamino && nuevo == EnumEstadoPedido.Entregado)
+            return true;
         return false;
     }
 
@@ -350,7 +383,7 @@ public class PedidoService {
         Integer tiempoEstimado = calcularTiempoEstimadoEntrega(pedido);
         pedido.setTiempoPreparacion(tiempoEstimado);
         pedidoRepository.save(pedido);
-     
+
         DTOPedido pedidoDTO = DTOPedido.desde(pedido);
         notificacionesService.notificarConfirmacionPedido(pedidoDTO, tiempoEstimado);
         try {
@@ -377,7 +410,6 @@ public class PedidoService {
                 .max(Integer::compareTo)
                 .orElse(0);
     }
-
 
     private Integer obtenerTiempoViaje(Pedido pedido) {
         DTODireccion origen = pedido.getRestaurante().getDireccion();

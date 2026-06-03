@@ -13,6 +13,7 @@ import com.backend.trego.repository.UsuarioRepository;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -35,7 +36,8 @@ public class RestauranteService {
     private final GeoapifyService geoapifyService;
 
     public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService,
-            @Lazy ProductosService productosService, NotificacionesService notificacionesService, GeoapifyService geoapifyService) {
+            @Lazy ProductosService productosService, NotificacionesService notificacionesService,
+            GeoapifyService geoapifyService) {
         this.restauranteRepository = restauranteRepository;
         this.currentUserService = currentUserService;
         this.productosService = productosService;
@@ -88,8 +90,7 @@ public class RestauranteService {
         if (restaurantesHabilitados.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "No hay restaurantes habilitados"
-            );
+                    "No hay restaurantes habilitados");
         }
 
         double latitud = direccion.getLatitud();
@@ -113,8 +114,7 @@ public class RestauranteService {
                     latitud,
                     longitud,
                     latitudResto,
-                    longitudResto
-            );
+                    longitudResto);
 
             // Si Geoapify no pudo calcular la ruta, descartamos el restaurante.
             if (distancia >= 0 && distancia <= radioEntrega) {
@@ -125,8 +125,7 @@ public class RestauranteService {
         if (restaurantesFiltro.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "No hay restaurantes en la zona"
-            );
+                    "No hay restaurantes en la zona");
         }
 
         return restaurantesFiltro;
@@ -155,13 +154,14 @@ public class RestauranteService {
                 .collect(Collectors.toList());
     }
 
-    public DTOIngrediente crearIngrediente(String nombre){
+    @Transactional
+    public DTOIngrediente crearIngrediente(String nombre) {
         Integer actualID = currentUserService.getCurrentId();
         Restaurante restaurante = restauranteRepository.findRestauranteById(actualID)
-                    .orElseThrow(() -> new ResponseStatusException(
+                .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante autenticado no encontrado con id: " + actualID));
         if (restaurante.existeIngrediente(nombre))
-            throw new ResponseStatusException( HttpStatus.CONFLICT, "Ingrediente ya existe");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ingrediente ya existe");
 
         Ingrediente ingrediente = new Ingrediente(nombre);
         restaurante.addIngredienteDisponible(ingrediente);
@@ -327,9 +327,10 @@ public class RestauranteService {
         if (!currentUserService.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No autenticado: se requiere iniciar sesión");
         }
-        
+
         if (!currentUserService.isAdmin()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: se requieren privilegios de administrador");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Acceso denegado: se requieren privilegios de administrador");
         }
 
         List<Restaurante> restaurantesNoHabilitados = restauranteRepository.findRestaurantesNoHabilitados();
@@ -338,44 +339,38 @@ public class RestauranteService {
                 .collect(Collectors.toList());
     }
 
-
-
     // Actualiza los datos del restaurante aplicando sólo los campos no nulos del
     // DTO. No se permite modificar id ni habilitado.
+    // Direcciones, Horarios y Contraseña se actualizan por endpoints específicos.
+    @Transactional
     public DTORestaurante actualizarRestaurante(DTORestaurante dto) {
         Restaurante restaurante = buscarRestaurante(String.valueOf(currentUserService.getCurrentId()));
 
-        if (dto.getNombre() != null) {
+        if (dto.getNombre() != null && !dto.getNombre().isBlank() && !dto.getNombre().equals(restaurante.getNombre())) {
             restaurante.setNombre(dto.getNombre());
         }
-        if (dto.getEmail() != null) {
+        if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(restaurante.getEmail())) {
             restaurante.setEmail(dto.getEmail());
-        }
-        if (dto.getPassword() != null) {
-            restaurante.setPassword(dto.getPassword());
-        }
-        if (dto.getRut() != null) {
+        }   
+        if (dto.getRut() != null && !dto.getRut().isBlank() && !dto.getRut().equals(restaurante.getRut())) {
             restaurante.setRut(dto.getRut());
         }
-        if (dto.getTelefono() != null) {
+        if (dto.getTelefono() != null && !dto.getTelefono().isBlank() && !dto.getTelefono().equals(restaurante.getTelefono())) {
             restaurante.setTelefono(dto.getTelefono());
         }
-        if (dto.getFotoPortada() != null) {
+        if (dto.getFotoPortada() != null && !dto.getFotoPortada().isBlank() && !dto.getFotoPortada().equals(restaurante.getFotoPortada())) {
             restaurante.setFotoPortada(dto.getFotoPortada());
         }
-        if (dto.getDireccion() != null) {
-            restaurante.setDireccion(dto.getDireccion());
-        }
-        if (dto.getDescripcion() != null) {
+        if (dto.getDescripcion() != null && !dto.getDescripcion().isBlank() && !dto.getDescripcion().equals(restaurante.getDescripcion())) {
             restaurante.setDescripcion(dto.getDescripcion());
         }
-        if (dto.getCategoria() != null) {
+        if (dto.getCategoria() != null && !dto.getCategoria().equals(restaurante.getCategoria())) {
             restaurante.setCategoria(dto.getCategoria());
         }
-        if (dto.getCalificacionProm() != null) {
+        if (dto.getCalificacionProm() != null && !dto.getCalificacionProm().equals(restaurante.getCalificacionProm())) {
             restaurante.setCalificacionProm(dto.getCalificacionProm());
         }
-        if (dto.getRadioEntrega() != null) {
+        if (dto.getRadioEntrega() != null && !dto.getRadioEntrega().equals(restaurante.getRadioEntrega())) {
             restaurante.setRadioEntrega(dto.getRadioEntrega());
         }
         if (dto.getHoraApertura() != null || dto.getHoraCierre() != null) {
@@ -386,25 +381,23 @@ public class RestauranteService {
         if (dto.getAbierto() != null) {
             restaurante.setAbierto(dto.getAbierto());
         }
-
         Restaurante actualizado = restauranteRepository.save(restaurante);
         return toDTO(actualizado);
     }
 
-   public void habilitarRestaurante(Integer restauranteId) {
+    @Transactional
+    public void habilitarRestaurante(Integer restauranteId) {
 
         if (!currentUserService.isAuthenticated()) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "No autenticado: se requiere iniciar sesión"
-            );
+                    "No autenticado: se requiere iniciar sesión");
         }
 
         if (!currentUserService.isAdmin()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Acceso denegado: se requieren privilegios de administrador"
-            );
+                    "Acceso denegado: se requieren privilegios de administrador");
         }
 
         Restaurante restaurante = buscarRestaurante(String.valueOf(restauranteId));
@@ -412,8 +405,7 @@ public class RestauranteService {
         if (restaurante.isHabilitado()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "El restaurante ya se encuentra habilitado"
-            );
+                    "El restaurante ya se encuentra habilitado");
         }
 
         restaurante.setHabilitado(true);
@@ -422,22 +414,20 @@ public class RestauranteService {
         notificacionesService.notificarRestauranteHabilitado(restaurante);
     }
 
-    public void noHabilitarRestaurante(Integer restauranteId, String motivo){
-         if (!currentUserService.isAuthenticated()) {
+    public void noHabilitarRestaurante(Integer restauranteId, String motivo) {
+        if (!currentUserService.isAuthenticated()) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "No autenticado: se requiere iniciar sesión"
-            );
+                    "No autenticado: se requiere iniciar sesión");
         }
 
         if (!currentUserService.isAdmin()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Acceso denegado: se requieren privilegios de administrador"
-            );
+                    "Acceso denegado: se requieren privilegios de administrador");
         }
 
         Restaurante restaurante = buscarRestaurante(String.valueOf(restauranteId));
-        notificacionesService.notificarRestauranteNoHabilitado(restaurante,motivo);
+        notificacionesService.notificarRestauranteNoHabilitado(restaurante, motivo);
     }
 }

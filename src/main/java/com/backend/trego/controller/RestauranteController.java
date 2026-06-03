@@ -73,7 +73,8 @@ public class RestauranteController {
     // Actualizar datos de un restaurante. Sólo se aplican los campos no nulos del
     // DTO; id y habilitado no se modifican.
     @PatchMapping("/actualizar")
-    @Operation(summary = "Actualizar restaurante", description = "Actualiza los datos del restaurante actualmente logeado. Sólo se modifican los campos no nulos del DTO. No se puede cambiar id ni habilitado.")
+    @Operation(summary = "Actualizar restaurante", description = "Actualiza los datos del restaurante actualmente logeado. Sólo se modifican los campos no nulos del DTO."+
+         " No Modifica: ID, Habilitado,Direcciones ni Contraseña.")
     @ApiResponse(responseCode = "200", description = "Restaurante actualizado")
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
     public ResponseEntity<DTORestaurante> actualizar(@RequestBody DTORestaurante dto) {

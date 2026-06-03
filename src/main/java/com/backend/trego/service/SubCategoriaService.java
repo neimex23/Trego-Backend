@@ -6,6 +6,7 @@ import com.backend.trego.entity.Enums.EnumCategoriaProducto;
 import com.backend.trego.repository.SubCategoriaRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -35,6 +36,7 @@ public class SubCategoriaService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public DTOSubCategoria crear(DTOSubCategoria dto) {
         if (dto.getNombre() == null || dto.getNombre().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
