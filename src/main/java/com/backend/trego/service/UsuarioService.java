@@ -72,18 +72,21 @@ public class UsuarioService {
         return usuarioRepository.save(nuevoAdmin);
     }
 
+// Da de alta un administrador con los datos del DTO generando una contraseña nueva
     public Administrador altaAdministrador(DTOUsuario adminDTO) {
         if (existeUsuario(adminDTO.getEmail())) {
             throw new IllegalArgumentException("El correo electrónico ya se encuentra ingresado en el sistema.");
         }
-
-        String passwordCifrada = passwordEncoder.encode(adminDTO.getPassword());
+		String passwordPlana = java.util.UUID.randomUUID().toString().substring(0, 10);
+        String passwordCifrada = passwordEncoder.encode(passwordPlana);
         Administrador nuevoAdmin = new Administrador(
                 adminDTO.getNombre(),
                 adminDTO.getEmail(),
                 adminDTO.getUrlImagen(),
                 passwordCifrada
         );
+        Administrador adminGuardado = usuarioRepository.save(nuevoAdmin);   // Guardar el administrador en la base de datos
+        notificacionesService.notificarCredencialesNuevoAdmin(adminDTO.getEmail(), passwordPlana);  // Se notificia por correo al nuevo Administrador
         return usuarioRepository.save(nuevoAdmin);
     }
 

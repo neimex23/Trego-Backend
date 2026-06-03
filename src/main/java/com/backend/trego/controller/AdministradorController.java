@@ -4,12 +4,14 @@ import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.service.AdministradorService;
 import com.backend.trego.service.RestauranteService;
+import com.backend.trego.service.UsuarioService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,10 +25,12 @@ public class AdministradorController {
 
     private final AdministradorService administradorService;
     private final RestauranteService restauranteService;
-
-    public AdministradorController(AdministradorService administradorService, RestauranteService restauranteService) {
+	private final UsuarioService usuarioService; // nuevo para agregar adiministrador al sistema
+	
+    public AdministradorController(AdministradorService administradorService, RestauranteService restauranteService, UsuarioService usuarioService) {
         this.administradorService = administradorService;
         this.restauranteService = restauranteService;
+        this.usuarioService = usuarioService;
     }
 
     // Devuelve los datos del administrador autenticado (extraídos del JWT).
@@ -72,4 +76,21 @@ public class AdministradorController {
         restauranteService.noHabilitarRestaurante(id, motivo);
         return ResponseEntity.ok().build();
     }
+    
+// Nuevo metodo Post para generar Administrador ver NotificaionesService y UsuarioService
+    @PostMapping("/CrearAdministrador")
+    @Operation(summary = "Crear Administrador", description = "Crea nuevo administrador a partir de un DTOUsuario. Valida que el correo no este en uso por algun usuario u otro admin y cifra la contraseña.")
+    @ApiResponse(responseCode = "200", description = "Administrador creado exitosamente")
+    @ApiResponse(responseCode = "400", description = "El correo ya se encuentra ingresado en el sistema o datos invalidos")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene permisos para crear administradores")
+    public ResponseEntity<?> generarAdministrador(@RequestBody DTOUsuario dtoUsuario) {
+        try {
+            usuarioService.altaAdministrador(dtoUsuario);
+            return ResponseEntity.ok(Map.of("mensaje", "Administrador creado exitosamente con el correo: " + dtoUsuario.getEmail())); 
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
 }

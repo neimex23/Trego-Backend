@@ -724,4 +724,53 @@ public class NotificacionesService {
         String cuerpo = "Confirmamos la entrega de tu pedido. ¡Que lo disfrutes!";
         enviarPushFCM(token, titulo, cuerpo, dataPedido(pedidoDTO, "Entregado"));
     }
+    
+    
+    // Construye el cuerpo HTML del correo de bienvenida para administradores
+    private String construirCuerpoCredencialesAdmin(String email, String password) {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
+        sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
+        sb.append("<img src='https://www.trego.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("</div>");
+        sb.append("<div style='padding: 32px;'>");
+        sb.append("<h2 style='color: #333;'>¡Bienvenido al equipo de administración de Trego!</h2>");   
+        sb.append("<p style='color: #555; font-size: 16px;'>")
+          .append("Se ha creado una cuenta de administrador para ti. A continuación, te proporcionamos tus credenciales de acceso iniciales:")
+          .append("</p>");
+        sb.append("<div style='background-color: #f9f9f9; border-left: 4px solid #FF6600; padding: 16px; margin: 20px 0;'>");
+        sb.append("<p style='color: #333; margin: 0 0 10px 0;'><strong>Usuario (Email):</strong> ").append(email).append("</p>");
+        sb.append("<p style='color: #333; margin: 0;'><strong>Contraseña:</strong> ").append(password).append("</p>");
+        sb.append("</div>");
+        sb.append("<p style='color: #555; font-size: 14px;'>")
+          .append("<em>Por motivos de seguridad, te recomendamos iniciar sesión y cambiar esta contraseña lo antes posible.</em>")
+          .append("</p>");
+        sb.append("<hr style='border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;'>");
+        sb.append("<p style='color: #555;'><strong>El equipo de Trego</strong></p>");
+        sb.append("</div>");
+        sb.append("<div style='background-color: #f5f5f5; padding: 16px; text-align: center;'>");
+        sb.append("<p style='color: #999; font-size: 12px; margin: 0;'>© 2026 Trego. Todos los derechos reservados.</p>");
+        sb.append("</div>");
+        sb.append("</div>");
+        
+        return sb.toString();
+    }
+    
+    public void notificarCredencialesNuevoAdmin(String emailDestino, String passwordPlana) {
+        try {
+            MimeMessage mail = mailSender.createMimeMessage();
+            MimeMessageHelper estructuraMail = new MimeMessageHelper(mail, false, "UTF-8");
+
+            estructuraMail.setTo(emailDestino);
+            estructuraMail.setFrom(mailFrom, mailFromName);
+            estructuraMail.setSubject("Bienvenido a Trego _Credenciales de Administrador");
+            estructuraMail.setText(construirCuerpoCredencialesAdmin(emailDestino, passwordPlana), true);
+            mailSender.send(mail);
+            System.out.println("Mail de credenciales enviado al nuevo administrador: " + emailDestino);
+        } catch (Exception e) {
+            System.err.println("Error al enviar mail de credenciales a administrador: " + e.getMessage());
+        }
+    }  
+    
 }
