@@ -48,13 +48,12 @@ public class ClienteService {
 
     private Cliente desdeDto(DTOCliente dto) {
         return new Cliente(
-               dto.getNombre(),
-               dto.getEmail(),
-               dto.getUrlImagen(),
-               dto.getTelefono(),
-               dto.getDirecciones(),
-               dto.getUidCliente()
-        );
+                dto.getNombre(),
+                dto.getEmail(),
+                dto.getUrlImagen(),
+                dto.getTelefono(),
+                dto.getDirecciones(),
+                dto.getUidCliente());
     }
 
     public Optional<Cliente> obtener(Integer id) {
@@ -64,6 +63,14 @@ public class ClienteService {
     public Cliente obtenerOFallar(Integer id) {
         return repo.findClienteById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
+    }
+
+    public DTOCliente obtenerClienteActual() {
+        String id = currentUserService.getCurrentUid();
+        Cliente cliente = repo.findClienteByUidCliente(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Cliente autenticado no encontrado con id: " + id));
+        return toDTO(cliente);
     }
 
     public Optional<Cliente> buscarPorEmail(String email) {
@@ -81,7 +88,8 @@ public class ClienteService {
         Cliente existente = obtenerOFallar(currentUserService.getCurrentId());
         if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(existente.getEmail())) {
             if (repo.findClienteByEmail(dto.getEmail()).isPresent()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El correo electrónico ya se encuentra registrado");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "El correo electrónico ya se encuentra registrado");
             }
             existente.setEmail(dto.getEmail());
         }
@@ -89,11 +97,13 @@ public class ClienteService {
             existente.setNombre(dto.getNombre());
         }
 
-        if (dto.getUrlImagen() != null && !dto.getUrlImagen().isBlank() && !dto.getUrlImagen().equals(existente.getFotoPerfil())) {
+        if (dto.getUrlImagen() != null && !dto.getUrlImagen().isBlank()
+                && !dto.getUrlImagen().equals(existente.getFotoPerfil())) {
             existente.setFotoPerfil(dto.getUrlImagen());
         }
 
-        if (dto.getTelefono() != null && !dto.getTelefono().isBlank() && !dto.getTelefono().equals(existente.getTelefono())) {
+        if (dto.getTelefono() != null && !dto.getTelefono().isBlank()
+                && !dto.getTelefono().equals(existente.getTelefono())) {
             existente.setTelefono(dto.getTelefono());
         }
         return repo.save(existente);
@@ -122,5 +132,15 @@ public class ClienteService {
         Cliente c = obtenerOFallar(id);
         c.setFcmToken((fcmToken == null || fcmToken.isBlank()) ? null : fcmToken);
         return repo.save(c);
+    }
+
+    private DTOCliente toDTO(Cliente cliente) {
+        return new DTOCliente(
+                cliente.getNombre(),
+                cliente.getEmail(),
+                cliente.getFotoPerfil(),
+                cliente.getTelefono(),
+                cliente.getUidCliente(),
+                cliente.getDirecciones());
     }
 }
