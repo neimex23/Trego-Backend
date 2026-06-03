@@ -20,6 +20,7 @@ import com.backend.trego.entity.Enums.EnumTipoProducto;
 import com.backend.trego.repository.ProductoRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -69,6 +70,7 @@ public class ProductosService {
         return productos;
     }
 
+    @Transactional
     public DTOProducto crearProducto(DTOProducto productoDTO) {
         // Validar que el restaurante existe y pertenece al usuario autenticado.
         String rol = currentUserService.getCurrentRol();
