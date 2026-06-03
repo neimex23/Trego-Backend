@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 // Endpoints de usuarios: clientes, restaurantes y administradores.
@@ -82,6 +83,15 @@ public class UsuarioController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/recuperarContraseña/{correo}")
+    @Operation(summary = "Recuperar Contraseña", description = "Inicia el proceso de recuperación de contraseña para el usuario con el correo especificado.")
+    @ApiResponse(responseCode = "200", description = "Solicitud de recuperación de contraseña enviada exitosamente")
+    @ApiResponse(responseCode = "400", description = "Correo no válido o usuario no encontrado")
+    public ResponseEntity<Void> recuperarContraseña(@PathVariable String correo) {
+        usuarioService.recuperarContraseña(correo);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/obtenerDirecciones")
     @Operation(summary = "Obtener Direcciones", description = "Retorna las direcciones asociadas al cliente autenticado")
     @ApiResponse(responseCode = "200", description = "Direcciones obtenidas exitosamente")
@@ -137,7 +147,6 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
     }
-
     //Firmar imagen para Cloudinary
     @PostMapping("/imagen/firma/{nombreArchivo}/{tipo}")
     @Operation(summary = "Solicitar Firmar un Archivo en Cloudinary", description = "Solicita una firma para subir un archivo a Cloudinary. El nombreArchivo es el nombre del archivo a subir (sin extensión) y tipo es opcional (image, video o raw).")
