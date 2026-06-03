@@ -12,6 +12,7 @@ import com.backend.trego.repository.UsuarioRepository;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -127,6 +128,7 @@ public class RestauranteService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public DTOIngrediente crearIngrediente(String nombre) {
         Integer actualID = currentUserService.getCurrentId();
         Restaurante restaurante = restauranteRepository.findRestauranteById(actualID)
@@ -313,6 +315,7 @@ public class RestauranteService {
 
     // Actualiza los datos del restaurante aplicando sólo los campos no nulos del
     // DTO. No se permite modificar id ni habilitado.
+    @Transactional
     public DTORestaurante actualizarRestaurante(DTORestaurante dto) {
         Restaurante restaurante = buscarRestaurante(String.valueOf(currentUserService.getCurrentId()));
 
@@ -359,6 +362,7 @@ public class RestauranteService {
         return toDTO(actualizado);
     }
 
+    @Transactional
     public void habilitarRestaurante(Integer restauranteId) {
 
         if (!currentUserService.isAuthenticated()) {

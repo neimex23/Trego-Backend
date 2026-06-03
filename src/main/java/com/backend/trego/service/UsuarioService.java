@@ -13,6 +13,7 @@ import com.backend.trego.entity.Cliente;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
@@ -41,6 +42,7 @@ public class UsuarioService {
     }
 
     // Da de alta un cliente nuevo a partir del DTO y lo devuelve ya con su id.
+    @Transactional
     public Usuario altaUsuario(DTOUsuario usuarioDTO) {
         Cliente nuevoCliente = new Cliente();
 
@@ -57,6 +59,7 @@ public class UsuarioService {
     }
 
     // Da de alta un administrador con email y contraseña cifrada.
+    @Transactional
     public Administrador altaAdministrador(String email, String password) {
         if (existeUsuario(email)) {
             throw new IllegalArgumentException("El correo electrónico ya se encuentra ingresado en el sistema.");
@@ -72,7 +75,8 @@ public class UsuarioService {
         return usuarioRepository.save(nuevoAdmin);
     }
 
-// Da de alta un administrador con los datos del DTO generando una contraseña nueva
+    @Transactional
+    // Da de alta un administrador con los datos del DTO generando una contraseña nueva
     public Administrador altaAdministrador(DTOUsuario adminDTO) {
         if (existeUsuario(adminDTO.getEmail())) {
             throw new IllegalArgumentException("El correo electrónico ya se encuentra ingresado en el sistema.");
@@ -87,7 +91,7 @@ public class UsuarioService {
         );
         Administrador adminGuardado = usuarioRepository.save(nuevoAdmin);   // Guardar el administrador en la base de datos
         notificacionesService.notificarCredencialesNuevoAdmin(adminDTO.getEmail(), passwordPlana);  // Se notificia por correo al nuevo Administrador
-        return usuarioRepository.save(nuevoAdmin);
+        return adminGuardado;
     }
 
     // Arranca el registro de un restaurante: chequea que el email no exista,
@@ -102,6 +106,7 @@ public class UsuarioService {
         registrosPendientes.put(email, registro);
     }
 
+    @Transactional
     public DTOUsuario registrarRestaurante(String email, String password) {
 
         String passwordCifrada = passwordEncoder.encode(password);

@@ -71,6 +71,7 @@ public class PedidoService {
         return pedidoRepository.findAll();
     }
 
+    @Transactional
     public Pedido guardar(Pedido pedido) {
         return pedidoRepository.save(pedido);
     }
@@ -96,6 +97,7 @@ public class PedidoService {
         return pedidoRepository.findByEstado(estado);
     }
 
+    @Transactional
     public Pedido cambiarEstado(Integer id, EnumEstadoPedido nuevoEstado) {
         Pedido p = obtenerOFallar(id);
         p.setEstado(nuevoEstado);
@@ -109,12 +111,14 @@ public class PedidoService {
         return pedidoRepository.save(p);
     }
 
+    @Transactional
     public Pedido recalcularTotal(Integer id) {
         Pedido p = obtenerOFallar(id);
         p.setTotal(p.calcularTotal());
         return pedidoRepository.save(p);
     }
 
+    @Transactional
     public void eliminar(Integer id) {
         if (!pedidoRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado");

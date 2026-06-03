@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.backend.trego.entity.Cliente;
@@ -24,15 +25,18 @@ public class ClienteService {
         return repo.findAllClientes();
     }
 
+    @Transactional
     public Cliente guardar(Cliente cliente) {
         return repo.save(cliente);
     }
 
+    @Transactional
     public Cliente crear(DTOCliente dto) {
         validarDto(dto);
         return guardar(desdeDto(dto));
     }
 
+    @Transactional
     public Cliente actualizar(Integer id, DTOCliente dto) {
         return actualizar(id, desdeDto(dto));
     }
@@ -73,6 +77,7 @@ public class ClienteService {
         return repo.findClienteByUidCliente(uidCliente);
     }
 
+    @Transactional
     public Cliente actualizar(Integer id, Cliente datos) {
         Cliente existente = obtenerOFallar(id);
         existente.setNombre(datos.getNombre());
@@ -86,6 +91,7 @@ public class ClienteService {
         return repo.save(existente);
     }
 
+    @Transactional
     public void eliminar(Integer id) {
         if (!repo.existsClienteById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado");
@@ -93,6 +99,7 @@ public class ClienteService {
         repo.deleteById(id);
     }
 
+    @Transactional
     public Cliente cambiarHabilitado(Integer id, boolean habilitado) {
         Cliente c = obtenerOFallar(id);
         c.setHabilitado(habilitado);
@@ -102,6 +109,7 @@ public class ClienteService {
     // Persiste el token de FCM del dispositivo del cliente para poder enviarle
     // notificaciones push. Si el token viene vacío se interpreta como un logout
     // y se limpia el campo para evitar enviar a un dispositivo que ya no aplica.
+    @Transactional
     public Cliente actualizarFcmToken(Integer id, String fcmToken) {
         Cliente c = obtenerOFallar(id);
         c.setFcmToken((fcmToken == null || fcmToken.isBlank()) ? null : fcmToken);

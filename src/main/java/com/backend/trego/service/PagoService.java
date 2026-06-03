@@ -18,6 +18,7 @@ import com.mercadopago.resources.payment.PaymentRefund;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -68,6 +69,7 @@ public class PagoService {
                 pedido.getIdPedido());
     }
 
+    @Transactional
     public void procesarWebHook(String payload) {
         Long paymentId = extraerPaymentId(payload);
         if (paymentId == null) {
