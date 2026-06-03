@@ -344,4 +344,57 @@ public class UsuarioService {
                 "Rol no soportado para actualizacion de contraseña: " + rol);
     }
 
+    @Transactional
+    public void recuperarContraseña(String correo) {
+        Usuario u = usuarioRepository.findByEmail(correo)
+                .orElseThrow(() -> new IllegalArgumentException("No existe un usuario con ese correo."));
+
+        if (u instanceof Cliente) {
+            throw new IllegalStateException("Los clientes deben recuperar su contraseña desde Firebase Auth.");
+        }
+
+        String passwordPlana = java.util.UUID.randomUUID().toString().substring(0, 10);
+        String passwordCifrada = passwordEncoder.encode(passwordPlana);
+
+        if (u instanceof Administrador admin) {
+            admin.setPassword(passwordCifrada);
+            usuarioRepository.save(admin);
+        } else if (u instanceof Restaurante restaurante) {
+            restaurante.setPassword(passwordCifrada);
+            usuarioRepository.save(restaurante);
+        } else {
+            throw new IllegalStateException("Rol no soportado para recuperación de contraseña.");
+        }
+
+        notificacionesService.notificarRecuperacionContraseña(correo, passwordPlana);
+    }
+
+    @Transactional
+    public void habilitarDeshabilitarUsuario(Integer idUsuario, Boolean habilitar, String motivoNoHabilitacion) {
+        if (!"Administrador".equals(currentUserService.getCurrentUser().getRol()))
+            throw new IllegalStateException("Solo los administradores pueden habilitar o deshabilitar usuarios");
+
+        Usuario u = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() ->
+                        new IllegalStateException("Usuario no encontrado para el ID: " + idUsuario));
+        if (u instanceof Cliente cliente) {
+            cliente.setHabilitado(habilitar);
+            usuarioRepository.save(cliente);
+            if (!habilitar) {
+                notificacionesService.notificarNoHabilitacionUsuario(cliente.getEmail(), cliente.getNombre(), motivoNoHabilitacion);
+            }
+            return;
+        }
+        if (u instanceof Restaurante restaurante) {
+            restaurante.setHabilitado(habilitar);
+            usuarioRepository.save(restaurante);
+            if (!habilitar) {
+                notificacionesService.notificarNoHabilitacionUsuario(restaurante.getEmail(), restaurante.getNombre(), motivoNoHabilitacion);
+            }
+            return;
+        }
+        throw new IllegalStateException("Solo los clientes y restaurantes pueden ser habilitados o deshabilitados");
+    }
+
+
 }

@@ -92,5 +92,16 @@ public class AdministradorController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+
+    @PostMapping("/HabilitarDeshabilitar/{idUsuario}/{habilitar}")
+    @Operation(summary = "Habilitar o Deshabilitar Usuario", description = "Habilita o deshabilita un usuario (cliente o restaurante) por su ID. Solo accesible para administradores.")
+    @ApiResponse(responseCode = "200", description = "Usuario habilitado/deshabilitado exitosamente")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    public ResponseEntity<Void> habilitarDeshabilitarUsuario(@PathVariable Integer idUsuario, @PathVariable Boolean habilitar, @RequestParam(required = false) String motivo) {
+        usuarioService.habilitarDeshabilitarUsuario(idUsuario, habilitar, motivo);
+        return ResponseEntity.ok().build();
+    }
+
     
 }
