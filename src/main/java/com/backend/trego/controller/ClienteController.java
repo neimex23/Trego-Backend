@@ -57,14 +57,15 @@ public class ClienteController {
         return DTOClienteResponse.desde(service.obtenerOFallar(id));
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Actualizar Cliente")
+    @PutMapping("/actualizar")
+    @Operation(summary = "Actualizar Cliente", description = "Actualiza los datos del cliente autenticado con los valores no nulos seteados en la llamada. El ID del cliente se obtiene del token de autenticación," +
+        " No Modifica: ID, Habilitado,Direcciones ni Contraseña.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Cliente actualizado"),
             @ApiResponse(responseCode = "404", description = "Cliente no existe")
     })
-    public DTOClienteResponse actualizar(@PathVariable Integer id, @RequestBody DTOCliente dto) {
-        return DTOClienteResponse.desde(service.actualizar(id, dto));
+    public DTOClienteResponse actualizar(@RequestBody DTOCliente dto) {
+        return DTOClienteResponse.desde(service.actualizar(dto));
     }
 
     @DeleteMapping("/{id}")

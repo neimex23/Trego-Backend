@@ -315,49 +315,38 @@ public class RestauranteService {
 
     // Actualiza los datos del restaurante aplicando sólo los campos no nulos del
     // DTO. No se permite modificar id ni habilitado.
+    // Direcciones, Horarios y Contraseña se actualizan por endpoints específicos.
     @Transactional
     public DTORestaurante actualizarRestaurante(DTORestaurante dto) {
         Restaurante restaurante = buscarRestaurante(String.valueOf(currentUserService.getCurrentId()));
 
-        if (dto.getNombre() != null) {
+        if (dto.getNombre() != null && !dto.getNombre().isBlank() && !dto.getNombre().equals(restaurante.getNombre())) {
             restaurante.setNombre(dto.getNombre());
         }
-        if (dto.getEmail() != null) {
+        if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(restaurante.getEmail())) {
             restaurante.setEmail(dto.getEmail());
-        }
-        if (dto.getPassword() != null) {
-            restaurante.setPassword(dto.getPassword());
-        }
-        if (dto.getRut() != null) {
+        }   
+        if (dto.getRut() != null && !dto.getRut().isBlank() && !dto.getRut().equals(restaurante.getRut())) {
             restaurante.setRut(dto.getRut());
         }
-        if (dto.getTelefono() != null) {
+        if (dto.getTelefono() != null && !dto.getTelefono().isBlank() && !dto.getTelefono().equals(restaurante.getTelefono())) {
             restaurante.setTelefono(dto.getTelefono());
         }
-        if (dto.getFotoPortada() != null) {
+        if (dto.getFotoPortada() != null && !dto.getFotoPortada().isBlank() && !dto.getFotoPortada().equals(restaurante.getFotoPortada())) {
             restaurante.setFotoPortada(dto.getFotoPortada());
         }
-        if (dto.getDireccion() != null) {
-            restaurante.setDireccion(dto.getDireccion());
-        }
-        if (dto.getDescripcion() != null) {
+        if (dto.getDescripcion() != null && !dto.getDescripcion().isBlank() && !dto.getDescripcion().equals(restaurante.getDescripcion())) {
             restaurante.setDescripcion(dto.getDescripcion());
         }
-        if (dto.getCategoria() != null) {
+        if (dto.getCategoria() != null && !dto.getCategoria().equals(restaurante.getCategoria())) {
             restaurante.setCategoria(dto.getCategoria());
         }
-        if (dto.getCalificacionProm() != null) {
+        if (dto.getCalificacionProm() != null && !dto.getCalificacionProm().equals(restaurante.getCalificacionProm())) {
             restaurante.setCalificacionProm(dto.getCalificacionProm());
         }
-        if (dto.getRadioEntrega() != null) {
+        if (dto.getRadioEntrega() != null && !dto.getRadioEntrega().equals(restaurante.getRadioEntrega())) {
             restaurante.setRadioEntrega(dto.getRadioEntrega());
         }
-        if (dto.getHoraApertura() != null || dto.getHoraCierre() != null) {
-            LocalTime apertura = dto.getHoraApertura() != null ? dto.getHoraApertura() : restaurante.getApertura();
-            LocalTime cierre = dto.getHoraCierre() != null ? dto.getHoraCierre() : restaurante.getCierre();
-            restaurante.setHorario(apertura, cierre);
-        }
-
         Restaurante actualizado = restauranteRepository.save(restaurante);
         return toDTO(actualizado);
     }
