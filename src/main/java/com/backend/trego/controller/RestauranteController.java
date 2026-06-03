@@ -1,5 +1,7 @@
 package com.backend.trego.controller;
 
+import com.backend.trego.config.AuthenticatedUser;
+import com.backend.trego.entity.DTOs.DTOAbrirCerrarLocalRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.service.RestauranteService;
@@ -9,9 +11,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 // Endpoints de restaurantes.
 @RestController
@@ -74,6 +78,68 @@ public class RestauranteController {
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
     public ResponseEntity<DTORestaurante> actualizar(@RequestBody DTORestaurante dto) {
         return ResponseEntity.ok(restauranteService.actualizarRestaurante(dto));
+    }
+
+        // CU-RES-05: Abrir Local
+    @PatchMapping("/abrirLocal")
+    @Operation(summary = "Abrir el local", description = "Cambia el estado del restaurante a abierto y establece su hora de cierre. Valida que existan productos.")
+    @ApiResponse(responseCode = "200", description = "El local se encuentra abierto")
+    @ApiResponse(responseCode = "400", description = "Datos incompletos o erroneos")
+    @ApiResponse(responseCode = "409", description = "Local ya abierto o sin productos")
+    public ResponseEntity<?> abrirLocal(
+            @RequestBody(required = false) DTOAbrirCerrarLocalRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        if (request == null || request.getHoraCierre() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Debe colocar una hora de cierre"));
+        }
+        Integer restauranteId = user.getIdUsuario();
+        try {
+            restauranteService.abrirLocal(restauranteId, request.getHoraCierre());
+            return ResponseEntity.ok(Map.of("mensaje", "El local se encuentra abierto"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // CU-RES-06: Cerrar Local
+    @PatchMapping("/cerrarLocal")
+    @Operation(summary = "Cerrar el local", description = "Cambia el estado del restaurante a cerrado.")
+    @ApiResponse(responseCode = "200", description = "El local ya no es visible para los clientes")
+    @ApiResponse(responseCode = "409", description = "El local ya se encontraba cerrado")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    public ResponseEntity<?> cerrarLocal(@AuthenticationPrincipal AuthenticatedUser user) {
+        try {
+            restauranteService.cerrarLocal(user.getIdUsuario());
+            return ResponseEntity.ok(Map.of("mensaje", "El local se encuentra cerrado"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // CU-RES-06: Cerrar Local - Sirve para actualizar la hora del cierre del local
+    @PatchMapping("/actualizarCierre")
+    @Operation(summary = "Actualizar hora de cierre", description = "Actualiza la hora de cierre del restaurante.")
+    @ApiResponse(responseCode = "200", description = "Hora de cierre actualizada")
+    @ApiResponse(responseCode = "400", description = "Datos incompletos o erróneos")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    public ResponseEntity<?> actualizarCierre(
+            @RequestBody(required = false) DTOAbrirCerrarLocalRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        if (request == null || request.getHoraCierre() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Debe colocar una hora de cierre"));
+        }
+        try {
+            restauranteService.actualizarHoraCierre(user.getIdUsuario(), request.getHoraCierre());
+            return ResponseEntity.ok(Map.of("mensaje", "Hora de cierre actualizada"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
     }
 
 }
