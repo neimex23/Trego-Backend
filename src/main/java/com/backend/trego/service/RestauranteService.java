@@ -1,6 +1,7 @@
 package com.backend.trego.service;
 
 import com.backend.trego.entity.Ingrediente;
+import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOFirma;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatus;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -41,6 +43,30 @@ public class RestauranteService {
         this.geoapifyService = geoapifyService;
     }
 
+    public void abrirLocal(Integer restauranteId, LocalTime horaCierre) {
+        Restaurante restaurante = restauranteRepository.findRestauranteById(restauranteId)
+                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
+        
+        List<DTOProducto> productos;
+        try {
+            productos = productosService.listarProductos(String.valueOf(restauranteId), false);
+        } catch (ResponseStatusException e) {
+            productos = Collections.emptyList();
+        }
+
+        if (productos == null || productos.isEmpty()) {
+            throw new IllegalStateException("Debe tener algun producto para ofrecer");
+        }
+        cerrarRestaurante(restaurante, true, horaCierre);
+    }
+
+    private void cerrarRestaurante(Restaurante restaurante, boolean estadoAbierto, LocalTime horaCierre) {
+        restaurante.setAbierto(estadoAbierto);
+        restaurante.setHorario(restaurante.getApertura(),horaCierre);
+        restauranteRepository.save(restaurante);
+    }
+    
+
     public boolean abrirLocal(String idRestaurante, Date horaServicio) {
         // TODO: implementar
         return false;
@@ -51,7 +77,7 @@ public class RestauranteService {
         return false;
     }
 
-        public Date actualizarHoraCierre(Date horaCierre) {
+    public Date actualizarHoraCierre(Date horaCierre) {
         // TODO: implementar
         return null;
     }
@@ -201,7 +227,7 @@ public class RestauranteService {
                 restaurante.getCalificacionProm(),
                 restaurante.getRadioEntrega(),
                 restaurante.isHabilitado(),
-                estaAbiertoDe(restaurante),
+                restaurante.getAbierto(),
                 restaurante.getApertura(),
                 restaurante.getCierre());
     }
@@ -291,7 +317,7 @@ public class RestauranteService {
                 restaurante.getCalificacionProm(),
                 restaurante.getRadioEntrega(),
                 restaurante.isHabilitado(),
-                estaAbiertoDe(restaurante),
+                restaurante.getAbierto(),
                 restaurante.getApertura(),
                 restaurante.getCierre(),
                 productos);
@@ -356,6 +382,9 @@ public class RestauranteService {
             LocalTime apertura = dto.getHoraApertura() != null ? dto.getHoraApertura() : restaurante.getApertura();
             LocalTime cierre = dto.getHoraCierre() != null ? dto.getHoraCierre() : restaurante.getCierre();
             restaurante.setHorario(apertura, cierre);
+        }
+        if (dto.getAbierto() != null) {
+            restaurante.setAbierto(dto.getAbierto());
         }
 
         Restaurante actualizado = restauranteRepository.save(restaurante);
