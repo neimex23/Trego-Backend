@@ -3,9 +3,11 @@ package com.backend.trego.service;
 import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.Producto;
+import com.backend.trego.entity.Reclamo;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.Usuario;
 import com.backend.trego.entity.Cliente;
+import com.backend.trego.entity.Enums.EnumEstadoReclamo;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
@@ -834,6 +836,108 @@ public class NotificacionesService {
         } catch (Exception e) {
             System.err.println("Error al enviar mail de credenciales a administrador: " + e.getMessage());
         }
+    }
+
+    public void notificarResolucionReclamo(Pedido pedido) {
+        if (pedido == null || pedido.getReclamo() == null || pedido.getCliente() == null) {
+            System.err.println("[Notificacion] Pedido, reclamo o cliente nulo; se omite notificación de reclamo.");
+            return;
+        }
+
+        Cliente cliente = pedido.getCliente();
+        Reclamo reclamo = pedido.getReclamo();
+
+        // Email
+        if (cliente.getEmail() != null && !cliente.getEmail().isBlank()) {
+            try {
+                MimeMessage mail = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mail, false, "UTF-8");
+                helper.setTo(cliente.getEmail());
+                helper.setFrom(mailFrom, mailFromName);
+                helper.setSubject("Actualización de tu reclamo - Pedido #" + pedido.getIdPedido());
+                helper.setText(construirCuerpoReclamo(pedido, reclamo), true);
+                mailSender.send(mail);
+                System.out.println("[Notificacion] Mail de reclamo enviado a " + cliente.getEmail()
+                        + " (pedido " + pedido.getIdPedido() + ")");
+            } catch (Exception e) {
+                System.err.println("[Notificacion] Error al enviar mail de reclamo (pedido "
+                        + pedido.getIdPedido() + "): " + e.getMessage());
+            }
+        }
+
+        // Push
+        String token = cliente.getFcmToken();
+        if (token != null && !token.isBlank()) {
+            boolean aceptado = reclamo.getEstado() == EnumEstadoReclamo.Resuelto;
+            String titulo = aceptado
+                    ? "Tu reclamo fue aceptado"
+                    : "Tu reclamo fue rechazado";
+            String cuerpo = aceptado
+                    ? "Se procesó el reintegro de $" + pedido.getTotal()
+                            + " por tu pedido #" + pedido.getIdPedido() + "."
+                    : "Tu reclamo sobre el pedido #" + pedido.getIdPedido() + " fue rechazado.";
+
+            Map<String, String> data = new HashMap<>();
+            data.put("idPedido", String.valueOf(pedido.getIdPedido()));
+            data.put("idReclamo", String.valueOf(reclamo.getIdReclamo()));
+            data.put("estado", reclamo.getEstado().name());
+            if (!aceptado && reclamo.getMotivoRechazo() != null) {
+                data.put("motivoRechazo", reclamo.getMotivoRechazo());
+            }
+            data.put("tipo", "RECLAMO");
+            enviarPushFCM(token, titulo, cuerpo, data);
+        }
+    }
+
+    private String construirCuerpoReclamo(Pedido pedido, Reclamo reclamo) {
+        boolean aceptado = reclamo.getEstado() == EnumEstadoReclamo.Resuelto;
+        String nombreCliente = textoOGuion(pedido.getCliente() != null ? pedido.getCliente().getNombre() : null);
+        String estadoTexto = aceptado ? "Aceptado" : "Rechazado";
+        String colorEstado = aceptado ? "#2e7d32" : "#c62828";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
+        sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
+        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("</div>");
+
+        sb.append("<div style='padding: 32px;'>");
+        sb.append("<h2 style='color: #333;'>Hola ").append(nombreCliente).append(",</h2>");
+        sb.append("<p style='color: #555; font-size: 16px;'>")
+                .append("Tu reclamo sobre el pedido <strong>#").append(pedido.getIdPedido())
+                .append("</strong> fue procesado.")
+                .append("</p>");
+
+        sb.append("<div style='background-color: #f9f9f9; border-left: 4px solid ").append(colorEstado)
+                .append("; padding: 12px 16px; color: #555; margin: 16px 0;'>");
+        sb.append("<p style='margin: 0;'><strong>Estado:</strong> <span style='color: ").append(colorEstado)
+                .append(";'>").append(estadoTexto).append("</span></p>");
+
+        sb.append("<p style='margin: 8px 0 0 0;'><strong>Motivo del reclamo:</strong> ")
+                .append(textoOGuion(reclamo.getTexto())).append("</p>");
+
+        if (aceptado) {
+            sb.append("<p style='margin: 8px 0 0 0;'><strong>Detalle del reintegro:</strong> ")
+                    .append("Se procesó un reintegro de <strong>$").append(pedido.getTotal())
+                    .append("</strong> correspondiente al monto del pedido.")
+                    .append("</p>");
+        } else {
+            sb.append("<p style='margin: 8px 0 0 0;'><strong>Motivo del rechazo:</strong> ")
+                    .append(textoOGuion(reclamo.getMotivoRechazo())).append("</p>");
+        }
+
+        sb.append("</div>");
+        sb.append("<p style='color: #555;'>Si tenés dudas, podés contactarnos desde la app o respondiendo este correo.</p>");
+        sb.append("<hr style='border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;'>");
+        sb.append("<p style='color: #555;'><strong>El equipo de Trego</strong></p>");
+        sb.append("</div>");
+
+        sb.append("<div style='background-color: #f5f5f5; padding: 16px; text-align: center;'>");
+        sb.append("<p style='color: #999; font-size: 12px; margin: 0;'>© 2026 Trego. Todos los derechos reservados.</p>");
+        sb.append("</div>");
+        sb.append("</div>");
+
+        return sb.toString();
     }
 
     public void notificarRecuperacionContraseña(String emailDestino, String passwordPlana) {

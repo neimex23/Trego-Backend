@@ -92,6 +92,8 @@ public class SecurityConfig {
                 // Clientes y usuarios
                 .requestMatchers("/api/clientes/**").authenticated()
                 .requestMatchers("/api/usuarios/**").authenticated()
+                // Reclamos
+                .requestMatchers("/api/reclamos/**").authenticated()
                 // Notificaciones
                 .requestMatchers("/api/notificaciones/**").authenticated()
                 .anyRequest().authenticated()
