@@ -338,7 +338,17 @@ public class RestauranteService {
         String id = String.valueOf(restauranteId);
         Restaurante restaurante = buscarRestaurante(id);
 
-        List<DTOProducto> productos = productosService.listarProductos(id, false);
+        List<DTOProducto> productos;
+        try {
+            productos = productosService.listarProductos(id, false);
+        } catch (ResponseStatusException e) {
+            // listarProductos devuelve 404 si no hay productos; en verMenu eso es menú vacío, no local inexistente.
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                productos = Collections.emptyList();
+            } else {
+                throw e;
+            }
+        }
 
         if (categoria != null && !categoria.isBlank()) {
             productos = aplicarFiltro(productos, categoria);
@@ -348,7 +358,8 @@ public class RestauranteService {
             productos = aplicarOrden(productos, orden);
         }
 
-        if (productos.isEmpty()) {
+        boolean filtroCategoriaActivo = categoria != null && !categoria.isBlank();
+        if (productos.isEmpty() && !filtroCategoriaActivo) {
             throw new SinProductoException("Restaurante sin Productos");
         }
 

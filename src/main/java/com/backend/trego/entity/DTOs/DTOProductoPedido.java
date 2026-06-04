@@ -60,13 +60,39 @@ public class DTOProductoPedido {
         this.producto = producto;
     }
 
+    public void setIngredientesAQuitar(List<DTOIngrediente> ingredientesAQuitar) {
+        this.ingredientesAQuitar = ingredientesAQuitar != null ? ingredientesAQuitar : new ArrayList<>();
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
+
+    public void setCantidad(Integer cantidad) {
+        this.cantidad = cantidad;
+    }
+
+    public void setProducto(DTOProductoSimplificado producto) {
+        this.producto = producto;
+    }
+
     public static DTOProductoPedido desde(LineaCarrito linea) {
         if (linea == null) {
             return null;
         }
+        Integer idRestaurante = linea.getProducto() != null && linea.getProducto().getRestaurante() != null
+                ? linea.getProducto().getRestaurante().getIdUsuario()
+                : null;
+        List<DTOIngrediente> ingredientesDto = new ArrayList<>();
+        if (linea.getIngredientesAQuitar() != null) {
+            for (var ing : linea.getIngredientesAQuitar()) {
+                ingredientesDto.add(new DTOIngrediente(
+                        ing.getIdIngrediente(), ing.getNombre(), idRestaurante));
+            }
+        }
         return new DTOProductoPedido(
                 null,
-                null,
+                ingredientesDto,
                 linea.getObservaciones(),
                 linea.getCantidad(),
                 linea.getSubtotal(),

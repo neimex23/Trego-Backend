@@ -7,6 +7,9 @@ public class DTOGeoapifyProperties {
     @JsonProperty("name")
     private String tag;
 
+    @JsonProperty("formatted")
+    private String formatted;
+
     // --- Campos de geocoding (reverse geocode) ---
     @JsonProperty("street")
     private String calle;
@@ -28,6 +31,10 @@ public class DTOGeoapifyProperties {
 
     public String getTag() {
         return tag;
+    }
+
+    public String getFormatted() {
+        return formatted;
     }
 
     public String getCalle() {

@@ -1,10 +1,12 @@
 package com.backend.trego.entity.DTOs;
 
+import com.backend.trego.entity.Ingrediente;
 import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.ProductoPedido;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -105,9 +107,19 @@ public class DTOPedido {
         DTOProductoSimplificado simplificado = producto != null
                 ? DTOProductoSimplificado.desde(producto)
                 : null;
+        Integer idRestaurante = producto != null && producto.getRestaurante() != null
+                ? producto.getRestaurante().getIdUsuario()
+                : null;
+        List<DTOIngrediente> ingredientesDto = new ArrayList<>();
+        if (pp.getIngredientesAQuitar() != null) {
+            for (Ingrediente ing : pp.getIngredientesAQuitar()) {
+                ingredientesDto.add(new DTOIngrediente(
+                        ing.getIdIngrediente(), ing.getNombre(), idRestaurante));
+            }
+        }
         return new DTOProductoPedido(
                 null,
-                null,
+                ingredientesDto,
                 pp.getComentarioCliente(),
                 pp.getCantidad(),
                 (double) pp.getPrecioSuma(),

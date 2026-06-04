@@ -46,6 +46,7 @@ public class PedidoService {
     private final ProductoRepository productoRepository;
     private final CarritoService carritoService;
     private final GeoapifyService geoapifyService;
+    private final IngredientePedidoService ingredientePedidoService;
 
     public PedidoService(PedidoRepository pedidoRepository,
             RestauranteService restauranteService,
@@ -55,7 +56,8 @@ public class PedidoService {
             UsuarioRepository usuarioRepository,
             ProductoRepository productoRepository,
             CarritoService carritoService,
-            GeoapifyService geoapifyService) {
+            GeoapifyService geoapifyService,
+            IngredientePedidoService ingredientePedidoService) {
         this.pedidoRepository = pedidoRepository;
         this.restauranteService = restauranteService;
         this.pagoService = pagoService;
@@ -65,6 +67,7 @@ public class PedidoService {
         this.productoRepository = productoRepository;
         this.carritoService = carritoService;
         this.geoapifyService = geoapifyService;
+        this.ingredientePedidoService = ingredientePedidoService;
     }
 
     public List<Pedido> listar() {
@@ -212,6 +215,9 @@ public class PedidoService {
                     : linea.getCantidad();
             float precioSuma = producto.getPrecio() * cantidad;
             ProductoPedido pp = new ProductoPedido(producto, cantidad, precioSuma, linea.getObservaciones());
+            pp.setIngredientesAQuitar(
+                    ingredientePedidoService.resolverIngredientesAQuitar(
+                            linea.getIngredientesAQuitar(), producto));
             pedido.addProductoPedido(pp);
         }
 

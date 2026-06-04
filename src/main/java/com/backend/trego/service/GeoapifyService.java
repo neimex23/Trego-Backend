@@ -20,42 +20,46 @@ public class GeoapifyService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public DTODireccion obtenerDireccion(double latitud, double longitud) {
-
-        String url = String.format(
-                "https://api.geoapify.com/v1/geocode/reverse?lat=%s&lon=%s&apiKey=%s",
-                latitud,
-                longitud,
-                apiKey
-        );
-
-        DTOGeoapifyResponse response =
-                restTemplate.getForObject(url, DTOGeoapifyResponse.class);
-
-        if (response == null ||
-            response.getCaracteristicas() == null ||
-            response.getCaracteristicas().isEmpty()) {
+        if (apiKey == null || apiKey.isBlank() || "dev".equalsIgnoreCase(apiKey.trim())) {
             return null;
         }
+        try {
+            String url = String.format(
+                    "https://api.geoapify.com/v1/geocode/reverse?lat=%s&lon=%s&lang=es&apiKey=%s",
+                    latitud,
+                    longitud,
+                    apiKey
+            );
 
-        DTOGeoapifyProperties props =
-                response.getCaracteristicas().get(0).getPropiedades();
+            DTOGeoapifyResponse response =
+                    restTemplate.getForObject(url, DTOGeoapifyResponse.class);
 
-        if (props == null) {
+            if (response == null ||
+                response.getCaracteristicas() == null ||
+                response.getCaracteristicas().isEmpty()) {
+                return null;
+            }
+
+            DTOGeoapifyProperties props =
+                    response.getCaracteristicas().get(0).getPropiedades();
+
+            if (props == null) {
+                return null;
+            }
+
+            String calle = props.getCalle();
+            String numero = props.getNumeroPuerta();
+            String apartamento = "";
+            String esquina = props.getBarrio();
+            String etiqueta = props.getFormatted() != null && !props.getFormatted().isBlank()
+                    ? props.getFormatted()
+                    : props.getTag();
+
+            return new DTODireccion(etiqueta, calle, numero, apartamento, esquina, latitud, longitud);
+        } catch (Exception e) {
+            System.err.println(">>> [Geoapify] Reverse geocode: " + e.getMessage());
             return null;
         }
-
-        String calle = props.getCalle();
-
-        // el numero de puerta viene como string
-        String numero = props.getNumeroPuerta();
-
-        // Geoapify normalmente no devuelve apartamento
-        String apartamento = "";
-
-        // esquina aproximada
-        String esquina = props.getBarrio();
-
-        return new DTODireccion(props.getTag(), calle, numero, apartamento, esquina, latitud, longitud);
     }
 
     // Distancia por ruta entre dos coordenadas, en kilometros.
@@ -66,12 +70,30 @@ public class GeoapifyService {
             double lat2,
             double lon2) {
 
-        DTOGeoapifyProperties props = consultarRuta(lat1, lon1, lat2, lon2);
-        if (props == null || props.getDistancia() == null) {
-            return -1;
+        try {
+            DTOGeoapifyProperties props = consultarRuta(lat1, lon1, lat2, lon2);
+            if (props != null && props.getDistancia() != null) {
+                // Geoapify devuelve la distancia en metros
+                return props.getDistancia() / 1000.0;
+            }
+        } catch (Exception e) {
+            System.err.println(">>> [Geoapify] Routing no disponible: " + e.getMessage());
         }
-        // Geoapify devuelve la distancia en metros
-        return props.getDistancia() / 1000.0;
+        // Desarrollo / API key inválida: distancia en línea recta (Haversine)
+        return distanciaHaversineKm(lat1, lon1, lat2, lon2);
+    }
+
+    /** Distancia aproximada en km cuando Geoapify no responde. */
+    private static double distanciaHaversineKm(
+            double lat1, double lon1, double lat2, double lon2) {
+        final double R = 6371.0;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
 
     // Tiempo estimado de llegada entre dos coordenadas, en minutos.

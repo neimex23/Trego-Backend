@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -69,8 +70,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 // Registro de restaurante (flujo por código de verificación)
                 .requestMatchers("/api/usuarios/registrar-restaurante/**").permitAll()
-                // Menú público de restaurante
-                .requestMatchers("/api/pedido/restaurante/*/verMenu").permitAll()
+                // Menú público (endpoint del equipo: GET /api/pedido/restaurante/{id}/verMenu)
+                .requestMatchers(HttpMethod.GET, "/api/pedido/restaurante/*/verMenu").permitAll()
+                .requestMatchers("/api/geo/**").permitAll()
                 // Webhook de MercadoPago
                 .requestMatchers("/api/pagos/webhook").permitAll()
                 // Consulta de estado de pago: el front la usa al volver del checkout,
