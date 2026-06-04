@@ -4,6 +4,7 @@ import com.backend.trego.entity.DTOs.DTOActualizarEstadoRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
+import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.service.PedidoService;
@@ -113,8 +114,9 @@ public class PedidoController {
         try {
             return ResponseEntity.ok(restauranteService.verRestaurante(restauranteId, categoria, orden));
         } catch (SinProductoException e) {
-            // El diagrama exige 200 OK aun cuando no haya productos.
-            return ResponseEntity.ok(Map.of("mensaje", e.getMessage()));
+            // 200 OK con datos del local y menú vacío (el front necesita idRestaurante y nombre).
+            DTORestaurante cabecera = restauranteService.obtenerRestaurante(String.valueOf(restauranteId));
+            return ResponseEntity.ok(cabecera);
         }
     }
   // Nueva actualizar estado  

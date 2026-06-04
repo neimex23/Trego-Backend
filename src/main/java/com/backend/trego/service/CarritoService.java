@@ -22,13 +22,16 @@ public class CarritoService {
     private final CarritoRepository carritoRepository;
     private final ProductoRepository productoRepository;
     private final CurrentUserService currentUserService;
+    private final IngredientePedidoService ingredientePedidoService;
 
     public CarritoService(CarritoRepository carritoRepository,
                           ProductoRepository productoRepository,
-                          CurrentUserService currentUserService) {
+                          CurrentUserService currentUserService,
+                          IngredientePedidoService ingredientePedidoService) {
         this.carritoRepository = carritoRepository;
         this.productoRepository = productoRepository;
         this.currentUserService = currentUserService;
+        this.ingredientePedidoService = ingredientePedidoService;
     }
 
     @Transactional
@@ -87,8 +90,17 @@ public class CarritoService {
             if (observaciones != null) {
                 linea.setObservaciones(observaciones);
             }
+            if (request.getIngredientesAQuitar() != null) {
+                linea.setIngredientesAQuitar(
+                        ingredientePedidoService.resolverIngredientesAQuitar(
+                                request.getIngredientesAQuitar(), producto));
+            }
         } else {
-            carrito.addLinea(new LineaCarrito(carrito, producto, cantidad, observaciones));
+            LineaCarrito linea = new LineaCarrito(carrito, producto, cantidad, observaciones);
+            linea.setIngredientesAQuitar(
+                    ingredientePedidoService.resolverIngredientesAQuitar(
+                            request.getIngredientesAQuitar(), producto));
+            carrito.addLinea(linea);
         }
 
         carrito.recalcularTotal();
@@ -123,6 +135,11 @@ public class CarritoService {
         }
         if (request.getObservaciones() != null) {
             linea.setObservaciones(request.getObservaciones());
+        }
+        if (request.getIngredientesAQuitar() != null) {
+            linea.setIngredientesAQuitar(
+                    ingredientePedidoService.resolverIngredientesAQuitar(
+                            request.getIngredientesAQuitar(), linea.getProducto()));
         }
 
         carrito.recalcularTotal();

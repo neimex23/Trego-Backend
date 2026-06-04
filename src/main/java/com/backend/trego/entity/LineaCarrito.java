@@ -1,12 +1,18 @@
 package com.backend.trego.entity;
 
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
+import com.backend.trego.entity.DTOs.DTOProductoSimplificado;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 
 // Un ítem del carrito: un producto con su cantidad. El subtotal es cantidad * precio.
@@ -28,6 +34,13 @@ public class LineaCarrito {
     private int cantidad;
 
     private String observaciones;
+
+    @ManyToMany
+    @JoinTable(
+            name = "linea_carrito_ingredientes_a_quitar",
+            joinColumns = @JoinColumn(name = "linea_carrito_id"),
+            inverseJoinColumns = @JoinColumn(name = "ingrediente_id"))
+    private List<Ingrediente> ingredientesAQuitar = new ArrayList<>();
 
     protected LineaCarrito() {
     }
@@ -79,6 +92,14 @@ public class LineaCarrito {
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public List<Ingrediente> getIngredientesAQuitar() {
+        return ingredientesAQuitar;
+    }
+
+    public void setIngredientesAQuitar(List<Ingrediente> ingredientesAQuitar) {
+        this.ingredientesAQuitar = ingredientesAQuitar != null ? ingredientesAQuitar : new ArrayList<>();
     }
 
     public double getSubtotal() {
