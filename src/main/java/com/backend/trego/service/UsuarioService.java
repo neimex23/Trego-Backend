@@ -34,7 +34,8 @@ public class UsuarioService {
     private final Map<String, RegistroTemporal> registrosPendientes = new ConcurrentHashMap<>();
 
     public UsuarioService(UsuarioRepository usuarioRepository, NotificacionesService notificacionesService,
-            PasswordEncoder passwordEncoder, CurrentUserService currentUserService, CloudinaryService cloudinaryService) {
+            PasswordEncoder passwordEncoder, CurrentUserService currentUserService,
+            CloudinaryService cloudinaryService) {
         this.usuarioRepository = usuarioRepository;
         this.notificacionesService = notificacionesService;
         this.passwordEncoder = passwordEncoder;
@@ -68,30 +69,32 @@ public class UsuarioService {
 
         String passwordCifrada = passwordEncoder.encode(password);
         Administrador nuevoAdmin = new Administrador(
-               "DefaultAdmin",
+                "DefaultAdmin",
                 email,
                 null,
-                passwordCifrada
-        );
+                passwordCifrada);
         return usuarioRepository.save(nuevoAdmin);
     }
 
     @Transactional
-    // Da de alta un administrador con los datos del DTO generando una contraseña nueva
+    // Da de alta un administrador con los datos del DTO generando una contraseña
+    // nueva
     public Administrador altaAdministrador(DTOUsuario adminDTO) {
         if (existeUsuario(adminDTO.getEmail())) {
             throw new IllegalArgumentException("El correo electrónico ya se encuentra ingresado en el sistema.");
         }
-		String passwordPlana = java.util.UUID.randomUUID().toString().substring(0, 10);
+        String passwordPlana = java.util.UUID.randomUUID().toString().substring(0, 10);
         String passwordCifrada = passwordEncoder.encode(passwordPlana);
         Administrador nuevoAdmin = new Administrador(
                 adminDTO.getNombre(),
                 adminDTO.getEmail(),
                 adminDTO.getUrlImagen(),
-                passwordCifrada
-        );
-        Administrador adminGuardado = usuarioRepository.save(nuevoAdmin);   // Guardar el administrador en la base de datos
-        notificacionesService.notificarCredencialesNuevoAdmin(adminDTO.getEmail(), passwordPlana);  // Se notificia por correo al nuevo Administrador
+                passwordCifrada);
+        Administrador adminGuardado = usuarioRepository.save(nuevoAdmin); // Guardar el administrador en la base de
+                                                                          // datos
+        notificacionesService.notificarCredencialesNuevoAdmin(adminDTO.getEmail(), passwordPlana); // Se notificia por
+                                                                                                   // correo al nuevo
+                                                                                                   // Administrador
         return adminGuardado;
     }
 
@@ -139,7 +142,8 @@ public class UsuarioService {
         return notificacionesService.codigoVerificacionEmail(email);
     }
 
-    // Valida el código que el usuario ingresó y, si es correcto, da de alta el restaurante.
+    // Valida el código que el usuario ingresó y, si es correcto, da de alta el
+    // restaurante.
     public DTOUsuario verificarCodigo(String email, String codigo) {
         RegistroTemporal pendiente = registrosPendientes.get(email);
 
@@ -228,7 +232,8 @@ public class UsuarioService {
     public List<DTODireccion> obtenerDirecciones() {
         String uid = currentUserService.getCurrentUid();
         if (uid == null) {
-            throw new IllegalStateException("No se encontró el uid del usuario autenticado. Este endpoint es solo para clientes autenticados con Firebase.");
+            throw new IllegalStateException(
+                    "No se encontró el uid del usuario autenticado. Este endpoint es solo para clientes autenticados con Firebase.");
         }
         return usuarioRepository.findDireccionesByUid(uid);
     }
@@ -248,28 +253,29 @@ public class UsuarioService {
                     "El cliente autenticado no tiene UID de Firebase asociado.");
         }
         Cliente cliente = usuarioRepository.findByUidCliente(uid)
-                .orElseThrow(() ->
-                        new IllegalStateException("Cliente no encontrado para el UID: " + uid));
+                .orElseThrow(() -> new IllegalStateException("Cliente no encontrado para el UID: " + uid));
         cliente.addDireccion(dto);
         usuarioRepository.save(cliente);
     }
 
-    public void actualizarDireccion(String tagModificar, DTODireccion dtoNueva) {
-        Integer id = currentUserService.getCurrentId();
-        Usuario u = usuarioRepository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalStateException("Usuario no encontrado para el ID: " + id));
-
-        if (u instanceof Cliente cliente) {
+    public void actualizarDireccion(String tagModificar, DTODireccion dtoNueva, Boolean client) {
+        if (client) {
+            System.out.println("Entro con " + client + " El tag: " + tagModificar);
+            String uid = currentUserService.getCurrentUid();
+            Cliente cliente = usuarioRepository.findByUidCliente(uid)
+                    .orElseThrow(() -> new IllegalStateException("Cliente no encontrado para el UID: " + uid));
             cliente.getDirecciones().removeIf(
                     d -> d.getTag().equals(tagModificar));
             cliente.getDirecciones().add(dtoNueva);
             usuarioRepository.save(cliente);
-        }
-
-        if (u instanceof Restaurante restaurante) {
-            restaurante.setDireccion(dtoNueva);
-            usuarioRepository.save(restaurante);
+        } else {
+            Integer id = currentUserService.getCurrentId();
+            Usuario u = usuarioRepository.findById(id)
+                    .orElseThrow(() -> new IllegalStateException("Usuario no encontrado para el ID: " + id));
+            if (u instanceof Restaurante restaurante) {
+                restaurante.setDireccion(dtoNueva);
+                usuarioRepository.save(restaurante);
+            }
         }
 
         throw new IllegalStateException(
@@ -279,8 +285,7 @@ public class UsuarioService {
     public void eliminarDireccion(String tagEliminar) {
         Integer id = currentUserService.getCurrentId();
         Usuario u = usuarioRepository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalStateException("Usuario no encontrado para el ID: " + id));
+                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado para el ID: " + id));
 
         if (u instanceof Cliente cliente) {
             cliente.getDirecciones().removeIf(
@@ -290,7 +295,8 @@ public class UsuarioService {
         }
 
         if (u instanceof Restaurante restaurante) {
-            throw new IllegalStateException("Los restaurantes no pueden no tener una dirección, para modificarla deben usar el endpoint de actualizar dirección con el tag de la dirección actual.");
+            throw new IllegalStateException(
+                    "Los restaurantes no pueden no tener una dirección, para modificarla deben usar el endpoint de actualizar dirección con el tag de la dirección actual.");
         }
 
         throw new IllegalStateException(
@@ -314,7 +320,8 @@ public class UsuarioService {
         String rol = auth.getRol();
 
         if ("Cliente".equals(rol)) {
-            throw new IllegalStateException("Los clientes autenticados con Firebase deben cambiar su contraseña desde la aplicación google, delegando en Firebase Auth. Este endpoint es solo para usuarios con rol Restaurante o Administrador.");
+            throw new IllegalStateException(
+                    "Los clientes autenticados con Firebase deben cambiar su contraseña desde la aplicación google, delegando en Firebase Auth. Este endpoint es solo para usuarios con rol Restaurante o Administrador.");
         }
 
         Integer id = auth.getIdUsuario();
@@ -323,8 +330,7 @@ public class UsuarioService {
                     "El token del usuario autenticado no contiene idUsuario (rol: " + rol + ").");
         }
         Usuario u = usuarioRepository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalStateException("Usuario no encontrado para el ID: " + id));
+                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado para el ID: " + id));
 
         String passwordCifrada = passwordEncoder.encode(nuevaContraseña);
 

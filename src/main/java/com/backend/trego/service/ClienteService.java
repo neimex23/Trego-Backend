@@ -85,7 +85,11 @@ public class ClienteService {
     // Direcciones, Horarios y Contraseña se actualizan por endpoints específicos.
     @Transactional
     public Cliente actualizar(DTOCliente dto) {
-        Cliente existente = obtenerOFallar(currentUserService.getCurrentId());
+        String id = currentUserService.getCurrentUid();
+        Cliente existente = repo.findClienteByUidCliente(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Cliente autenticado no encontrado con id: " + id));
+                        
         if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(existente.getEmail())) {
             if (repo.findClienteByEmail(dto.getEmail()).isPresent()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
