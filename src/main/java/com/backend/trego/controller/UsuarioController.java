@@ -119,8 +119,8 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Dirección actualizada exitosamente")
     @ApiResponse(responseCode = "400", description = "Datos de dirección inválidos")
     @ApiResponse(responseCode = "401", description = "No autenticado")
-    public ResponseEntity<Void> actualizarDireccion(@RequestParam String tagModificar, @RequestBody DTODireccion dto) {
-        usuarioService.actualizarDireccion(tagModificar, dto);
+    public ResponseEntity<Void> actualizarDireccion(@RequestParam String tagModificar, @RequestBody DTODireccion dto, @RequestParam(defaultValue = "false") Boolean client) {
+        usuarioService.actualizarDireccion(tagModificar, dto, client);
         return ResponseEntity.ok().build();
     }
 
