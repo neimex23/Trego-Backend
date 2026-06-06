@@ -88,15 +88,14 @@ public class ClienteController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{id}/fcm-token")
+    @PutMapping("/fcm-token")
     @Operation(summary = "Registrar/actualizar token FCM del dispositivo del cliente")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Token actualizado"),
             @ApiResponse(responseCode = "404", description = "Cliente no existe")
     })
-    public ResponseEntity<Void> actualizarFcmToken(@PathVariable Integer id,
-            @RequestBody FcmTokenRequest body) {
-        service.actualizarFcmToken(id, body != null ? body.token() : null);
+    public ResponseEntity<Void> actualizarFcmToken(@RequestBody FcmTokenRequest body) {
+        service.actualizarFcmToken(body != null ? body.token() : null);
         return ResponseEntity.noContent().build();
     }
 

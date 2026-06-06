@@ -242,23 +242,29 @@ public class UsuarioService {
     // actualizarDireccion (tiene una sola); Administrador no maneja direcciones.
     @Transactional
     public void agregarDireccion(DTODireccion dto) {
-        var auth = currentUserService.getCurrentUser();
-        if (!"Cliente".equals(auth.getRol())) {
-            throw new IllegalStateException(
-                    "Solo los clientes pueden agregar direcciones (rol actual: " + auth.getRol() + ").");
-        }
-        String uid = auth.getUid();
-        if (uid == null || uid.isBlank()) {
-            throw new IllegalStateException(
-                    "El cliente autenticado no tiene UID de Firebase asociado.");
-        }
+        String uid = currentUserService.getCurrentUid();
         Cliente cliente = usuarioRepository.findByUidCliente(uid)
                 .orElseThrow(() -> new IllegalStateException("Cliente no encontrado para el UID: " + uid));
+       
+        boolean existe = cliente.getDirecciones().stream()
+            .anyMatch(d -> d.getTag().equals(dto.getTag()));
+
+        if (existe) {
+            throw new IllegalArgumentException(
+                "Ya existe una dirección con el tag: " + dto.getTag()
+            );
+        }
         cliente.addDireccion(dto);
         usuarioRepository.save(cliente);
     }
 
     public void actualizarDireccion(String tagModificar, DTODireccion dtoNueva, Boolean client) {
+        if (currentUserService.getCurrentRol().equals("Administrador")) {
+            throw new IllegalStateException(
+                    "Los administradores no manejan direcciones, por lo que no pueden actualizar ninguna. "+
+                    "Este endpoint es solo para clientes");
+        }
+
         if (client) {
             System.out.println("Entro con " + client + " El tag: " + tagModificar);
             String uid = currentUserService.getCurrentUid();
@@ -276,10 +282,7 @@ public class UsuarioService {
                 restaurante.setDireccion(dtoNueva);
                 usuarioRepository.save(restaurante);
             }
-        }
-
-        throw new IllegalStateException(
-                "El usuario autenticado no es ni Cliente ni Restaurante");
+        } 
     }
 
     public void eliminarDireccion(String tagEliminar) {
