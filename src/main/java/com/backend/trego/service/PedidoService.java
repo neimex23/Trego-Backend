@@ -351,8 +351,9 @@ public class PedidoService {
         DTOPedido dtoActualizado = DTOPedido.desde(pedidoGuardado);
         try {
             if (nuevoEstado == EnumEstadoPedido.EnCamino) {
-                notificacionesService.notificarPedidoEnCamino(dtoActualizado, pedidoGuardado.getTiempoPreparacion());
-                notificacionesService.notificarPushEnCamino(dtoActualizado, pedidoGuardado.getTiempoPreparacion());
+                Integer tiempoViaje = obtenerTiempoViaje(pedidoGuardado);
+                notificacionesService.notificarPedidoEnCamino(dtoActualizado, tiempoViaje);
+                notificacionesService.notificarPushEnCamino(dtoActualizado, tiempoViaje);
             } else if (nuevoEstado == EnumEstadoPedido.Entregado) {
                 notificacionesService.notificarPedidoEntregado(dtoActualizado);
                 notificacionesService.notificarPushEntregado(dtoActualizado);
