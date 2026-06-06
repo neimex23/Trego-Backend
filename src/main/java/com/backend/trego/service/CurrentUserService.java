@@ -43,22 +43,9 @@ public class CurrentUserService {
         return getCurrentUser().getIdUsuario();
     }
 
-    //Solo Disponible para Restaurante o Administrador, lanza IllegalStateException si el rol no coincide o el token no tiene userId.
     public Integer getCurrentId() {
         AuthenticatedUser user = getCurrentUser();
-        String rol = user.getRol();
-
-        if (!"Restaurante".equals(rol) && !"Administrador".equals(rol)) {
-            throw new IllegalStateException(
-                    "getCurrentId() solo está disponible para Restaurante o Administrador (rol actual: " + rol + ")");
-        }
-
-        Integer id = user.getIdUsuario();
-        if (id == null) {
-            throw new IllegalStateException(
-                    "El token del usuario autenticado no contiene userId (rol: " + rol + ")");
-        }
-        return id;
+        return user.getIdUsuario();
     }
 
     public String getCurrentEmail() {

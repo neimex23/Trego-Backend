@@ -80,6 +80,14 @@ public class RestauranteController {
         return ResponseEntity.ok(restauranteService.actualizarRestaurante(dto));
     }
 
+    @PatchMapping("/altaRestaurante")
+    @Operation(summary = "Dar de alta un restaurante", description = "Crea un nuevo restaurante en el sistema.")
+    @ApiResponse(responseCode = "201", description = "Restaurante creado exitosamente")
+    @ApiResponse(responseCode = "400", description = "Datos incompletos o erroneos")
+    public ResponseEntity<DTORestaurante> altaRestaurante(@RequestBody DTORestaurante dto) {
+        return ResponseEntity.ok(restauranteService.altaRestaurante(dto));
+    }
+
         // CU-RES-05: Abrir Local
     @PatchMapping("/abrirLocal")
     @Operation(summary = "Abrir el local", description = "Cambia el estado del restaurante a abierto y establece su hora de cierre. Valida que existan productos.")

@@ -132,8 +132,8 @@ public class ClienteService {
     // notificaciones push. Si el token viene vacío se interpreta como un logout
     // y se limpia el campo para evitar enviar a un dispositivo que ya no aplica.
     @Transactional
-    public Cliente actualizarFcmToken(Integer id, String fcmToken) {
-        Cliente c = obtenerOFallar(id);
+    public Cliente actualizarFcmToken(String fcmToken) {
+        Cliente c = obtenerOFallar(currentUserService.getCurrentId());
         c.setFcmToken((fcmToken == null || fcmToken.isBlank()) ? null : fcmToken);
         return repo.save(c);
     }

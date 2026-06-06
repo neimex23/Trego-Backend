@@ -7,6 +7,7 @@ import com.backend.trego.entity.DTOs.DTOFirma;
 import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTORestaurante;
+import com.backend.trego.entity.Enums.EnumCategoriaRestaurante;
 import com.backend.trego.exception.RestauranteCerradoException;
 import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.repository.UsuarioRepository;
@@ -158,7 +159,7 @@ public class RestauranteService {
 
     public List<DTORestaurante> listarRestaurantesZona(DTODireccion direccion) {
 
-        List<DTORestaurante> restaurantesHabilitados = listarRestaurantes();
+        List<DTORestaurante> restaurantesHabilitados = listarRestaurantesHabilitadosNoCerrados();
         if (restaurantesHabilitados.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
@@ -207,6 +208,13 @@ public class RestauranteService {
     // password ni menú). Es el catálogo que ve el cliente.
     public List<DTORestaurante> listarRestaurantes() {
         return restauranteRepository.findRestaurantesHabilitados().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<DTORestaurante> listarRestaurantesHabilitadosNoCerrados() {
+        return restauranteRepository.findRestaurantesHabilitados().stream()
+                .filter(this::estaAbiertoDe)
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -303,6 +311,30 @@ public class RestauranteService {
                 restaurante.getApertura(),
                 restaurante.getCierre());
     }
+
+    private DTORestaurante toDTOHabilitar(Restaurante restaurante) {
+        return new DTORestaurante(
+                restaurante.getIdUsuario(),
+                restaurante.getNombre(),
+                restaurante.getEmail(),
+                null, // password: nunca se expone al frontend
+                restaurante.getRut(),
+                restaurante.getTelefono(),
+                restaurante.getFotoPortada(),
+                restaurante.getFotoPerfil(),
+                restaurante.getDireccion(),
+                restaurante.getDescripcion(),
+                null,
+                null,
+                null,
+                restaurante.isHabilitado(),
+                null,
+                null,
+                null,
+                null);
+    }
+
+    
 
     // Misma lógica que estaAbierto pero sobre una entidad ya cargada, para no
     // volver a consultar la base.
@@ -418,10 +450,18 @@ public class RestauranteService {
 
         List<Restaurante> restaurantesNoHabilitados = restauranteRepository.findRestaurantesNoHabilitados();
         return restaurantesNoHabilitados.stream()
-                .map(this::toDTO)
+                .map(this::toDTOHabilitar)
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public DTORestaurante altaRestaurante(DTORestaurante dto) {
+        Restaurante restaurante = buscarRestaurante(String.valueOf(currentUserService.getCurrentId()));
+        restaurante.setDireccion(dto.getDireccion());
+        restauranteRepository.save(restaurante);
+        return actualizarRestaurante(dto);
+    }
+        
     // Actualiza los datos del restaurante aplicando sólo los campos no nulos del
     // DTO. No se permite modificar id ni habilitado.
     // Direcciones, Horarios y Contraseña se actualizan por endpoints específicos.
