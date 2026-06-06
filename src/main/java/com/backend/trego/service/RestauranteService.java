@@ -558,7 +558,7 @@ public class RestauranteService {
         Cliente cliente = restauranteRepository.findClienteById(currentUserService.getCurrentId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente autenticado no encontrado"));
 
-        Comentario comentario = new Comentario(request.getTexto(), request.getCalificacion(), cliente);
+        Comentario comentario = new Comentario(request.getTexto(), request.getCalificacion(), cliente, restaurante);
         restaurante.addComentario(comentario);
         restauranteRepository.save(restaurante);
         return new DTOComentario(

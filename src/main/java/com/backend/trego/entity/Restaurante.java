@@ -47,7 +47,7 @@ public class Restaurante extends Usuario {
     @JoinColumn(name = "restaurante_id")
     private List<Ingrediente> ingredientesDisponibles = new ArrayList<>();
 
-    @OneToMany(mappedBy = "commentario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "restaurante", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comentario> comentarios = new ArrayList<>();
 
     protected Restaurante() {

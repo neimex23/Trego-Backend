@@ -22,15 +22,20 @@ public class Comentario {
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
+    @ManyToOne
+    @JoinColumn(name = "restaurante_id")
+    private Restaurante restaurante;
+
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
     protected Comentario() {
     }
 
-    public Comentario(String texto, Integer calificacion, Cliente cliente) {
+    public Comentario(String texto, Integer calificacion, Cliente cliente, Restaurante restaurante) {
         this.texto = texto;
         this.calificacion = calificacion;
         this.cliente = cliente;
+        this.restaurante = restaurante;
     }
 
     public Integer getIdComentario() {
@@ -63,6 +68,14 @@ public class Comentario {
 
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
+    }
+
+    public Restaurante getRestaurante() {
+        return restaurante;
+    }
+
+    public void setRestaurante(Restaurante restaurante) {
+        this.restaurante = restaurante;
     }
 
     public LocalDateTime getFechaCreacion() {
