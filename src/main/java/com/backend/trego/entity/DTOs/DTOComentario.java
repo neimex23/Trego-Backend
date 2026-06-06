@@ -5,6 +5,9 @@ public class DTOComentario {
     private String texto;
     private Integer idRestaurante;
     private Integer calificacion;
+    private String fechaCreacion;
+    private String nombreCliente;
+
     public String getIdComentario() {
         return idComentario;
     }
@@ -17,11 +20,19 @@ public class DTOComentario {
     public Integer getCalificacion() {
         return calificacion;
     }
-    public DTOComentario(String idComentario, String texto, Integer idRestaurante, Integer calificacion) {
+    public String getFechaCreacion() {
+        return fechaCreacion;
+    }
+    public String getNombreCliente() {
+        return nombreCliente;
+    }
+    public DTOComentario(String idComentario, String texto, Integer idRestaurante, Integer calificacion, String fechaCreacion, String nombreCliente) {
         this.idComentario = idComentario;
         this.texto = texto;
         this.idRestaurante = idRestaurante;
         this.calificacion = calificacion;
+        this.fechaCreacion = fechaCreacion;
+        this.nombreCliente = nombreCliente;
     }
 
     

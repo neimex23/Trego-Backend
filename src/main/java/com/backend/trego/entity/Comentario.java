@@ -7,6 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+import java.time.LocalDateTime;
+
 @Entity
 public class Comentario {
     @Id
@@ -19,6 +21,8 @@ public class Comentario {
     @ManyToOne
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
+
+    private LocalDateTime fechaCreacion = LocalDateTime.now();
 
     protected Comentario() {
     }
@@ -58,5 +62,13 @@ public class Comentario {
 
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
     }
 }

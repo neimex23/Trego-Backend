@@ -54,10 +54,6 @@ public class Pedido {
     private Restaurante restaurante;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "comentario_id")
-    private Comentario comentario;
-
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "reclamo_id")
     private Reclamo reclamo;
 
@@ -129,14 +125,6 @@ public class Pedido {
 
     public void setRestaurante(Restaurante restaurante) {
         this.restaurante = restaurante;
-    }
-
-    public Comentario getComentario() {
-        return comentario;
-    }
-
-    public void setComentario(Comentario comentario) {
-        this.comentario = comentario;
     }
 
     public Reclamo getReclamo() {
