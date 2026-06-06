@@ -88,11 +88,11 @@ public class PedidoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
     }
 
-    public List<Pedido> listarPorCliente(int idCliente) {
+    public List<Pedido> listarPorCliente(Integer idCliente) {
         return pedidoRepository.findByClienteIdUsuario(idCliente);
     }
 
-    public List<Pedido> listarPorRestaurante(int idRestaurante) {
+    public List<Pedido> listarPorRestaurante(Integer idRestaurante) {
         return pedidoRepository.findByRestauranteIdUsuario(idRestaurante);
     }
 
@@ -137,7 +137,7 @@ public class PedidoService {
     }
 
     @Transactional
-    public int cancelarPedidosExpirados() {
+    public Integer cancelarPedidosExpirados() {
         List<Pedido> expirados = pedidoRepository
                 .findByFechaExpiracionNotNullAndFechaExpiracionBefore(LocalDateTime.now());
         for (Pedido pedido : expirados) {
@@ -210,7 +210,7 @@ public class PedidoService {
             Producto producto = productoRepository.findById(linea.getIdProducto())
                     .orElseThrow(() -> new NoSuchElementException(
                             "Producto no encontrado con id: " + linea.getIdProducto()));
-            int cantidad = (linea.getCantidad() == null || linea.getCantidad() <= 0)
+            Integer cantidad = (linea.getCantidad() == null || linea.getCantidad() <= 0)
                     ? 1
                     : linea.getCantidad();
             float precioSuma = producto.getPrecio() * cantidad;

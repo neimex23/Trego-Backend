@@ -7,32 +7,42 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+import java.time.LocalDateTime;
+
 @Entity
 public class Comentario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idComentario;
+    private Integer idComentario;
 
     private String texto;
-    private float calificacion;
+    private Integer calificacion;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
+    @ManyToOne
+    @JoinColumn(name = "restaurante_id")
+    private Restaurante restaurante;
+
+    private LocalDateTime fechaCreacion = LocalDateTime.now();
+
     protected Comentario() {
     }
 
-    public Comentario(String texto, float calificacion) {
+    public Comentario(String texto, Integer calificacion, Cliente cliente, Restaurante restaurante) {
         this.texto = texto;
         this.calificacion = calificacion;
+        this.cliente = cliente;
+        this.restaurante = restaurante;
     }
 
-    public int getIdComentario() {
+    public Integer getIdComentario() {
         return idComentario;
     }
 
-    public void setIdComentario(int idComentario) {
+    public void setIdComentario(Integer idComentario) {
         this.idComentario = idComentario;
     }
 
@@ -44,11 +54,11 @@ public class Comentario {
         this.texto = texto;
     }
 
-    public float getCalificacion() {
+    public Integer getCalificacion() {
         return calificacion;
     }
 
-    public void setCalificacion(float calificacion) {
+    public void setCalificacion(Integer calificacion) {
         this.calificacion = calificacion;
     }
 
@@ -58,5 +68,21 @@ public class Comentario {
 
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
+    }
+
+    public Restaurante getRestaurante() {
+        return restaurante;
+    }
+
+    public void setRestaurante(Restaurante restaurante) {
+        this.restaurante = restaurante;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
     }
 }

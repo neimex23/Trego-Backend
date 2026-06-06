@@ -15,9 +15,9 @@ import jakarta.persistence.ManyToOne;
 public class ProductoPedido {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idProductoPedido;
+    private Integer idProductoPedido;
 
-    private int cantidad;
+    private Integer cantidad;
     private float precioSuma;
     private String comentarioCliente;
 
@@ -35,22 +35,22 @@ public class ProductoPedido {
     protected ProductoPedido() {
     }
 
-    public ProductoPedido(Producto producto, int cantidad, float precioSuma, String comentarioCliente) {
+    public ProductoPedido(Producto producto, Integer cantidad, float precioSuma, String comentarioCliente) {
         this.producto = producto;
         this.cantidad = cantidad;
         this.precioSuma = precioSuma;
         this.comentarioCliente = comentarioCliente;
     }
 
-    public int getIdProductoPedido() {
+    public Integer getIdProductoPedido() {
         return idProductoPedido;
     }
 
-    public int getCantidad() {
+    public Integer getCantidad() {
         return cantidad;
     }
 
-    public void setCantidad(int cantidad) {
+    public void setCantidad(Integer cantidad) {
         this.cantidad = cantidad;
     }
 

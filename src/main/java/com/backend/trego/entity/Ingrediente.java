@@ -9,7 +9,7 @@ import jakarta.persistence.Id;
 public class Ingrediente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idIngrediente;
+    private Integer idIngrediente;
     private String nombre;
 
     protected Ingrediente() {
@@ -19,7 +19,7 @@ public class Ingrediente {
         this.nombre = nombre;
     }
 
-    public int getIdIngrediente() {
+    public Integer getIdIngrediente() {
         return idIngrediente;
     }
 

@@ -8,7 +8,7 @@ import jakarta.persistence.ManyToMany;
 
 @Entity
 public class Plato extends Producto {
-    private int tiempoPreparacionMinutos;
+    private Integer tiempoPreparacionMinutos;
 
     @ManyToMany
     private List<Ingrediente> ingredientes = new ArrayList<>();
@@ -16,16 +16,16 @@ public class Plato extends Producto {
     protected Plato() {
     }
 
-    public Plato(String nombre, float precio, String descripcion, String urlImagen, int tiempoPreparacionMinutos) {
+    public Plato(String nombre, float precio, String descripcion, String urlImagen, Integer tiempoPreparacionMinutos) {
         super(nombre, precio, descripcion, urlImagen);
         this.tiempoPreparacionMinutos = tiempoPreparacionMinutos;
     }
 
-    public int getTiempoPreparacionMinutos() {
+    public Integer getTiempoPreparacionMinutos() {
         return tiempoPreparacionMinutos;
     }
 
-    public void setTiempoPreparacionMinutos(int tiempoPreparacionMinutos) {
+    public void setTiempoPreparacionMinutos(Integer tiempoPreparacionMinutos) {
         this.tiempoPreparacionMinutos = tiempoPreparacionMinutos;
     }
 

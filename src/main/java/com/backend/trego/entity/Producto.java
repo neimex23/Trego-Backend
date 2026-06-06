@@ -14,7 +14,7 @@ import jakarta.persistence.ManyToOne;
 public abstract class Producto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idProducto;
+    private Integer idProducto;
 
     private String nombre;
     private float precio;
@@ -45,7 +45,7 @@ public abstract class Producto {
         this.urlImagen = urlImagen;
     }
 
-    public int getIdProducto() {
+    public Integer getIdProducto() {
         return idProducto;
     }
 

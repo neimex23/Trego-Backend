@@ -9,5 +9,5 @@ import com.backend.trego.entity.Comentario;
 
 @Repository
 public interface ComentarioRepository extends JpaRepository<Comentario, Integer> {
-    List<Comentario> findByClienteIdUsuario(int idCliente);
+    List<Comentario> findByClienteIdUsuario(Integer idCliente);
 }

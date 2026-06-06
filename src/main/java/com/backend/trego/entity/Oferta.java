@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 public class Oferta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idOferta;
+    private Integer idOferta;
 
     private String descripcion;
     private float descuento; // Porcentaje, ej. 20.0 para 20% off
@@ -31,7 +31,7 @@ public class Oferta {
         this.fechaFin = fechaFin;
     }
 
-    public int getIdOferta() {
+    public Integer getIdOferta() {
         return idOferta;
     }
 

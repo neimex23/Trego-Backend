@@ -97,7 +97,7 @@ public class GeoapifyService {
     }
 
     // Tiempo estimado de llegada entre dos coordenadas, en minutos.
-    public int calcularTiempoLlegadaMinutos(DTODireccion origen, DTODireccion destino) {
+    public Integer calcularTiempoLlegadaMinutos(DTODireccion origen, DTODireccion destino) {
         double lat1 = origen.getLatitud();
         double lon1 = origen.getLongitud();
         double lat2 = destino.getLatitud();

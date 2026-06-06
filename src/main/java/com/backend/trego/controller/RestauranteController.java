@@ -2,6 +2,7 @@ package com.backend.trego.controller;
 
 import com.backend.trego.config.AuthenticatedUser;
 import com.backend.trego.entity.DTOs.DTOAbrirCerrarLocalRequest;
+import com.backend.trego.entity.DTOs.DTOComentario;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.service.RestauranteService;
@@ -119,6 +120,24 @@ public class RestauranteController {
     public ResponseEntity<Void> actualizarCierre(@RequestBody DTOAbrirCerrarLocalRequest request) {
         restauranteService.actualizarHoraCierre(request.getHoraCierre());
         return ResponseEntity.ok().build();
+    }
+
+    // Agregar y asignar un nuevo comentario a un restaurante
+    @PostMapping("/comentarios/agregar")
+    @Operation(summary = "Agregar comentario", description = "Agrega un nuevo comentario al restaurante especificado, con el usuario autenticado como autor.")
+    @ApiResponse(responseCode = "200", description = "Comentario agregado exitosamente")
+    @ApiResponse(responseCode = "400", description = "Datos incompletos o erróneos")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    public ResponseEntity<DTOComentario> agregarComentario(@RequestBody DTOComentario request) {
+        return ResponseEntity.ok(restauranteService.agregarComentario(request));
+    }
+
+    @GetMapping("/comentarios/listar")
+    @Operation(summary = "Listar comentarios", description = "Lista todos los comentarios del restaurante autenticado.")
+    @ApiResponse(responseCode = "200", description = "Comentarios listados exitosamente")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    public ResponseEntity<List<DTOComentario>> listarComentarios() {
+        return ResponseEntity.ok(restauranteService.listarComentarios());
     }
 
 }

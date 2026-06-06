@@ -1,7 +1,10 @@
 package com.backend.trego.service;
 
+import com.backend.trego.entity.Cliente;
+import com.backend.trego.entity.Comentario;
 import com.backend.trego.entity.Ingrediente;
 import com.backend.trego.entity.Restaurante;
+import com.backend.trego.entity.DTOs.DTOComentario;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOFirma;
 import com.backend.trego.entity.DTOs.DTOIngrediente;
@@ -544,5 +547,39 @@ public class RestauranteService {
 
         Restaurante restaurante = buscarRestaurante(String.valueOf(restauranteId));
         notificacionesService.notificarRestauranteNoHabilitado(restaurante, motivo);
+    }
+
+    public DTOComentario agregarComentario(DTOComentario request) {
+        if (!currentUserService.getCurrentRol().equals("CLIENTE")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: solo los clientes pueden agregar comentarios");
+        }
+
+        Restaurante restaurante = buscarRestaurante(String.valueOf(request.getIdRestaurante()));
+        Cliente cliente = restauranteRepository.findClienteById(currentUserService.getCurrentId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente autenticado no encontrado"));
+
+        Comentario comentario = new Comentario(request.getTexto(), request.getCalificacion(), cliente, restaurante);
+        restaurante.addComentario(comentario);
+        restauranteRepository.save(restaurante);
+        return new DTOComentario(
+            comentario.getIdComentario(), 
+            comentario.getTexto(), 
+            restaurante.getIdUsuario(),
+            comentario.getCalificacion(), 
+            comentario.getFechaCreacion().toString(), 
+            comentario.getCliente().getNombre());
+    }
+
+    public List<DTOComentario> listarComentarios() {
+        Restaurante restaurante = buscarRestaurante(String.valueOf(currentUserService.getCurrentId()));
+        return restaurante.getComentarios().stream()
+                .map(c -> new DTOComentario(
+                    c.getIdComentario(), 
+                    c.getTexto(), 
+                    restaurante.getIdUsuario(),
+                    c.getCalificacion(), 
+                    c.getFechaCreacion().toString(), 
+                    c.getCliente().getNombre()))
+                .collect(Collectors.toList());
     }
 }

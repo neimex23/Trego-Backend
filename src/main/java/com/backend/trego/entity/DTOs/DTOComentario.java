@@ -1,11 +1,14 @@
 package com.backend.trego.entity.DTOs;
 
 public class DTOComentario {
-    private String idComentario;
+    private Integer idComentario;
     private String texto;
     private Integer idRestaurante;
     private Integer calificacion;
-    public String getIdComentario() {
+    private String fechaCreacion;
+    private String nombreCliente;
+
+    public Integer getIdComentario() {
         return idComentario;
     }
     public String getTexto() {
@@ -17,11 +20,19 @@ public class DTOComentario {
     public Integer getCalificacion() {
         return calificacion;
     }
-    public DTOComentario(String idComentario, String texto, Integer idRestaurante, Integer calificacion) {
+    public String getFechaCreacion() {
+        return fechaCreacion;
+    }
+    public String getNombreCliente() {
+        return nombreCliente;
+    }
+    public DTOComentario(Integer idComentario, String texto, Integer idRestaurante, Integer calificacion, String fechaCreacion, String nombreCliente) {
         this.idComentario = idComentario;
         this.texto = texto;
         this.idRestaurante = idRestaurante;
         this.calificacion = calificacion;
+        this.fechaCreacion = fechaCreacion;
+        this.nombreCliente = nombreCliente;
     }
 
     

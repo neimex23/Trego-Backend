@@ -120,7 +120,7 @@ public class AuthService {
                 usuario = usuarioOpt.get();
             }
 
-            int idUsuarioInt = usuario.getIdUsuario();
+            Integer idUsuarioInt = usuario.getIdUsuario();
             String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), uid, idUsuarioInt);
             
             return new DTOLoginResponse(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
@@ -157,7 +157,7 @@ public class AuthService {
             }
 
             String identificador = usuario.getEmail() != null ? usuario.getEmail() : uid;
-            int idUsuarioInt = usuario.getIdUsuario();
+            Integer idUsuarioInt = usuario.getIdUsuario();
             
             String jwt = jwtUtil.generateToken(identificador, usuario.getRol().name(), uid, idUsuarioInt);
             

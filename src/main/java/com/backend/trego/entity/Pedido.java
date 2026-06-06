@@ -26,7 +26,7 @@ import java.util.List;
 public class Pedido {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idPedido;
+    private Integer idPedido;
 
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaExpiracion;
@@ -52,10 +52,6 @@ public class Pedido {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurante_id")
     private Restaurante restaurante;
-
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "comentario_id")
-    private Comentario comentario;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "reclamo_id")
@@ -95,7 +91,7 @@ public class Pedido {
         this.productos.remove(pp);
     }
 
-    public int getIdPedido() {
+    public Integer getIdPedido() {
         return idPedido;
     }
 
@@ -129,14 +125,6 @@ public class Pedido {
 
     public void setRestaurante(Restaurante restaurante) {
         this.restaurante = restaurante;
-    }
-
-    public Comentario getComentario() {
-        return comentario;
-    }
-
-    public void setComentario(Comentario comentario) {
-        this.comentario = comentario;
     }
 
     public Reclamo getReclamo() {
