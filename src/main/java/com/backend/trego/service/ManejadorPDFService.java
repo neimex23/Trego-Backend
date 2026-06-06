@@ -101,7 +101,7 @@ public class ManejadorPDFService {
             BigDecimal total = BigDecimal.ZERO;
             for (ProductoPedido pp : pedido.getProductos()) {
                 Producto p = pp.getProducto();
-                int cantidad = pp.getCantidad();
+                Integer cantidad = pp.getCantidad();
                 BigDecimal precioUnitario = (p != null)
                         ? new BigDecimal(String.valueOf(p.getPrecio()))
                         : BigDecimal.ZERO;

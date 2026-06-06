@@ -15,7 +15,7 @@ import com.backend.trego.entity.Enums.EnumEstadoReclamo;
 public class Reclamo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idReclamo;
+    private Integer idReclamo;
 
     private String texto;
 
@@ -34,7 +34,7 @@ public class Reclamo {
         this.fechaReclamo = LocalDateTime.now();
     }
 
-    public int getIdReclamo() {
+    public Integer getIdReclamo() {
         return idReclamo;
     }
 

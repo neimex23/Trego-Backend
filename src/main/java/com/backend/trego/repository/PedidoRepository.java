@@ -15,7 +15,7 @@ import com.backend.trego.entity.Enums.EnumEstadoReclamo;
 
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
-    List<Pedido> findByClienteIdUsuario(int idCliente);
+    List<Pedido> findByClienteIdUsuario(Integer idCliente);
 
     @Query("""
             SELECT p FROM Pedido p
@@ -23,7 +23,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
             WHERE p.cliente.idUsuario = :idCliente
             ORDER BY p.fechaCreacion DESC
             """)
-    List<Pedido> findHistorialByClienteIdUsuario(@Param("idCliente") int idCliente);
+    List<Pedido> findHistorialByClienteIdUsuario(@Param("idCliente") Integer idCliente);
 
     @Query("""
             SELECT DISTINCT p FROM Pedido p
@@ -34,17 +34,17 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
             ORDER BY p.fechaCreacion DESC
             """)
     List<Pedido> findPedidosActualesByCliente(
-            @Param("idCliente") int idCliente, 
+            @Param("idCliente") Integer idCliente, 
             @Param("estadosPermitidos") List<EnumEstadoPedido> estadosPermitidos
     );
 
-    List<Pedido> findByRestauranteIdUsuario(int idRestaurante);
+    List<Pedido> findByRestauranteIdUsuario(Integer idRestaurante);
 
     List<Pedido> findByEstado(EnumEstadoPedido estado);
 
     List<Pedido> findByFechaExpiracionNotNullAndFechaExpiracionBefore(LocalDateTime instante);
 
-    List<Pedido> findByRestauranteIdUsuarioAndEstado(int idRestaurante, EnumEstadoPedido estado);
+    List<Pedido> findByRestauranteIdUsuarioAndEstado(Integer idRestaurante, EnumEstadoPedido estado);
 
 
     @Query("""
@@ -60,7 +60,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
             ORDER BY r.fechaReclamo DESC
             """)
     List<Pedido> findPedidosConReclamoPorRestaurante(
-            @Param("idRestaurante") int idRestaurante,
+            @Param("idRestaurante") Integer idRestaurante,
             @Param("estado") EnumEstadoReclamo estado,
             @Param("nombreCliente") String nombreCliente,
             @Param("fechaDesde") LocalDateTime fechaDesde,
@@ -74,6 +74,6 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
             AND p.restaurante.idUsuario = :idRestaurante
             """)
     Optional<Pedido> findPedidoByReclamoIdAndRestaurante(
-            @Param("idReclamo") int idReclamo,
-            @Param("idRestaurante") int idRestaurante);
+            @Param("idReclamo") Integer idReclamo,
+            @Param("idRestaurante") Integer idRestaurante);
 }

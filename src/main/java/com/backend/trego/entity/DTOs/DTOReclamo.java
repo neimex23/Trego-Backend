@@ -7,8 +7,8 @@ import com.backend.trego.entity.Enums.EnumEstadoReclamo;
 // DTO de lectura para un reclamo: se usa en listados y respuesta tras resolución.
 public class DTOReclamo {
 
-    private int idReclamo;
-    private int idPedido;
+    private Integer idReclamo;
+    private Integer idPedido;
     private String nombreUsuario;
     private String emailUsuario;
     private String motivoReclamo;
@@ -19,7 +19,7 @@ public class DTOReclamo {
     protected DTOReclamo() {
     }
 
-    public DTOReclamo(int idReclamo, int idPedido, String nombreUsuario, String emailUsuario,
+    public DTOReclamo(Integer idReclamo, Integer idPedido, String nombreUsuario, String emailUsuario,
             String motivoReclamo, EnumEstadoReclamo estado, LocalDateTime fechaReclamo,
             String motivoRechazo) {
         this.idReclamo = idReclamo;
@@ -32,11 +32,11 @@ public class DTOReclamo {
         this.motivoRechazo = motivoRechazo;
     }
 
-    public int getIdReclamo() {
+    public Integer getIdReclamo() {
         return idReclamo;
     }
 
-    public int getIdPedido() {
+    public Integer getIdPedido() {
         return idPedido;
     }
 

@@ -60,7 +60,7 @@ public class CarritoService {
             throw new IllegalArgumentException("producto.idRestaurante es obligatorio");
         }
 
-        int cantidad = (request.getCantidad() == null || request.getCantidad() <= 0) ? 1 : request.getCantidad();
+        Integer cantidad = (request.getCantidad() == null || request.getCantidad() <= 0) ? 1 : request.getCantidad();
         String observaciones = request.getObservaciones();
 
         String uidCliente = currentUserService.getCurrentUid();

@@ -26,7 +26,7 @@ import java.util.List;
 public class Pedido {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idPedido;
+    private Integer idPedido;
 
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaExpiracion;
@@ -91,7 +91,7 @@ public class Pedido {
         this.productos.remove(pp);
     }
 
-    public int getIdPedido() {
+    public Integer getIdPedido() {
         return idPedido;
     }
 

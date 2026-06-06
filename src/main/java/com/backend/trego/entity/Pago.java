@@ -16,7 +16,7 @@ import jakarta.persistence.Id;
 public class Pago {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idPago;
+    private Integer idPago;
 
     private LocalDateTime fechaPago;
     private float monto;
@@ -40,7 +40,7 @@ public class Pago {
         this.nroUltimDigTarjeta = nroUltimDigTarjeta;
     }
 
-    public int getIdPago() {
+    public Integer getIdPago() {
         return idPago;
     }
 

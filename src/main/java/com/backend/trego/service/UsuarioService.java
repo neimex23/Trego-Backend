@@ -181,7 +181,7 @@ public class UsuarioService {
         }
 
         System.out.println("[Caché] Iniciando limpieza automática de registros expirados...");
-        int sizeInitial = registrosPendientes.size();
+        Integer sizeInitial = registrosPendientes.size();
 
         registrosPendientes.entrySet().removeIf(entry -> {
             boolean expirado = entry.getValue().estaExpiradoCacheReenvio();
@@ -191,7 +191,7 @@ public class UsuarioService {
             return expirado;
         });
 
-        int eliminados = sizeInitial - registrosPendientes.size();
+        Integer eliminados = sizeInitial - registrosPendientes.size();
         if (eliminados > 0) {
             System.out.println("[Caché] Limpieza terminada. Se eliminaron " + eliminados + " registros colgados.");
         }

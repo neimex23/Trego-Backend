@@ -38,7 +38,7 @@ public class Restaurante extends Usuario {
     private LocalTime horaApertura;
     private LocalTime horaCierre;
 
-    private int radioEntrega = 10;
+    private Integer radioEntrega = 10;
 
     @OneToMany(mappedBy = "restaurante", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Producto> productos = new ArrayList<>();
@@ -46,6 +46,9 @@ public class Restaurante extends Usuario {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "restaurante_id")
     private List<Ingrediente> ingredientesDisponibles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "commentario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comentario> comentarios = new ArrayList<>();
 
     protected Restaurante() {
     }
@@ -57,7 +60,7 @@ public class Restaurante extends Usuario {
 
     public Restaurante(String nombre, String email, String urlImagen, String password, String rut,
             String telefono, DTODireccion direccion, String descripcion, float calificacionProm,
-            EnumCategoriaRestaurante categoria, LocalTime apertura, LocalTime cierre, int radioEntrega) {
+            EnumCategoriaRestaurante categoria, LocalTime apertura, LocalTime cierre, Integer radioEntrega) {
         super(nombre, email, urlImagen, EnumRoles.Restaurante);
         this.password = password;
         this.rut = rut;
@@ -119,7 +122,25 @@ public class Restaurante extends Usuario {
     public LocalTime getApertura() { return horaApertura; }
     public void setApertura(LocalTime apertura) { this.horaApertura = apertura; };
     public LocalTime getCierre() { return horaCierre; }
-    public void setCierre(LocalTime cierre) { this.horaApertura = cierre; };
+    public void setCierre(LocalTime cierre) { this.horaCierre = cierre; };
+    public List<Comentario> getComentarios() { return comentarios;}
+    public void setComentarios(List<Comentario> comentarios) { this.comentarios = comentarios; }
+    public void addComentario(Comentario comentario) {
+        this.comentarios.add(comentario);
+        calcularCalificacionProm();
+    }
+
+    public void calcularCalificacionProm() {
+        if (comentarios.isEmpty()) {
+            this.calificacionProm = 0;
+        } else {
+            float suma = 0;
+            for (Comentario c : comentarios) {
+                suma += c.getCalificacion();
+            }
+            this.calificacionProm = suma / comentarios.size();
+        }
+    }
 
 
     public void setHorario(LocalTime apertura, LocalTime cierre) {
@@ -127,8 +148,8 @@ public class Restaurante extends Usuario {
         if (cierre != null) this.horaCierre = cierre;
     }
 
-    public int getRadioEntrega() { return radioEntrega; }
-    public void setRadioEntrega(int radioEntrega) { this.radioEntrega = radioEntrega; }
+    public Integer getRadioEntrega() { return radioEntrega; }
+    public void setRadioEntrega(Integer radioEntrega) { this.radioEntrega = radioEntrega; }
 
     public boolean existeIngrediente(String nombre) {
         return ingredientesDisponibles.stream()

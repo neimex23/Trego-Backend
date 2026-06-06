@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 public class SubCategoria {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idSubCategoria;
+    private Integer idSubCategoria;
 
     private String nombre;
 
@@ -31,7 +31,7 @@ public class SubCategoria {
         this.urlImagen = urlImagen;
     }
 
-    public int getIdSubCategoria() {
+    public Integer getIdSubCategoria() {
         return idSubCategoria;
     }
 

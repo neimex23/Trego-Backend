@@ -14,7 +14,7 @@ public class PedidoExpiracionScheduler {
 
     @Scheduled(cron = "0 0 0 * * *")
     public void cancelarPedidosExpirados() {
-        int cancelados = pedidoService.cancelarPedidosExpirados();
+        Integer cancelados = pedidoService.cancelarPedidosExpirados();
         if (cancelados > 0) {
             System.out.println("[Pedidos] Se cancelaron " + cancelados + " pedido(s) por expiración.");
         }

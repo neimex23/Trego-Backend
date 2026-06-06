@@ -67,7 +67,7 @@ public class ReclamoService {
             LocalDate fechaDesde,
             LocalDate fechaHasta) {
 
-        int idRestaurante = currentUserService.getCurrentId();
+        Integer idRestaurante = currentUserService.getCurrentId();
 
         LocalDateTime desde = fechaDesde != null ? fechaDesde.atStartOfDay() : null;
         LocalDateTime hasta = fechaHasta != null ? fechaHasta.atTime(23, 59, 59) : null;
@@ -86,8 +86,8 @@ public class ReclamoService {
 
 
     @Transactional
-    public DTOReclamo resolverReclamo(int idReclamo, DTOResolverReclamoRequest request) {
-        int idRestaurante = currentUserService.getCurrentId();
+    public DTOReclamo resolverReclamo(Integer idReclamo, DTOResolverReclamoRequest request) {
+        Integer idRestaurante = currentUserService.getCurrentId();
 
         Pedido pedido = pedidoRepository
                 .findPedidoByReclamoIdAndRestaurante(idReclamo, idRestaurante)

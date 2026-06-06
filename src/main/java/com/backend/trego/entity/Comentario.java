@@ -13,10 +13,10 @@ import java.time.LocalDateTime;
 public class Comentario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idComentario;
+    private Integer idComentario;
 
     private String texto;
-    private float calificacion;
+    private Integer calificacion;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
@@ -27,16 +27,17 @@ public class Comentario {
     protected Comentario() {
     }
 
-    public Comentario(String texto, float calificacion) {
+    public Comentario(String texto, Integer calificacion, Cliente cliente) {
         this.texto = texto;
         this.calificacion = calificacion;
+        this.cliente = cliente;
     }
 
-    public int getIdComentario() {
+    public Integer getIdComentario() {
         return idComentario;
     }
 
-    public void setIdComentario(int idComentario) {
+    public void setIdComentario(Integer idComentario) {
         this.idComentario = idComentario;
     }
 
@@ -48,11 +49,11 @@ public class Comentario {
         this.texto = texto;
     }
 
-    public float getCalificacion() {
+    public Integer getCalificacion() {
         return calificacion;
     }
 
-    public void setCalificacion(float calificacion) {
+    public void setCalificacion(Integer calificacion) {
         this.calificacion = calificacion;
     }
 

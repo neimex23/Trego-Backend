@@ -16,7 +16,7 @@ import jakarta.persistence.InheritanceType;
 public abstract class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idUsuario;
+    private Integer idUsuario;
 
     private String nombre;
     private String email;
@@ -40,7 +40,7 @@ public abstract class Usuario {
         this.rol = rol;
     }
 
-    public int getIdUsuario() {
+    public Integer getIdUsuario() {
         return idUsuario;
     }
 

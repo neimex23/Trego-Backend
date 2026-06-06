@@ -31,7 +31,7 @@ public class LineaCarrito {
     @JoinColumn(name = "producto_id")
     private Producto producto;
 
-    private int cantidad;
+    private Integer cantidad;
 
     private String observaciones;
 
@@ -45,13 +45,13 @@ public class LineaCarrito {
     protected LineaCarrito() {
     }
 
-    public LineaCarrito(Carrito carrito, Producto producto, int cantidad) {
+    public LineaCarrito(Carrito carrito, Producto producto, Integer cantidad) {
         this.carrito = carrito;
         this.producto = producto;
         this.cantidad = cantidad;
     }
 
-    public LineaCarrito(Carrito carrito, Producto producto, int cantidad, String observaciones) {
+    public LineaCarrito(Carrito carrito, Producto producto, Integer cantidad, String observaciones) {
         this.carrito = carrito;
         this.producto = producto;
         this.cantidad = cantidad;
@@ -78,11 +78,11 @@ public class LineaCarrito {
         this.producto = producto;
     }
 
-    public int getCantidad() {
+    public Integer getCantidad() {
         return cantidad;
     }
 
-    public void setCantidad(int cantidad) {
+    public void setCantidad(Integer cantidad) {
         this.cantidad = cantidad;
     }
 

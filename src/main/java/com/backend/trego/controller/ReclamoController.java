@@ -87,7 +87,7 @@ public class ReclamoController {
     @ApiResponse(responseCode = "400", description = "Acción inválida o reclamo ya resuelto")
     @ApiResponse(responseCode = "404", description = "Reclamo no encontrado o no pertenece a este restaurante")
     public ResponseEntity<DTOReclamo> resolver(
-            @PathVariable int idReclamo,
+            @PathVariable Integer idReclamo,
             @Valid @RequestBody DTOResolverReclamoRequest request) {
 
         return ResponseEntity.ok(reclamoService.resolverReclamo(idReclamo, request));

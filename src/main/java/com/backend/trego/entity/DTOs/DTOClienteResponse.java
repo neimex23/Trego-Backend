@@ -9,7 +9,7 @@ import com.backend.trego.entity.Enums.EnumRoles;
 // DTO de salida del Cliente. Evita serializar la entidad JPA directa, que
 // arrastra relaciones LAZY, herencia JOINED y referencias a Comentario/Pedido.
 public class DTOClienteResponse {
-    private int id;
+    private Integer id;
     private String nombre;
     private String email;
     private String fotoPerfil;
@@ -22,7 +22,7 @@ public class DTOClienteResponse {
     public DTOClienteResponse() {
     }
 
-    public DTOClienteResponse(int id, String nombre, String email, String fotoPerfil, String telefono,
+    public DTOClienteResponse(Integer id, String nombre, String email, String fotoPerfil, String telefono,
                               String uidCliente, boolean habilitado, EnumRoles rol,
                               List<DTODireccion> direcciones) {
         this.id = id;
@@ -52,7 +52,7 @@ public class DTOClienteResponse {
         );
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
