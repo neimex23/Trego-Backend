@@ -1,10 +1,7 @@
 package com.backend.trego.controller;
 
-import com.backend.trego.entity.Cliente;
-import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTOCliente;
 import com.backend.trego.entity.DTOs.DTOClienteResponse;
-import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.service.ClienteService;
 
 import io.swagger.v3.oas.annotations.Operation;

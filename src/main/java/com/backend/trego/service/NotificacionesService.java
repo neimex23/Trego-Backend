@@ -786,7 +786,6 @@ public class NotificacionesService {
     private String construirCuerpoCredenciales(String email, String password, TipoCredencial tipo) {
         String titulo;
         String descripcion;
-        String asuntoInterno;
 
         if (tipo == TipoCredencial.NUEVO_ADMIN) {
             titulo = "¡Bienvenido al equipo de administración de Trego!";

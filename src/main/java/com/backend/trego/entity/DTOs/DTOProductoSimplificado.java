@@ -21,6 +21,9 @@ public class DTOProductoSimplificado {
     // Solo aplica a Plato. 0 para Articulo/Combo.
     private Integer tiempoPreparacion = 0;
 
+    // Solo se usa en el contexto de estadísticas (productos más vendidos). 0 por defecto.
+    private Integer cantidadVendida = 0;
+
     private List<DTOIngrediente> ingredientes = new ArrayList<>();
 
     public Integer getIdProducto() {
@@ -53,6 +56,14 @@ public class DTOProductoSimplificado {
 
     public Integer getTiempoPreparacion() {
         return tiempoPreparacion;
+    }
+
+    public Integer getCantidadVendida() {
+        return cantidadVendida;
+    }
+
+    public void setCantidadVendida(Integer cantidadVendida) {
+        this.cantidadVendida = cantidadVendida;
     }
 
     public DTOProductoSimplificado() {

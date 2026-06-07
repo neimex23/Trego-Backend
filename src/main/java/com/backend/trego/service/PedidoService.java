@@ -136,6 +136,17 @@ public class PedidoService {
         return pedidoRepository.findByRestauranteIdUsuario(idRestaurante);
     }
 
+    public List<Pedido> listarPedidosRestauranteActual(){
+        Integer idRestaurante;
+        try {
+            idRestaurante = Integer.valueOf(currentUserService.getCurrentId());
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Usuario autenticado inválido");
+        }
+        return pedidoRepository.findByRestauranteIdUsuario(idRestaurante);
+    }
+
     @Transactional
     public Integer cancelarPedidosExpirados() {
         List<Pedido> expirados = pedidoRepository

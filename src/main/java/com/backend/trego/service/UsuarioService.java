@@ -1,6 +1,5 @@
 package com.backend.trego.service;
 
-import com.backend.trego.entity.DTOs.DTOCliente;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOFirma;
 import com.backend.trego.entity.DTOs.DTOUsuario;
@@ -297,7 +296,7 @@ public class UsuarioService {
             return;
         }
 
-        if (u instanceof Restaurante restaurante) {
+        if (u instanceof Restaurante) {
             throw new IllegalStateException(
                     "Los restaurantes no pueden no tener una dirección, para modificarla deben usar el endpoint de actualizar dirección con el tag de la dirección actual.");
         }

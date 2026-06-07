@@ -3,14 +3,16 @@ package com.backend.trego.service;
 import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.Comentario;
 import com.backend.trego.entity.Ingrediente;
+import com.backend.trego.entity.Pedido;
+import com.backend.trego.entity.ProductoPedido;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTOComentario;
 import com.backend.trego.entity.DTOs.DTODireccion;
-import com.backend.trego.entity.DTOs.DTOFirma;
+import com.backend.trego.entity.DTOs.DTOEstadisticas;
 import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOProducto;
+import com.backend.trego.entity.DTOs.DTOProductoSimplificado;
 import com.backend.trego.entity.DTOs.DTORestaurante;
-import com.backend.trego.entity.Enums.EnumCategoriaRestaurante;
 import com.backend.trego.exception.RestauranteCerradoException;
 import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.repository.UsuarioRepository;
@@ -21,12 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,6 +45,7 @@ public class RestauranteService {
     private final UsuarioRepository restauranteRepository;
     private final CurrentUserService currentUserService;
     private final ProductosService productosService;
+    private final PedidoService pedidosService;
     private final NotificacionesService notificacionesService;
     private final GeoapifyService geoapifyService;
 
@@ -52,12 +55,13 @@ public class RestauranteService {
 
     public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService,
             @Lazy ProductosService productosService, NotificacionesService notificacionesService,
-            GeoapifyService geoapifyService) {
+            GeoapifyService geoapifyService, @Lazy PedidoService pedidosService) {
         this.restauranteRepository = restauranteRepository;
         this.currentUserService = currentUserService;
         this.productosService = productosService;
         this.notificacionesService = notificacionesService;
         this.geoapifyService = geoapifyService;
+        this.pedidosService = pedidosService;
     }
 
     public void abrirLocal(LocalTime horaCierre) {
@@ -581,5 +585,59 @@ public class RestauranteService {
                     c.getFechaCreacion().toString(), 
                     c.getCliente().getNombre()))
                 .collect(Collectors.toList());
+    }
+
+    public Integer obtenerCalificacion(Integer restauranteId, Boolean esRestaurante) {
+        Integer id = restauranteId;
+        if (esRestaurante) {
+            id = currentUserService.getCurrentId();
+        }
+        Restaurante restaurante = buscarRestaurante(id.toString());
+        return Math.round(restaurante.getCalificacionProm());
+    }
+
+    public DTOEstadisticas obtenerEstadisticas(DTOEstadisticas request) {
+        if (!currentUserService.getCurrentRol().equals("RESTAURANTE")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: solo los restaurantes pueden obtener estadísticas");
+        }
+        if (request.getFechaInicio() == null || request.getFechaFin() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Se requieren ambas fechas para filtrar estadísticas por rango de fecha");
+        }
+        LocalDateTime fechaInicio = request.getFechaInicio();
+        LocalDateTime fechaFin = request.getFechaFin();
+
+        List<Pedido> pedidosFiltrados = pedidosService.listarPedidosRestauranteActual().stream()
+                .filter(p -> !p.getFechaCreacion().isBefore(fechaInicio) && !p.getFechaCreacion().isAfter(fechaFin))
+                .collect(Collectors.toList());
+
+        // Platos más solicitados: agrupa por producto, suma cantidades y ordena de mayor a menor
+        List<DTOProductoSimplificado> productosMasVendidos = pedidosFiltrados.stream()
+                .flatMap(p -> p.getProductos().stream())
+                .collect(Collectors.groupingBy(pp -> pp.getProducto().getIdProducto()))
+                .entrySet().stream()
+                .sorted((a, b) -> b.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum()
+                                - a.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum())
+                .map(e -> {
+                    DTOProductoSimplificado dto = DTOProductoSimplificado.desde(e.getValue().get(0).getProducto());
+                    dto.setCantidadVendida(e.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        // Cantidad de pedidos por fecha (agrupados por día)
+        Map<LocalDateTime, Integer> ventasPorFecha = pedidosFiltrados.stream()
+                .collect(Collectors.groupingBy(
+                        p -> p.getFechaCreacion().truncatedTo(ChronoUnit.DAYS),
+                        Collectors.summingInt(p -> 1)));
+
+        // Monto promedio de pedido por día
+        Map<LocalDateTime, Float> ingresosPorFecha = pedidosFiltrados.stream()
+                .collect(Collectors.groupingBy(
+                        p -> p.getFechaCreacion().truncatedTo(ChronoUnit.DAYS),
+                        Collectors.averagingDouble(p -> (double) p.getTotal())))
+                .entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().floatValue()));
+
+        return new DTOEstadisticas(fechaInicio, fechaFin, productosMasVendidos, ventasPorFecha, ingresosPorFecha);
     }
 }

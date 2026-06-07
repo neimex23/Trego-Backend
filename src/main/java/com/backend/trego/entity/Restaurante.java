@@ -9,7 +9,6 @@ import com.backend.trego.entity.Enums.EnumCategoriaRestaurante;
 import com.backend.trego.entity.Enums.EnumRoles;
 
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

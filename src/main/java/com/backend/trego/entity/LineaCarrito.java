@@ -1,7 +1,6 @@
 package com.backend.trego.entity;
 
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
-import com.backend.trego.entity.DTOs.DTOProductoSimplificado;
 
 import java.util.ArrayList;
 import java.util.List;

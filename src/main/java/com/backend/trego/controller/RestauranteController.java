@@ -1,9 +1,9 @@
 package com.backend.trego.controller;
 
-import com.backend.trego.config.AuthenticatedUser;
 import com.backend.trego.entity.DTOs.DTOAbrirCerrarLocalRequest;
 import com.backend.trego.entity.DTOs.DTOComentario;
 import com.backend.trego.entity.DTOs.DTODireccion;
+import com.backend.trego.entity.DTOs.DTOEstadisticas;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.service.RestauranteService;
 
@@ -12,11 +12,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 // Endpoints de restaurantes.
 @RestController
@@ -138,6 +136,23 @@ public class RestauranteController {
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
     public ResponseEntity<List<DTOComentario>> listarComentarios() {
         return ResponseEntity.ok(restauranteService.listarComentarios());
+    }
+
+    @GetMapping("/calificacion/obtener/{id}")
+    @Operation(summary = "Obtener calificación", description = "Obtiene la calificación de un restaurante por su ID.")
+    @ApiResponse(responseCode = "200", description = "Calificación obtenida exitosamente")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    public ResponseEntity<Integer> obtenerCalificacion(@PathVariable Integer id, @RequestParam(required = false, defaultValue = "false") Boolean esRestaurante) {
+        return ResponseEntity.ok(restauranteService.obtenerCalificacion(id, esRestaurante));
+    }
+
+    @PostMapping("/estadisticas")
+    @Operation(summary = "Obtener estadísticas de pedidos", description = "Obtiene estadísticas de pedidos para el restaurante autenticado en un rango de fechas.")
+    @ApiResponse(responseCode = "200", description = "Estadísticas obtenidas exitosamente")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    @ApiResponse(responseCode = "400", description = "Datos de fecha inválidos")
+    public ResponseEntity<DTOEstadisticas> obtenerEstadisticas(@RequestBody DTOEstadisticas request) {
+        return ResponseEntity.ok(restauranteService.obtenerEstadisticas(request));
     }
 
 }
