@@ -37,9 +37,9 @@ public class PagoService {
     private final CarritoService carritoService;
 
     public PagoService(MercadoPagoService mercadoPagoService,
-                       PedidoRepository pedidoRepository,
-                       NotificacionesService notificacionesService,
-                       CarritoService carritoService) {
+            PedidoRepository pedidoRepository,
+            NotificacionesService notificacionesService,
+            CarritoService carritoService) {
         this.mercadoPagoService = mercadoPagoService;
         this.pedidoRepository = pedidoRepository;
         this.notificacionesService = notificacionesService;
@@ -120,7 +120,7 @@ public class PagoService {
         pedidoRepository.save(pedido);
 
         carritoService.limpiarItemsCarrito(pedido.getCliente().getUidCliente());
-        
+
         enviarNotificacionConfirmacion(pedido);
         System.out.println("Pago aprobado para el pedido " + pedido.getIdPedido()
                 + " (transacción " + pago.getId() + "). Pedido marcado como Pagado.");
@@ -144,6 +144,8 @@ public class PagoService {
             List<Producto> productos = pedido.getProductos().stream()
                     .map(pp -> pp.getProducto())
                     .toList();
+            DTOPedido pedidoDTO = DTOPedido.desde(pedido); // Agregado para recibir notificacion de pedido pagado
+            notificacionesService.notificarPushPagoProcesado(pedidoDTO); // Se envia la notificacion al front (Mobile)
             notificacionesService.notificarConfirmacionPedidoConPDF(
                     pedido.getCliente(), productos, pedido.getRestaurante(), pedido);
         } catch (Exception e) {

@@ -15,9 +15,7 @@ import com.backend.trego.entity.DTOs.DTOProductoSimplificado;
 import com.backend.trego.repository.UsuarioRepository;
 
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
-import com.google.firebase.messaging.Notification;
 
 import jakarta.mail.internet.MimeMessage;
 
@@ -26,6 +24,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -64,6 +63,7 @@ public class NotificacionesService {
 
     // Notifica al cliente que su pedido fue confirmado por el restaurante, con el
     // tiempo estimado de entrega (preparación + viaje).
+    @Async
     public void notificarConfirmacionPedido(DTOPedido pedidoDTO, Integer tiempoEstimado) {
         if (pedidoDTO == null) {
             System.err.println("[Notificacion] pedidoDTO nulo, se omite el envio.");
@@ -125,7 +125,6 @@ public class NotificacionesService {
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
         sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
-
         sb.append("<div style='padding: 32px;'>");
         sb.append("<h2 style='color: #333;'>¡").append(nombreCliente)
                 .append(", tu pedido fue confirmado!</h2>");
@@ -188,7 +187,8 @@ public class NotificacionesService {
     }
 
     // Notifica al cliente que su pedido salió del restaurante y está en camino,
-    // con el tiempo estimado de viaje. 
+    // con el tiempo estimado de viaje.
+    @Async
     public void notificarPedidoEnCamino(DTOPedido pedidoDTO, Integer tiempoViaje) {
         if (pedidoDTO == null) {
             System.err.println("[Notificacion] pedidoDTO nulo, se omite el envio.");
@@ -230,7 +230,7 @@ public class NotificacionesService {
     }
 
     // Cuerpo HTML del mail de "en camino": nombre del cliente, número de pedido,
-    // tiempo estimado de viaje, dirección de entrega y, si está disponible, la hora estimada de llegada 
+    // tiempo estimado de viaje, dirección de entrega y, si está disponible, la hora estimada de llegada
     private String construirCuerpoEnCamino(DTOPedido pedidoDTO, Integer tiempoViaje) {
         String nombreCliente = textoOGuion(pedidoDTO.getNombreCliente());
         String direccionEntrega = formatearDireccion(pedidoDTO.getDireccionEntrega());
@@ -292,6 +292,7 @@ public class NotificacionesService {
     // Notifica al cliente que su pedido fue entregado. Igual que las demás
     // notificaciones de pedido, los errores se loguean sin propagar para no
     // bloquear el cambio de estado.
+    @Async
     public void notificarPedidoEntregado(DTOPedido pedidoDTO) {
         if (pedidoDTO == null) {
             System.err.println("[Notificacion] pedidoDTO nulo, se omite el envio.");
@@ -386,11 +387,12 @@ public class NotificacionesService {
         return sb.toString();
     }
 
-
     // Manda el correo de confirmación con el cuerpo HTML y el comprobante en PDF.
+    @Async
     public void notificarConfirmacionPedidoConPDF(Usuario usuario, List<Producto> productos, Restaurante restaurante,
             Pedido pedido) {
         try {
+            System.out.println("Enviando mail en hilo: " + Thread.currentThread().getName());
             MimeMessage mailConPDF = mailSender.createMimeMessage();
             // multipart = true para poder adjuntar el PDF
             MimeMessageHelper estructuraMail = new MimeMessageHelper(mailConPDF, true, "UTF-8");
@@ -416,6 +418,7 @@ public class NotificacionesService {
 
     // Notifica al restaurante que su solicitud de alta fue aprobada y ya está
     // habilitado para operar en la plataforma.
+    @Async
     public void notificarRestauranteHabilitado(Restaurante restaurante) {
         try {
             MimeMessage mail = mailSender.createMimeMessage();
@@ -441,7 +444,8 @@ public class NotificacionesService {
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
-        sb.append("<h2 style='color: #333;'>¡").append(restaurante.getNombre()).append(", tu solicitud fue aprobada!</h2>");
+        sb.append("<h2 style='color: #333;'>¡").append(restaurante.getNombre())
+                .append(", tu solicitud fue aprobada!</h2>");
         sb.append("<p style='color: #555; font-size: 16px;'>")
                 .append("Tu restaurante ya se encuentra habilitado en Trego y es visible para los clientes. ")
                 .append("Ya podés ingresar al panel para cargar tu menú, promociones y comenzar a recibir pedidos.")
@@ -460,6 +464,7 @@ public class NotificacionesService {
 
     // Notifica al restaurante que su solicitud de alta fue rechazada, incluyendo
     // el motivo informado por el administrador.
+    @Async
     public void notificarRestauranteNoHabilitado(Restaurante restaurante, String motivo) {
         try {
             MimeMessage mail = mailSender.createMimeMessage();
@@ -513,6 +518,7 @@ public class NotificacionesService {
     }
 
     // Envía un código de verificación por email y devuelve el código generado.
+    @Async
     public String codigoVerificacionEmail(String email) {
         String codigoGenerado = String.valueOf(100000 + new Random().nextInt(900000));
         try {
@@ -546,8 +552,7 @@ public class NotificacionesService {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append(
-                "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
+        sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
         // OJO: reemplazar por una URL pública real (servidor o Firebase Storage)
         sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
@@ -600,8 +605,7 @@ public class NotificacionesService {
         sb.append("</div>");
 
         sb.append("<div style='background-color: #f5f5f5; padding: 16px; text-align: center;'>");
-        sb.append(
-                "<p style='color: #999; font-size: 12px; margin: 0;'>© 2026 Trego. Todos los derechos reservados.</p>");
+        sb.append("<p style='color: #999; font-size: 12px; margin: 0;'>© 2026 Trego. Todos los derechos reservados.</p>");
         sb.append("</div>");
         sb.append("</div>");
 
@@ -616,44 +620,40 @@ public class NotificacionesService {
         return direccion == null ? "—" : direccion.toString();
     }
 
-
     // Notificaciones push
     // ============================================================
 
-    private boolean enviarPushFCM(String token, String titulo, String cuerpo,
-                                  Map<String, String> data) {
+    private boolean enviarPushFCM(String token, String titulo, String cuerpo, Map<String, String> data) {
         if (token == null || token.isBlank()) {
             System.err.println("[Push] Token FCM vacío, se omite el envío.");
             return false;
         }
         try {
-            Notification notification = Notification.builder()
-                    .setTitle(titulo)
-                    .setBody(cuerpo)
+            // Inicializamos el mapa si viene nulo
+            Map<String, String> dataMap = (data != null) ? new HashMap<>(data) : new HashMap<>();
+
+            // IMPORTANTE: Metemos el título y cuerpo dentro del mapa DATA
+            dataMap.put("title", titulo);
+            dataMap.put("body", cuerpo);
+
+            // Configuración para asegurar prioridad alta (despertar al dispositivo)
+            com.google.firebase.messaging.AndroidConfig androidConfig = com.google.firebase.messaging.AndroidConfig
+                    .builder()
+                    .setPriority(com.google.firebase.messaging.AndroidConfig.Priority.HIGH)
                     .build();
 
-            Message.Builder builder = Message.builder()
+            Message message = Message.builder()
                     .setToken(token)
-                    .setNotification(notification);
+                    .putAllData(dataMap) // Enviamos el contenido como data y no notificacion
+                    .setAndroidConfig(androidConfig)
+                    .build();
 
-            if (data != null) {
-                for (Map.Entry<String, String> e : data.entrySet()) {
-                    if (e.getKey() != null && e.getValue() != null) {
-                        builder.putData(e.getKey(), e.getValue());
-                    }
-                }
-            }
-
-            String response = FirebaseMessaging.getInstance().send(builder.build());
-            System.out.println("[Push] Enviado a token=" + acortar(token)
+            String response = FirebaseMessaging.getInstance().send(message);
+            System.out.println("[Push Data] Enviado a token=" + acortar(token)
                     + " messageId=" + response + " titulo='" + titulo + "'");
             return true;
-        } catch (FirebaseMessagingException e) {
-            System.err.println("[Push] Error FCM al enviar a token=" + acortar(token)
-                    + " : " + e.getMessagingErrorCode() + " - " + e.getMessage());
-            return false;
         } catch (Exception e) {
-            System.err.println("[Push] Error inesperado al enviar push: " + e.getMessage());
+            System.err.println("[Push Data] Error: " + e.getMessage());
             return false;
         }
     }
@@ -698,6 +698,24 @@ public class NotificacionesService {
         return token.substring(0, 6) + "…" + token.substring(token.length() - 4);
     }
 
+    // Notificacion push para que el frontend pueda escuchar que el estado del
+    // pedido cambio Estado_pagado es lo que esta esperando el front (Mobile) para
+    // actualizar la lista de los pedidos confirmados
+    public void notificarPushPagoProcesado(DTOPedido pedidoDTO) {
+        String token = obtenerTokenCliente(pedidoDTO);
+        if (token == null) {
+            System.err.println("[Push] No se pudo obtener el token para el pedido confirmado.");
+            return;
+        }
+
+        String titulo = "¡Pago Completado!";
+        String cuerpo = "Tu pago fue exitoso y el restaurante ya tiene tu orden.";
+
+        Map<String, String> data = dataPedido(pedidoDTO, "PAGO_PROCESADO");
+
+        enviarPushFCM(token, titulo, cuerpo, data);
+    }
+
     public void notificarPushEnPreparacion(DTOPedido pedidoDTO, Integer tiempoEstimado) {
         String token = obtenerTokenCliente(pedidoDTO);
         if (token == null) {
@@ -731,8 +749,7 @@ public class NotificacionesService {
         String cuerpo = "Confirmamos la entrega de tu pedido. ¡Que lo disfrutes!";
         enviarPushFCM(token, titulo, cuerpo, dataPedido(pedidoDTO, "Entregado"));
     }
-    
-    
+
     private String construirCuerpoNoHabilitacionUsuario(String nombre, String motivo) {
         String motivoMostrado = (motivo == null || motivo.isBlank())
                 ? "No se especificó un motivo."
@@ -765,6 +782,7 @@ public class NotificacionesService {
         return sb.toString();
     }
 
+    @Async
     public void notificarNoHabilitacionUsuario(String emailDestino, String nombre, String motivo) {
         try {
             MimeMessage mail = mailSender.createMimeMessage();
@@ -804,12 +822,13 @@ public class NotificacionesService {
         sb.append("<h2 style='color: #333;'>").append(titulo).append("</h2>");
         sb.append("<p style='color: #555; font-size: 16px;'>").append(descripcion).append("</p>");
         sb.append("<div style='background-color: #f9f9f9; border-left: 4px solid #FF6600; padding: 16px; margin: 20px 0;'>");
-        sb.append("<p style='color: #333; margin: 0 0 10px 0;'><strong>Usuario (Email):</strong> ").append(email).append("</p>");
+        sb.append("<p style='color: #333; margin: 0 0 10px 0;'><strong>Usuario (Email):</strong> ").append(email)
+                .append("</p>");
         sb.append("<p style='color: #333; margin: 0;'><strong>Contraseña:</strong> ").append(password).append("</p>");
         sb.append("</div>");
         sb.append("<p style='color: #555; font-size: 14px;'>")
-          .append("<em>Por motivos de seguridad, te recomendamos iniciar sesión y cambiar esta contraseña lo antes posible.</em>")
-          .append("</p>");
+                .append("<em>Por motivos de seguridad, te recomendamos iniciar sesión y cambiar esta contraseña lo antes posible.</em>")
+                .append("</p>");
         sb.append("<hr style='border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;'>");
         sb.append("<p style='color: #555;'><strong>El equipo de Trego</strong></p>");
         sb.append("</div>");
@@ -821,6 +840,7 @@ public class NotificacionesService {
         return sb.toString();
     }
 
+    @Async
     public void notificarCredencialesNuevoAdmin(String emailDestino, String passwordPlana) {
         try {
             MimeMessage mail = mailSender.createMimeMessage();
@@ -829,7 +849,8 @@ public class NotificacionesService {
             estructuraMail.setTo(emailDestino);
             estructuraMail.setFrom(mailFrom, mailFromName);
             estructuraMail.setSubject("Bienvenido a Trego - Credenciales de Administrador");
-            estructuraMail.setText(construirCuerpoCredenciales(emailDestino, passwordPlana, TipoCredencial.NUEVO_ADMIN), true);
+            estructuraMail.setText(construirCuerpoCredenciales(emailDestino, passwordPlana, TipoCredencial.NUEVO_ADMIN),
+                    true);
             mailSender.send(mail);
             System.out.println("Mail de credenciales enviado al nuevo administrador: " + emailDestino);
         } catch (Exception e) {
@@ -939,6 +960,7 @@ public class NotificacionesService {
         return sb.toString();
     }
 
+    @Async
     public void notificarRecuperacionContraseña(String emailDestino, String passwordPlana) {
         try {
             MimeMessage mail = mailSender.createMimeMessage();
@@ -947,7 +969,8 @@ public class NotificacionesService {
             estructuraMail.setTo(emailDestino);
             estructuraMail.setFrom(mailFrom, mailFromName);
             estructuraMail.setSubject("Recuperación de contraseña - Trego");
-            estructuraMail.setText(construirCuerpoCredenciales(emailDestino, passwordPlana, TipoCredencial.RECUPERACION), true);
+            estructuraMail.setText(
+                    construirCuerpoCredenciales(emailDestino, passwordPlana, TipoCredencial.RECUPERACION), true);
             mailSender.send(mail);
             System.out.println("Mail de recuperación de contraseña enviado a: " + emailDestino);
         } catch (Exception e) {
