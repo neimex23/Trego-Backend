@@ -503,6 +503,15 @@ public class RestauranteService {
         if (dto.getRadioEntrega() != null && !dto.getRadioEntrega().equals(restaurante.getRadioEntrega())) {
             restaurante.setRadioEntrega(dto.getRadioEntrega());
         }
+
+        if (dto.getHoraApertura() != null && !dto.getHoraApertura().equals(restaurante.getApertura())) {
+            restaurante.setApertura(dto.getHoraApertura());
+        }
+        
+        if (dto.getHoraCierre() != null && !dto.getHoraCierre().equals(restaurante.getCierre())) {
+            restaurante.setCierre(dto.getHoraCierre());
+        }
+
         Restaurante actualizado = restauranteRepository.save(restaurante);
         return toDTO(actualizado);
     }
