@@ -15,19 +15,16 @@ public class DTOCrearReclamoRequest {
     protected DTOCrearReclamoRequest() {
     }
 
+    public DTOCrearReclamoRequest(Integer idPedido, String texto) {
+        this.idPedido = idPedido;
+        this.texto = texto;
+    }
+
     public Integer getIdPedido() {
         return idPedido;
     }
 
-    public void setIdPedido(Integer idPedido) {
-        this.idPedido = idPedido;
-    }
-
     public String getTexto() {
         return texto;
-    }
-
-    public void setTexto(String texto) {
-        this.texto = texto;
     }
 }

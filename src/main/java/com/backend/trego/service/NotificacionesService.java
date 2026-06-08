@@ -54,6 +54,9 @@ public class NotificacionesService {
     @Value("${mail.from.name}")
     private String mailFromName;
 
+    @Value("${app.dev.mail-log-only:false}")
+    private boolean mailLogOnly;
+
     public NotificacionesService(JavaMailSender mailSender, ManejadorPDFService generarPDF,
             UsuarioRepository usuarioRepository) {
         this.mailSender = mailSender;
@@ -517,10 +520,13 @@ public class NotificacionesService {
         return sb.toString();
     }
 
-    // Envía un código de verificación por email y devuelve el código generado.
+    // Envía el código de verificación por email de forma asíncrona.
     @Async
-    public String codigoVerificacionEmail(String email) {
-        String codigoGenerado = String.valueOf(100000 + new Random().nextInt(900000));
+    public void enviarCodigoVerificacionEmail(String email, String codigoGenerado) {
+        if (mailLogOnly) {
+            System.out.println("[DEV mail-log-only] Código de verificación para " + email + ": " + codigoGenerado);
+            return;
+        }
         try {
             SimpleMailMessage mensaje = new SimpleMailMessage();
             mensaje.setFrom(mailFrom);
@@ -529,7 +535,6 @@ public class NotificacionesService {
             mensaje.setText("Tu código de verificación es: " + codigoGenerado);
 
             mailSender.send(mensaje);
-            return codigoGenerado;
         } catch (Exception e) {
             throw new RuntimeException("Error al enviar código de verificación", e);
         }
@@ -901,7 +906,12 @@ public class NotificacionesService {
             data.put("idPedido", String.valueOf(pedido.getIdPedido()));
             data.put("idReclamo", String.valueOf(reclamo.getIdReclamo()));
             data.put("estado", reclamo.getEstado().name());
-            if (!aceptado && reclamo.getMotivoRechazo() != null) {
+            data.put("estadoFinal", reclamo.getEstado().name());
+            data.put("motivoReclamo", textoOGuion(reclamo.getTexto()));
+            if (aceptado) {
+                data.put("detalleReintegro",
+                        "Reintegro de $" + pedido.getTotal() + " por el pedido #" + pedido.getIdPedido());
+            } else if (reclamo.getMotivoRechazo() != null) {
                 data.put("motivoRechazo", reclamo.getMotivoRechazo());
             }
             data.put("tipo", "RECLAMO");

@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToMany;
 
 @Entity
 public class Plato extends Producto {
     private Integer tiempoPreparacionMinutos;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<Ingrediente> ingredientes = new ArrayList<>();
 
     protected Plato() {

@@ -43,12 +43,12 @@ public class ReclamoController {
     @PostMapping
     @Operation(
         summary = "Crear reclamo",
-        description = "Registra un reclamo sobre un pedido entregado. "
-                + "Solo el cliente autenticado dueño del pedido puede crearlo. "
-                + "El pedido debe estar en estado Entregado y no tener reclamo previo."
+        description = "Registra un reclamo sobre un pedido del cliente. "
+                + "No aplica a pedidos Pagado, Cancelado o Reembolsado. "
+                + "El pedido no debe tener un reclamo previo."
     )
     @ApiResponse(responseCode = "201", description = "Reclamo creado")
-    @ApiResponse(responseCode = "400", description = "Pedido no en estado Entregado")
+    @ApiResponse(responseCode = "400", description = "Estado del pedido no permite reclamo")
     @ApiResponse(responseCode = "403", description = "El pedido no pertenece al cliente autenticado")
     @ApiResponse(responseCode = "404", description = "Pedido o cliente no encontrado")
     @ApiResponse(responseCode = "409", description = "El pedido ya tiene un reclamo")

@@ -26,6 +26,34 @@ public class DTOProductoSimplificado {
 
     private List<DTOIngrediente> ingredientes = new ArrayList<>();
 
+    protected DTOProductoSimplificado() {
+    }
+
+    public DTOProductoSimplificado(Integer idProducto, Integer idRestaurante, String nombre, float precio,
+            String urlImagen, DTOOferta oferta, Integer tiempoPreparacion) {
+        this(idProducto, idRestaurante, nombre, precio, urlImagen, oferta, tiempoPreparacion, 0, new ArrayList<>());
+    }
+
+    public DTOProductoSimplificado(Integer idProducto, Integer idRestaurante, String nombre, float precio,
+            String urlImagen, DTOOferta oferta, Integer tiempoPreparacion, Integer cantidadVendida,
+            List<DTOIngrediente> ingredientes) {
+        this.idProducto = idProducto;
+        this.idRestaurante = idRestaurante;
+        this.nombre = nombre;
+        this.precio = precio;
+        this.urlImagen = urlImagen;
+        this.oferta = oferta;
+        if (tiempoPreparacion != null) {
+            this.tiempoPreparacion = tiempoPreparacion;
+        }
+        if (cantidadVendida != null) {
+            this.cantidadVendida = cantidadVendida;
+        }
+        if (ingredientes != null) {
+            this.ingredientes = ingredientes;
+        }
+    }
+
     public Integer getIdProducto() {
         return idProducto;
     }
@@ -62,26 +90,6 @@ public class DTOProductoSimplificado {
         return cantidadVendida;
     }
 
-    public void setCantidadVendida(Integer cantidadVendida) {
-        this.cantidadVendida = cantidadVendida;
-    }
-
-    public DTOProductoSimplificado() {
-    }
-
-    public DTOProductoSimplificado(Integer idProducto, Integer idRestaurante, String nombre, float precio,
-            String urlImagen, DTOOferta oferta, Integer tiempoPreparacion) {
-        this.idProducto = idProducto;
-        this.idRestaurante = idRestaurante;
-        this.nombre = nombre;
-        this.precio = precio;
-        this.urlImagen = urlImagen;
-        this.oferta = oferta;
-        if (tiempoPreparacion != null) {
-            this.tiempoPreparacion = tiempoPreparacion;
-        }
-    }
-
     public static DTOProductoSimplificado desde(Producto producto) {
         if (producto == null) {
             return null;
@@ -98,26 +106,42 @@ public class DTOProductoSimplificado {
                 ? plato.getTiempoPreparacionMinutos()
                 : null;
 
-        DTOProductoSimplificado dto = new DTOProductoSimplificado(
-                producto.getIdProducto(),
-                idRestaurante,
-                producto.getNombre(),
-                producto.getPrecio(),
-                producto.getUrlImagen(),
-                dtoOferta,
-                tiempoPreparacion);
-
-        // Los ingredientes solo existen en Plato
+        List<DTOIngrediente> ingredientesDto = new ArrayList<>();
         if (producto instanceof Plato plato) {
             for (Ingrediente ing : plato.getIngredientes()) {
-                dto.ingredientes.add(new DTOIngrediente(
+                ingredientesDto.add(new DTOIngrediente(
                         ing.getIdIngrediente(),
                         ing.getNombre(),
                         idRestaurante));
             }
         }
 
-        return dto;
+        return new DTOProductoSimplificado(
+                producto.getIdProducto(),
+                idRestaurante,
+                producto.getNombre(),
+                producto.getPrecio(),
+                producto.getUrlImagen(),
+                dtoOferta,
+                tiempoPreparacion,
+                0,
+                ingredientesDto);
     }
 
+    public static DTOProductoSimplificado desdeConCantidadVendida(Producto producto, int cantidadVendida) {
+        DTOProductoSimplificado dto = desde(producto);
+        if (dto == null) {
+            return null;
+        }
+        return new DTOProductoSimplificado(
+                dto.getIdProducto(),
+                dto.getIdRestaurante(),
+                dto.getNombre(),
+                dto.getPrecio(),
+                dto.getUrlImagen(),
+                dto.getOferta(),
+                dto.getTiempoPreparacion(),
+                cantidadVendida,
+                dto.getIngredientes());
+    }
 }

@@ -46,6 +46,15 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
 
     List<Pedido> findByRestauranteIdUsuarioAndEstado(Integer idRestaurante, EnumEstadoPedido estado);
 
+    @Query("""
+            SELECT COUNT(p) FROM Pedido p
+            WHERE p.cliente.idUsuario = :idCliente
+            AND p.restaurante.idUsuario = :idRestaurante
+            """)
+    long countPedidosPorClienteYRestaurante(
+            @Param("idCliente") Integer idCliente,
+            @Param("idRestaurante") Integer idRestaurante);
+
 
     @Query("""
             SELECT p FROM Pedido p

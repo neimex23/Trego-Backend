@@ -7,11 +7,13 @@ public class DTOCombo {
 
     private List<Integer> productosIncluidosIds = new ArrayList<>();
 
-    public DTOCombo() {
+    protected DTOCombo() {
     }
 
     public DTOCombo(List<Integer> productosIncluidosIds) {
-        this.productosIncluidosIds = productosIncluidosIds;
+        if (productosIncluidosIds != null) {
+            this.productosIncluidosIds = productosIncluidosIds;
+        }
     }
 
     public List<Integer> getProductosIncluidosIds() {

@@ -33,6 +33,12 @@ logging.level.org.springframework.web.servlet.mvc.method.annotation.RequestRespo
 # Obtener desde https://myprojects.geoapify.com/api
 geoapify.api.key=
 
+# --- Firebase Web (mismo projectId y apiKey que firebase.config.js del front) ---
+firebase.web.project-id=
+firebase.client.api-key=
+# Solo desarrollo local si Admin SDK usa otro proyecto o falla SSL
+firebase.dev.trust-jwt-claims=false
+
 # --- JWT ---
 # Clave secreta para firmar los tokens. Debe ser una cadena larga y aleatoria.
 jwt.secret=

@@ -13,11 +13,15 @@ import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.Reclamo;
 import com.backend.trego.entity.DTOs.DTOCrearReclamoRequest;
+import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOReclamo;
 import com.backend.trego.entity.DTOs.DTOResolverReclamoRequest;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.entity.Enums.EnumEstadoReclamo;
-import com.backend.trego.repository.PedidoRepository;;
+import com.backend.trego.entity.Pago;
+import com.backend.trego.repository.PedidoRepository;
+
+import org.springframework.context.annotation.Lazy;
 
 
 @Service
@@ -26,13 +30,16 @@ public class ReclamoService {
     private final PedidoRepository pedidoRepository;
     private final NotificacionesService notificacionesService;
     private final CurrentUserService currentUserService;
+    private final PedidoService pedidoService;
 
     public ReclamoService(PedidoRepository pedidoRepository,
             NotificacionesService notificacionesService,
-            CurrentUserService currentUserService) {
+            CurrentUserService currentUserService,
+            @Lazy PedidoService pedidoService) {
         this.pedidoRepository = pedidoRepository;
         this.notificacionesService = notificacionesService;
         this.currentUserService = currentUserService;
+        this.pedidoService = pedidoService;
     }
 
 
@@ -42,10 +49,9 @@ public class ReclamoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Pedido " + request.getIdPedido() + " no encontrado"));
 
-        if (pedido.getEstado() != EnumEstadoPedido.Entregado) {
+        if (!pedido.getEstado().permiteReclamo()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Solo se puede reclamar un pedido en estado Entregado (estado actual: "
-                            + pedido.getEstado() + ")");
+                    "No se puede reclamar un pedido en estado " + pedido.getEstado());
         }
 
         if (pedido.getReclamo() != null) {
@@ -106,15 +112,16 @@ public class ReclamoService {
                     "Se requiere la acción a realizar (ACEPTAR o RECHAZAR)");
         }
 
-        if (request.getAccion()){
-                reclamo.setEstado(EnumEstadoReclamo.Resuelto);
-        }else {
-                if (request.getMotivoRechazo() == null || request.getMotivoRechazo().isBlank()) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "Se requiere un motivo de rechazo");
-                }
-                reclamo.setEstado(EnumEstadoReclamo.Rechazado);
-                reclamo.setMotivoRechazo(request.getMotivoRechazo().trim());
+        if (request.getAccion()) {
+            reclamo.setEstado(EnumEstadoReclamo.Resuelto);
+            procesarReintegro(pedido);
+        } else {
+            if (request.getMotivoRechazo() == null || request.getMotivoRechazo().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Se requiere un motivo de rechazo");
+            }
+            reclamo.setEstado(EnumEstadoReclamo.Rechazado);
+            reclamo.setMotivoRechazo(request.getMotivoRechazo().trim());
         }
 
         pedidoRepository.save(pedido);
@@ -122,6 +129,26 @@ public class ReclamoService {
         notificacionesService.notificarResolucionReclamo(pedido);
 
         return toDTOReclamo(pedido);
+    }
+
+    private void procesarReintegro(Pedido pedido) {
+        Pago pago = pedido.getPago();
+        boolean tienePasarela = pago != null
+                && pago.getIdTransaccion() != null
+                && !pago.getIdTransaccion().isBlank();
+
+        if (tienePasarela) {
+            DTOPedido dto = new DTOPedido(
+                    pedido.getIdPedido(),
+                    (double) pedido.getTotal(),
+                    null);
+            pedidoService.reembolsarPedido(dto);
+            return;
+        }
+
+        if (pedido.getEstado() != EnumEstadoPedido.Reembolsado) {
+            pedido.setEstado(EnumEstadoPedido.Reembolsado);
+        }
     }
 
     private DTOReclamo toDTOReclamo(Pedido pedido) {
@@ -135,6 +162,7 @@ public class ReclamoService {
                 r.getTexto(),
                 r.getEstado(),
                 r.getFechaReclamo(),
-                r.getMotivoRechazo());
+                r.getMotivoRechazo(),
+                pedido.getTotal());
     }
 }

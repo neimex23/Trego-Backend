@@ -1,6 +1,8 @@
 package com.backend.trego.controller;
 
 import com.backend.trego.entity.DTOs.DTOIngrediente;
+import com.backend.trego.entity.DTOs.DTOCrearProductoRequest;
+import com.backend.trego.entity.DTOs.DTOModificarProductoRequest;
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.service.ProductosService;
 import com.backend.trego.service.RestauranteService;
@@ -71,8 +73,17 @@ public class ProductosController {
     @ApiResponse(responseCode = "200", description = "Producto agregado correctamente")
     @ApiResponse(responseCode = "404", description = "Restaurante no existe")
     @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene rol Restaurante")
-    public ResponseEntity<DTOProducto> agregarProducto(@RequestBody DTOProducto producto){
+    public ResponseEntity<DTOProducto> agregarProducto(@RequestBody DTOCrearProductoRequest producto){
         return ResponseEntity.ok(productosService.crearProducto(producto));
+    }
+
+    @PatchMapping("/modificarProducto")
+    @Operation(summary = "Modificar Producto", description = "Actualiza un producto del restaurante autenticado")
+    @ApiResponse(responseCode = "200", description = "Producto modificado correctamente")
+    @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene rol Restaurante")
+    public ResponseEntity<DTOProducto> modificarProducto(@RequestBody DTOModificarProductoRequest producto) {
+        return ResponseEntity.ok(productosService.modificarProducto(producto));
     }
 
     @PatchMapping("/{idProducto}/deshabilitar")

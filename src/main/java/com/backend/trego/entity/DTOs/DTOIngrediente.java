@@ -7,7 +7,7 @@ public class DTOIngrediente {
     private String nombre;
     private Integer idRestaurante;
 
-    public DTOIngrediente() {
+    protected DTOIngrediente() {
     }
 
     public DTOIngrediente(Integer idIngrediente, String nombre, Integer idRestaurante) {

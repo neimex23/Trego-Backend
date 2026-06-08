@@ -13,6 +13,21 @@ public class DTOProductoPedido {
     private Double subtotal;
     private DTOProductoSimplificado producto;
 
+    protected DTOProductoPedido() {
+    }
+
+    public DTOProductoPedido(Integer cantidadDisponible, List<DTOIngrediente> ingredientes, String observaciones,
+            Integer cantidad, Double subtotal, DTOProductoSimplificado producto) {
+        this.cantidadDisponible = cantidadDisponible;
+        if (ingredientes != null) {
+            this.ingredientesAQuitar = ingredientes;
+        }
+        this.observaciones = observaciones;
+        this.cantidad = cantidad;
+        this.subtotal = subtotal;
+        this.producto = producto;
+    }
+
     public Integer getCantidadDisponible() {
         return cantidadDisponible;
     }
@@ -45,37 +60,6 @@ public class DTOProductoPedido {
         return producto != null ? producto.getTiempoPreparacion() : 0;
     }
 
-    public DTOProductoPedido() {
-    }
-
-    public DTOProductoPedido(Integer cantidadDisponible, List<DTOIngrediente> ingredientes, String observaciones,
-            Integer cantidad, Double subtotal, DTOProductoSimplificado producto) {
-        this.cantidadDisponible = cantidadDisponible;
-        if (ingredientes != null) {
-            this.ingredientesAQuitar = ingredientes;
-        }
-        this.observaciones = observaciones;
-        this.cantidad = cantidad;
-        this.subtotal = subtotal;
-        this.producto = producto;
-    }
-
-    public void setIngredientesAQuitar(List<DTOIngrediente> ingredientesAQuitar) {
-        this.ingredientesAQuitar = ingredientesAQuitar != null ? ingredientesAQuitar : new ArrayList<>();
-    }
-
-    public void setObservaciones(String observaciones) {
-        this.observaciones = observaciones;
-    }
-
-    public void setCantidad(Integer cantidad) {
-        this.cantidad = cantidad;
-    }
-
-    public void setProducto(DTOProductoSimplificado producto) {
-        this.producto = producto;
-    }
-
     public static DTOProductoPedido desde(LineaCarrito linea) {
         if (linea == null) {
             return null;
@@ -98,6 +82,4 @@ public class DTOProductoPedido {
                 linea.getSubtotal(),
                 DTOProductoSimplificado.desde(linea.getProducto()));
     }
-
-
 }

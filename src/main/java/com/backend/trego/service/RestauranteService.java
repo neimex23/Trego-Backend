@@ -7,6 +7,7 @@ import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.ProductoPedido;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTOComentario;
+import com.backend.trego.entity.DTOs.DTOCrearComentarioRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOEstadisticas;
 import com.backend.trego.entity.DTOs.DTOIngrediente;
@@ -15,6 +16,8 @@ import com.backend.trego.entity.DTOs.DTOProductoSimplificado;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.exception.RestauranteCerradoException;
 import com.backend.trego.exception.SinProductoException;
+import com.backend.trego.repository.ComentarioRepository;
+import com.backend.trego.repository.PedidoRepository;
 import com.backend.trego.repository.UsuarioRepository;
 
 import org.springframework.context.annotation.Lazy;
@@ -29,8 +32,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -48,6 +54,8 @@ public class RestauranteService {
     private final PedidoService pedidosService;
     private final NotificacionesService notificacionesService;
     private final GeoapifyService geoapifyService;
+    private final PedidoRepository pedidoRepository;
+    private final ComentarioRepository comentarioRepository;
 
     // Para calcular y cerrar automaticamente el restaurante
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -55,13 +63,16 @@ public class RestauranteService {
 
     public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService,
             @Lazy ProductosService productosService, NotificacionesService notificacionesService,
-            GeoapifyService geoapifyService, @Lazy PedidoService pedidosService) {
+            GeoapifyService geoapifyService, @Lazy PedidoService pedidosService,
+            PedidoRepository pedidoRepository, ComentarioRepository comentarioRepository) {
         this.restauranteRepository = restauranteRepository;
         this.currentUserService = currentUserService;
         this.productosService = productosService;
         this.notificacionesService = notificacionesService;
         this.geoapifyService = geoapifyService;
         this.pedidosService = pedidosService;
+        this.pedidoRepository = pedidoRepository;
+        this.comentarioRepository = comentarioRepository;
     }
 
     public void abrirLocal(LocalTime horaCierre) {
@@ -562,38 +573,111 @@ public class RestauranteService {
         notificacionesService.notificarRestauranteNoHabilitado(restaurante, motivo);
     }
 
-    public DTOComentario agregarComentario(DTOComentario request) {
-        if (!currentUserService.getCurrentRol().equals("CLIENTE")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: solo los clientes pueden agregar comentarios");
+    @Transactional
+    public DTOComentario agregarComentario(DTOCrearComentarioRequest request) {
+        if (request.getIdRestaurante() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El id del restaurante es obligatorio");
+        }
+
+        Integer calificacion = request.getCalificacion();
+        if (calificacion == null || calificacion < 1 || calificacion > 5) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La calificación debe ser un valor entre 1 y 5 estrellas");
+        }
+
+        String texto = request.getTexto() != null ? request.getTexto().trim() : "";
+        if (texto.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El comentario no puede estar vacío");
         }
 
         Restaurante restaurante = buscarRestaurante(String.valueOf(request.getIdRestaurante()));
-        Cliente cliente = restauranteRepository.findClienteById(currentUserService.getCurrentId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente autenticado no encontrado"));
+        Cliente cliente = resolverClienteAutenticado();
 
-        Comentario comentario = new Comentario(request.getTexto(), request.getCalificacion(), cliente, restaurante);
-        restaurante.addComentario(comentario);
-        restauranteRepository.save(restaurante);
-        return new DTOComentario(
-            comentario.getIdComentario(), 
-            comentario.getTexto(), 
-            restaurante.getIdUsuario(),
-            comentario.getCalificacion(), 
-            comentario.getFechaCreacion().toString(), 
-            comentario.getCliente().getNombre());
+        long cantidadPedidos = pedidoRepository.countPedidosPorClienteYRestaurante(
+                cliente.getIdUsuario(), restaurante.getIdUsuario());
+        if (cantidadPedidos == 0) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Solo podés comentar un restaurante en el que hayas realizado un pedido");
+        }
+
+        if (comentarioRepository.existsByClienteIdUsuarioAndRestauranteIdUsuario(
+                cliente.getIdUsuario(), restaurante.getIdUsuario())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Ya dejaste un comentario en este restaurante");
+        }
+
+        Comentario comentario = new Comentario(texto, calificacion, cliente, restaurante);
+        comentarioRepository.save(comentario);
+        actualizarCalificacionPromedioRestaurante(restaurante.getIdUsuario());
+
+        return toDTOComentario(comentario, restaurante.getIdUsuario());
     }
 
-    public List<DTOComentario> listarComentarios() {
-        Restaurante restaurante = buscarRestaurante(String.valueOf(currentUserService.getCurrentId()));
-        return restaurante.getComentarios().stream()
-                .map(c -> new DTOComentario(
-                    c.getIdComentario(), 
-                    c.getTexto(), 
-                    restaurante.getIdUsuario(),
-                    c.getCalificacion(), 
-                    c.getFechaCreacion().toString(), 
-                    c.getCliente().getNombre()))
+    @Transactional(readOnly = true)
+    public boolean clienteYaComentoEnRestaurante(Integer idRestaurante) {
+        if (idRestaurante == null || currentUserService.getCurrentUserOrNull() == null) {
+            return false;
+        }
+        if (!"Cliente".equalsIgnoreCase(currentUserService.getCurrentRol())) {
+            return false;
+        }
+        Cliente cliente = resolverClienteAutenticado();
+        return comentarioRepository.existsByClienteIdUsuarioAndRestauranteIdUsuario(
+                cliente.getIdUsuario(), idRestaurante);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DTOComentario> listarComentarios(Integer idRestaurante) {
+        final Integer restauranteId;
+
+        if (idRestaurante == null) {
+            if (!"Restaurante".equals(currentUserService.getCurrentRol())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Debe indicar el id del restaurante para listar comentarios");
+            }
+            restauranteId = currentUserService.getCurrentId();
+        } else {
+            buscarRestaurante(String.valueOf(idRestaurante));
+            restauranteId = idRestaurante;
+        }
+
+        Set<Integer> clientesVistos = new HashSet<>();
+        return comentarioRepository.findByRestauranteWithClienteOrderByFechaCreacionDesc(restauranteId).stream()
+                .filter(c -> clientesVistos.add(c.getCliente().getIdUsuario()))
+                .map(c -> toDTOComentario(c, restauranteId))
                 .collect(Collectors.toList());
+    }
+
+    private void actualizarCalificacionPromedioRestaurante(Integer idRestaurante) {
+        Double promedio = comentarioRepository.promedioCalificacionPorRestaurante(idRestaurante);
+        restauranteRepository.updateCalificacionProm(idRestaurante, promedio != null ? promedio.floatValue() : 0f);
+    }
+
+    private Cliente resolverClienteAutenticado() {
+        String uid = currentUserService.getCurrentUid();
+        if (uid != null && !uid.isBlank()) {
+            Optional<Cliente> porUid = restauranteRepository.findClienteByUidCliente(uid);
+            if (porUid.isPresent()) {
+                return porUid.get();
+            }
+        }
+        Integer idUsuario = currentUserService.getCurrentIdUsuario();
+        if (idUsuario != null) {
+            return restauranteRepository.findClienteById(idUsuario)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Cliente autenticado no encontrado"));
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente autenticado no encontrado");
+    }
+
+    private DTOComentario toDTOComentario(Comentario comentario, Integer idRestaurante) {
+        return new DTOComentario(
+                comentario.getIdComentario(),
+                comentario.getTexto(),
+                idRestaurante,
+                comentario.getCalificacion(),
+                comentario.getFechaCreacion().toString(),
+                comentario.getCliente().getNombre());
     }
 
     public Integer obtenerCalificacion(Integer restauranteId, Boolean esRestaurante) {
@@ -606,7 +690,7 @@ public class RestauranteService {
     }
 
     public DTOEstadisticas obtenerEstadisticas(DTOEstadisticas request) {
-        if (!currentUserService.getCurrentRol().equals("RESTAURANTE")) {
+        if (!"Restaurante".equals(currentUserService.getCurrentRol())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: solo los restaurantes pueden obtener estadísticas");
         }
         if (request.getFechaInicio() == null || request.getFechaFin() == null) {
@@ -626,11 +710,9 @@ public class RestauranteService {
                 .entrySet().stream()
                 .sorted((a, b) -> b.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum()
                                 - a.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum())
-                .map(e -> {
-                    DTOProductoSimplificado dto = DTOProductoSimplificado.desde(e.getValue().get(0).getProducto());
-                    dto.setCantidadVendida(e.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum());
-                    return dto;
-                })
+                .map(e -> DTOProductoSimplificado.desdeConCantidadVendida(
+                        e.getValue().get(0).getProducto(),
+                        e.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum()))
                 .collect(Collectors.toList());
 
         // Cantidad de pedidos por fecha (agrupados por día)

@@ -23,7 +23,7 @@ public class Cliente extends Usuario {
     private boolean habilitado = true;
 
 
-    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "cliente")
     private List<Comentario> comentarios = new ArrayList<>();
 
     protected Cliente(String nombre, String email, String foto, EnumRoles cliente, String uid, Object object, List<DTODireccion> direccionesVaciasGoogle) {
