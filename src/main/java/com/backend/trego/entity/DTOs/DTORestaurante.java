@@ -29,7 +29,7 @@ public class DTORestaurante {
     private List<DTOProducto> productos = new ArrayList<>();
     private List<DTOIngrediente> ingredientesDisponibles = new ArrayList<>();
 
-    public DTORestaurante() {
+    protected DTORestaurante() {
     }
 
     // Constructor completo: usado al exponer todos los datos del restaurante.
@@ -56,7 +56,6 @@ public class DTORestaurante {
         this.horaCierre = horaCierre;
         this.productos = productos != null ? productos : new ArrayList<>();
     }
-
 
     public DTORestaurante(Integer idRestaurante, String nombre, String email, String telefono,
             String fotoPortada, String fotoPerfil, DTODireccion direccion, String descripcion,
@@ -91,7 +90,6 @@ public class DTORestaurante {
     public EnumCategoriaRestaurante getCategoria() { return categoria; }
     public Float getCalificacionProm() { return calificacionProm; }
     public Integer getRadioEntrega() { return radioEntrega; }
-    public void setRadioEntrega(Integer radioEntrega) { this.radioEntrega = radioEntrega; }
     public Boolean getHabilitado() { return habilitado; }
     public Boolean getAbierto() { return abierto; }
     public LocalTime getHoraApertura() { return horaApertura; }
@@ -99,7 +97,4 @@ public class DTORestaurante {
     public List<DTOProducto> getProductos() { return productos; }
     public String getFotoPerfil() { return fotoPerfil; }
     public List<DTOIngrediente> getIngredientesDisponibles() { return ingredientesDisponibles; }
-    public void setIngredientesDisponibles(List<DTOIngrediente> ingredientesDisponibles) {
-        this.ingredientesDisponibles = ingredientesDisponibles != null ? ingredientesDisponibles : new ArrayList<>();
-    }
 }

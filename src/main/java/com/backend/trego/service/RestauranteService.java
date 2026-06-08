@@ -48,8 +48,6 @@ import java.util.stream.Collectors;
 @Service
 public class RestauranteService {
 
-    private static final double RADIO_CERCANIA_KM = 10;
-
     private final UsuarioRepository restauranteRepository;
     private final CurrentUserService currentUserService;
     private final ProductosService productosService;
@@ -712,11 +710,9 @@ public class RestauranteService {
                 .entrySet().stream()
                 .sorted((a, b) -> b.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum()
                                 - a.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum())
-                .map(e -> {
-                    DTOProductoSimplificado dto = DTOProductoSimplificado.desde(e.getValue().get(0).getProducto());
-                    dto.setCantidadVendida(e.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum());
-                    return dto;
-                })
+                .map(e -> DTOProductoSimplificado.desdeConCantidadVendida(
+                        e.getValue().get(0).getProducto(),
+                        e.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum()))
                 .collect(Collectors.toList());
 
         // Cantidad de pedidos por fecha (agrupados por día)

@@ -120,8 +120,8 @@ public class AuthService {
                 usuario = usuarioOpt.get();
             }
 
-            int idUsuarioInt = usuario.getIdUsuario();
-            String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), uid, idUsuarioInt);
+            Integer idUsuario = usuario.getIdUsuario();
+            String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), uid, idUsuario);
             
             return new DTOLoginResponse(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
 
@@ -157,9 +157,9 @@ public class AuthService {
             }
 
             String identificador = usuario.getEmail() != null ? usuario.getEmail() : uid;
-            int idUsuarioInt = usuario.getIdUsuario();
-            
-            String jwt = jwtUtil.generateToken(identificador, usuario.getRol().name(), uid, idUsuarioInt);
+            Integer idUsuario = usuario.getIdUsuario();
+
+            String jwt = jwtUtil.generateToken(identificador, usuario.getRol().name(), uid, idUsuario);
             
             return new DTOLoginResponse(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
 
@@ -168,6 +168,16 @@ public class AuthService {
         }
     }
     
+    // Sesión JWT tras confirmar el registro de un restaurante (sin volver a loguearse).
+    public DTOLoginResponse crearSesionRestauranteRegistrado(DTOUsuario usuario) {
+        String token = jwtUtil.generateToken(
+                usuario.getEmail(),
+                usuario.getRol().name(),
+                null,
+                usuario.getIdUsuario());
+        return new DTOLoginResponse(token, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
+    }
+
     // Implementación del cierre de sesión
     public void cerrarSesion(String token) {
         // 1. Extrae los datos necesarios desde JWT

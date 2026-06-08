@@ -61,34 +61,6 @@ public class DTODireccion {
         return longitud;
     }
 
-    public void setTag(String tag) {
-        this.tag = tag;
-    }
-
-    public void setCalle(String calle) {
-        this.calle = calle;
-    }
-
-    public void setNumero(String numero) {
-        this.numero = numero;
-    }
-
-    public void setApartamento(String apartamento) {
-        this.apartamento = apartamento;
-    }
-
-    public void setEsquina(String esquina) {
-        this.esquina = esquina;
-    }
-
-    public void setLatitud(double latitud) {
-        this.latitud = latitud;
-    }
-
-    public void setLongitud(double longitud) {
-        this.longitud = longitud;
-    }
-
     // Representación legible de la dirección. Se usa en el PDF de comprobante y
     // en los emails. Si no hay calle se cae a las coordenadas; si tampoco hay
     // coordenadas devuelve "Sin dirección". Cuando hay tag se antepone como

@@ -10,27 +10,21 @@ public class DTOCrearComentarioRequest {
     protected DTOCrearComentarioRequest() {
     }
 
-    public Integer getIdRestaurante() {
-        return idRestaurante;
+    public DTOCrearComentarioRequest(Integer idRestaurante, Integer calificacion, String texto) {
+        this.idRestaurante = idRestaurante;
+        this.calificacion = calificacion;
+        this.texto = texto;
     }
 
-    public void setIdRestaurante(Integer idRestaurante) {
-        this.idRestaurante = idRestaurante;
+    public Integer getIdRestaurante() {
+        return idRestaurante;
     }
 
     public Integer getCalificacion() {
         return calificacion;
     }
 
-    public void setCalificacion(Integer calificacion) {
-        this.calificacion = calificacion;
-    }
-
     public String getTexto() {
         return texto;
-    }
-
-    public void setTexto(String texto) {
-        this.texto = texto;
     }
 }

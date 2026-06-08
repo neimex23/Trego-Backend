@@ -4,7 +4,7 @@ public class DTOPlato {
 
     private Integer tiempoPreparacionMinutos;
 
-    public DTOPlato() {
+    protected DTOPlato() {
     }
 
     public DTOPlato(Integer tiempoPreparacionMinutos) {
@@ -14,9 +14,4 @@ public class DTOPlato {
     public Integer getTiempoPreparacionMinutos() {
         return tiempoPreparacionMinutos;
     }
-
-    public void setTiempoPreparacionMinutos(Integer tiempoPreparacionMinutos) {
-        this.tiempoPreparacionMinutos = tiempoPreparacionMinutos;
-    }
-
 }

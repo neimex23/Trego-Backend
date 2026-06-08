@@ -7,7 +7,7 @@ public class DTOIngrediente {
     private String nombre;
     private Integer idRestaurante;
 
-    public DTOIngrediente() {
+    protected DTOIngrediente() {
     }
 
     public DTOIngrediente(Integer idIngrediente, String nombre, Integer idRestaurante) {
@@ -26,17 +26,5 @@ public class DTOIngrediente {
 
     public Integer getIdRestaurante() {
         return idRestaurante;
-    }
-
-    public void setIdIngrediente(Integer idIngrediente) {
-        this.idIngrediente = idIngrediente;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public void setIdRestaurante(Integer idRestaurante) {
-        this.idRestaurante = idRestaurante;
     }
 }

@@ -1,6 +1,5 @@
 package com.backend.trego.service;
 
-import com.backend.trego.config.JWTUtil;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOFirma;
 import com.backend.trego.entity.DTOs.DTOLoginResponse;
@@ -12,6 +11,7 @@ import com.backend.trego.entity.Usuario;
 import com.backend.trego.entity.Administrador;
 import com.backend.trego.entity.Cliente;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,20 +31,20 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final CurrentUserService currentUserService;
     private final CloudinaryService cloudinaryService;
-    private final JWTUtil jwtUtil;
+    private final AuthService authService;
 
     // Mapa en memoria: email -> datos del registro pendiente (código + contraseña)
     private final Map<String, RegistroTemporal> registrosPendientes = new ConcurrentHashMap<>();
 
     public UsuarioService(UsuarioRepository usuarioRepository, NotificacionesService notificacionesService,
             PasswordEncoder passwordEncoder, CurrentUserService currentUserService,
-            CloudinaryService cloudinaryService, JWTUtil jwtUtil) {
+            CloudinaryService cloudinaryService, @Lazy AuthService authService) {
         this.usuarioRepository = usuarioRepository;
         this.notificacionesService = notificacionesService;
         this.passwordEncoder = passwordEncoder;
         this.currentUserService = currentUserService;
         this.cloudinaryService = cloudinaryService;
-        this.jwtUtil = jwtUtil;
+        this.authService = authService;
     }
 
     // Da de alta un cliente nuevo a partir del DTO y lo devuelve ya con su id.
@@ -158,13 +158,7 @@ public class UsuarioService {
         }
 
         DTOUsuario usuario = registrarRestaurante(pendiente.getEmail(), pendiente.getPassword());
-        String token = jwtUtil.generateToken(
-                usuario.getEmail(),
-                usuario.getRol().name(),
-                null,
-                usuario.getIdUsuario());
-
-        return new DTOLoginResponse(token, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
+        return authService.crearSesionRestauranteRegistrado(usuario);
     }
 
     // Reenvía el código reutilizando los datos que quedaron guardados en el mapa.

@@ -23,91 +23,67 @@ public class DTOCrearProductoRequest {
     protected DTOCrearProductoRequest() {
     }
 
-    public String getNombre() {
-        return nombre;
+    public DTOCrearProductoRequest(String nombre, String descripcion, float precio, String urlImagen,
+            Boolean disponible, Integer idSubCategoria, EnumTipoProducto tipo,
+            List<DTOIngrediente> ingredientes, DTOPlato plato, DTOArticulo articulo, DTOCombo combo) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.urlImagen = urlImagen;
+        if (disponible != null) {
+            this.disponible = disponible;
+        }
+        this.idSubCategoria = idSubCategoria;
+        this.tipo = tipo;
+        if (ingredientes != null) {
+            this.ingredientes = ingredientes;
+        }
+        this.plato = plato;
+        this.articulo = articulo;
+        this.combo = combo;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
+    public String getNombre() {
+        return nombre;
     }
 
     public String getDescripcion() {
         return descripcion;
     }
 
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
     public float getPrecio() {
         return precio;
-    }
-
-    public void setPrecio(float precio) {
-        this.precio = precio;
     }
 
     public String getUrlImagen() {
         return urlImagen;
     }
 
-    public void setUrlImagen(String urlImagen) {
-        this.urlImagen = urlImagen;
-    }
-
     public Boolean getDisponible() {
         return disponible;
-    }
-
-    public void setDisponible(Boolean disponible) {
-        this.disponible = disponible;
     }
 
     public Integer getIdSubCategoria() {
         return idSubCategoria;
     }
 
-    public void setIdSubCategoria(Integer idSubCategoria) {
-        this.idSubCategoria = idSubCategoria;
-    }
-
     public EnumTipoProducto getTipo() {
         return tipo;
-    }
-
-    public void setTipo(EnumTipoProducto tipo) {
-        this.tipo = tipo;
     }
 
     public List<DTOIngrediente> getIngredientes() {
         return ingredientes;
     }
 
-    public void setIngredientes(List<DTOIngrediente> ingredientes) {
-        this.ingredientes = ingredientes != null ? ingredientes : new ArrayList<>();
-    }
-
     public DTOPlato getPlato() {
         return plato;
-    }
-
-    public void setPlato(DTOPlato plato) {
-        this.plato = plato;
     }
 
     public DTOArticulo getArticulo() {
         return articulo;
     }
 
-    public void setArticulo(DTOArticulo articulo) {
-        this.articulo = articulo;
-    }
-
     public DTOCombo getCombo() {
         return combo;
-    }
-
-    public void setCombo(DTOCombo combo) {
-        this.combo = combo;
     }
 }

@@ -15,7 +15,7 @@ public class DTOSubCategoria {
     private EnumCategoriaProducto categoria;
     private String urlImagen;
 
-    public DTOSubCategoria() {
+    protected DTOSubCategoria() {
     }
 
     public DTOSubCategoria(Integer idSubCategoria, String nombre, EnumCategoriaProducto categoria, String urlImagen) {
@@ -40,31 +40,15 @@ public class DTOSubCategoria {
         return idSubCategoria;
     }
 
-    public void setIdSubCategoria(Integer idSubCategoria) {
-        this.idSubCategoria = idSubCategoria;
-    }
-
     public String getNombre() {
         return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
     }
 
     public EnumCategoriaProducto getCategoria() {
         return categoria;
     }
 
-    public void setCategoria(EnumCategoriaProducto categoria) {
-        this.categoria = categoria;
-    }
-
     public String getUrlImagen() {
         return urlImagen;
-    }
-
-    public void setUrlImagen(String urlImagen) {
-        this.urlImagen = urlImagen;
     }
 }
