@@ -66,7 +66,7 @@ public class CloudinaryService {
             return "archivo_" + System.currentTimeMillis();
         }
         String nombre = nombreArchivo.trim();
-        Integer punto = nombre.lastIndexOf('.');
+        int punto = nombre.lastIndexOf('.');
         if (punto > 0) {
             nombre = nombre.substring(0, punto);
         }

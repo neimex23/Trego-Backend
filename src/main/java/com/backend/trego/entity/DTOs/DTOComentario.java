@@ -29,24 +29,12 @@ public class DTOComentario {
         return texto;
     }
 
-    public void setTexto(String texto) {
-        this.texto = texto;
-    }
-
     public Integer getIdRestaurante() {
         return idRestaurante;
     }
 
-    public void setIdRestaurante(Integer idRestaurante) {
-        this.idRestaurante = idRestaurante;
-    }
-
     public Integer getCalificacion() {
         return calificacion;
-    }
-
-    public void setCalificacion(Integer calificacion) {
-        this.calificacion = calificacion;
     }
 
     public String getFechaCreacion() {

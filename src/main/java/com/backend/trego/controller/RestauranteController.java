@@ -2,6 +2,7 @@ package com.backend.trego.controller;
 
 import com.backend.trego.entity.DTOs.DTOAbrirCerrarLocalRequest;
 import com.backend.trego.entity.DTOs.DTOComentario;
+import com.backend.trego.entity.DTOs.DTOCrearComentarioRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOEstadisticas;
 import com.backend.trego.entity.DTOs.DTORestaurante;
@@ -131,7 +132,7 @@ public class RestauranteController {
     @ApiResponse(responseCode = "403", description = "Sin pedido previo en el restaurante")
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
     @ApiResponse(responseCode = "409", description = "El cliente ya comentó este restaurante")
-    public ResponseEntity<?> agregarComentario(@RequestBody DTOComentario request) {
+    public ResponseEntity<?> agregarComentario(@RequestBody DTOCrearComentarioRequest request) {
         try {
             return ResponseEntity.ok(restauranteService.agregarComentario(request));
         } catch (ResponseStatusException ex) {

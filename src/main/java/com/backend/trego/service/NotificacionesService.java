@@ -520,13 +520,12 @@ public class NotificacionesService {
         return sb.toString();
     }
 
-    // Envía un código de verificación por email y devuelve el código generado.
-    // No es @Async: el registro del restaurante necesita el código de vuelta al instante.
-    public String codigoVerificacionEmail(String email) {
-        String codigoGenerado = String.valueOf(100000 + new Random().nextInt(900000));
+    // Envía el código de verificación por email de forma asíncrona.
+    @Async
+    public void enviarCodigoVerificacionEmail(String email, String codigoGenerado) {
         if (mailLogOnly) {
             System.out.println("[DEV mail-log-only] Código de verificación para " + email + ": " + codigoGenerado);
-            return codigoGenerado;
+            return;
         }
         try {
             SimpleMailMessage mensaje = new SimpleMailMessage();
@@ -536,7 +535,6 @@ public class NotificacionesService {
             mensaje.setText("Tu código de verificación es: " + codigoGenerado);
 
             mailSender.send(mensaje);
-            return codigoGenerado;
         } catch (Exception e) {
             throw new RuntimeException("Error al enviar código de verificación", e);
         }

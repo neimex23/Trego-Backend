@@ -13,14 +13,14 @@ import com.backend.trego.entity.DTOs.DTOFirma;
 import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOOferta;
 import com.backend.trego.entity.DTOs.DTOPlato;
+import com.backend.trego.entity.DTOs.DTOCrearProductoRequest;
+import com.backend.trego.entity.DTOs.DTOModificarProductoRequest;
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTOSubCategoria;
 import com.backend.trego.entity.Enums.EnumCategoriaProducto;
 import com.backend.trego.entity.Enums.EnumTipoProducto;
 import com.backend.trego.repository.IngredienteRepository;
 import com.backend.trego.repository.ProductoRepository;
-
-import jakarta.persistence.EntityManager;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,19 +42,16 @@ public class ProductosService {
     private final CloudinaryService cloudinaryService;
     private final CurrentUserService currentUserService;
     private final SubCategoriaService subCategoriaService;
-    private final EntityManager entityManager;
 
     public ProductosService(ProductoRepository productoRepository, IngredienteRepository ingredienteRepository,
             RestauranteService restauranteService, CloudinaryService cloudinaryService,
-            CurrentUserService currentUserService, SubCategoriaService subCategoriaService,
-            EntityManager entityManager) {
+            CurrentUserService currentUserService, SubCategoriaService subCategoriaService) {
         this.productoRepository = productoRepository;
         this.ingredienteRepository = ingredienteRepository;
         this.restauranteService = restauranteService;
         this.cloudinaryService = cloudinaryService;
         this.currentUserService = currentUserService;
         this.subCategoriaService = subCategoriaService;
-        this.entityManager = entityManager;
     }
 
     // Devuelve los productos del menú de un restaurante, ya mapeados a DTO.
@@ -106,7 +103,7 @@ public class ProductosService {
     }
 
     @Transactional
-    public DTOProducto crearProducto(DTOProducto productoDTO) {
+    public DTOProducto crearProducto(DTOCrearProductoRequest request) {
         // Validar que el restaurante existe y pertenece al usuario autenticado.
         String rol = currentUserService.getCurrentRol();
         if (!"Restaurante".equals(rol)) {
@@ -116,68 +113,65 @@ public class ProductosService {
         Integer idRestaurante = currentUserService.getCurrentId();
         Producto producto = null;
 
-        switch (productoDTO.getTipo()) {
+        switch (request.getTipo()) {
             case Plato -> {
-                if (productoDTO.getPlato() == null) {
+                if (request.getPlato() == null) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "El DTOProducto de tipo Plato debe incluir el campo 'plato' con los detalles específicos del plato.");
+                            "El producto de tipo Plato debe incluir el campo 'plato' con los detalles específicos del plato.");
                 }
                 Plato plato = new Plato(
-                    productoDTO.getNombre(),
-                    productoDTO.getPrecio(),
-                    productoDTO.getDescripcion(),
-                    productoDTO.getUrlImagen(),
-                    productoDTO.getPlato().getTiempoPreparacionMinutos()
+                    request.getNombre(),
+                    request.getPrecio(),
+                    request.getDescripcion(),
+                    request.getUrlImagen(),
+                    request.getPlato().getTiempoPreparacionMinutos()
                 );
                 producto = plato;
             }
             case Combo -> {
-                if (productoDTO.getCombo() == null) {
+                if (request.getCombo() == null) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "El DTOProducto de tipo Combo debe incluir el campo 'combo' con los detalles específicos del combo.");
+                            "El producto de tipo Combo debe incluir el campo 'combo' con los detalles específicos del combo.");
                 }
-                List<Producto> productosIncluidos = productoDTO.getCombo().getProductosIncluidosIds().stream()
+                List<Producto> productosIncluidos = request.getCombo().getProductosIncluidosIds().stream()
                         .map(id -> productoRepository.findById(id)
                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                         "Producto incluido en el combo no encontrado con id: " + id)))
                         .collect(Collectors.toList());
                 producto = new Combo(
-                    productoDTO.getNombre(),
-                    productoDTO.getPrecio(),
-                    productoDTO.getDescripcion(),
-                    productoDTO.getUrlImagen()
+                    request.getNombre(),
+                    request.getPrecio(),
+                    request.getDescripcion(),
+                    request.getUrlImagen()
                 );
                 ((Combo) producto).setProductosIncluidos(productosIncluidos);
             }
             case Articulo -> {
-                // No hay campos adicionales obligatorios para Articulo en el modelo actual
                 producto = new Articulo(
-                    productoDTO.getNombre(),
-                    productoDTO.getPrecio(),
-                    productoDTO.getDescripcion(),
-                    productoDTO.getUrlImagen()
+                    request.getNombre(),
+                    request.getPrecio(),
+                    request.getDescripcion(),
+                    request.getUrlImagen()
                 );
             }
             default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Tipo de producto inválido: " + productoDTO.getTipo());
+                    "Tipo de producto inválido: " + request.getTipo());
         }
 
-        // Asociar el producto al restaurante del usuario autenticado.
         Restaurante restaurante = restauranteService.buscarRestaurante(String.valueOf(idRestaurante));
         producto.setRestaurante(restaurante);
 
-        // SubCategoria: campo opcional, pero si viene debe existir.
-        if (productoDTO.getIdSubCategoria() != null) {
-            SubCategoria subCategoria = subCategoriaService.buscarPorId(productoDTO.getIdSubCategoria());
+        if (request.getIdSubCategoria() != null) {
+            SubCategoria subCategoria = subCategoriaService.buscarPorId(request.getIdSubCategoria());
             producto.setSubCategoria(subCategoria);
         }
 
-        if (productoDTO.getDisponible() != null) {
-            producto.setDisponible(productoDTO.getDisponible());
+        if (request.getDisponible() != null) {
+            producto.setDisponible(request.getDisponible());
         }
 
-        if (producto instanceof Plato plato && productoDTO.getIngredientes() != null) {
-            vincularIngredientesPlato(plato, productoDTO.getIngredientes(), idRestaurante);
+        if (producto instanceof Plato plato && request.getIngredientes() != null) {
+            vincularIngredientesPlato(plato, request.getIngredientes(), idRestaurante);
         }
 
         productoRepository.save(producto);
@@ -185,21 +179,21 @@ public class ProductosService {
     }
 
     @Transactional
-    public DTOProducto modificarProducto(DTOProducto productoDTO) {
+    public DTOProducto modificarProducto(DTOModificarProductoRequest request) {
         String rol = currentUserService.getCurrentRol();
         if (!"Restaurante".equals(rol)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "El endpoint solo está disponible para restaurantes autenticados (rol actual: " + rol + ")");
         }
-        if (productoDTO.getIdProducto() == null) {
+        if (request.getIdProducto() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "El idProducto es obligatorio para modificar un producto.");
         }
 
         Integer idRestaurante = currentUserService.getCurrentId();
-        Producto producto = productoRepository.findById(productoDTO.getIdProducto())
+        Producto producto = productoRepository.findById(request.getIdProducto())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Producto no encontrado con id: " + productoDTO.getIdProducto()));
+                        "Producto no encontrado con id: " + request.getIdProducto()));
 
         if (producto.getRestaurante() == null
                 || !Objects.equals(producto.getRestaurante().getIdUsuario(), idRestaurante)) {
@@ -207,76 +201,62 @@ public class ProductosService {
                     "El producto no pertenece al restaurante autenticado.");
         }
 
-        if (productoDTO.getNombre() != null) {
-            producto.setNombre(productoDTO.getNombre());
+        if (request.getNombre() != null) {
+            producto.setNombre(request.getNombre());
         }
-        if (productoDTO.getDescripcion() != null) {
-            producto.setDescripcion(productoDTO.getDescripcion());
+        if (request.getDescripcion() != null) {
+            producto.setDescripcion(request.getDescripcion());
         }
-        producto.setPrecio(productoDTO.getPrecio());
-        if (productoDTO.getUrlImagen() != null) {
-            producto.setUrlImagen(productoDTO.getUrlImagen());
+        producto.setPrecio(request.getPrecio());
+        if (request.getUrlImagen() != null) {
+            producto.setUrlImagen(request.getUrlImagen());
         }
-        if (productoDTO.getDisponible() != null) {
-            producto.setDisponible(productoDTO.getDisponible());
+        if (request.getDisponible() != null) {
+            producto.setDisponible(request.getDisponible());
         }
-        if (productoDTO.getIdSubCategoria() != null) {
-            SubCategoria subCategoria = subCategoriaService.buscarPorId(productoDTO.getIdSubCategoria());
+        if (request.getIdSubCategoria() != null) {
+            SubCategoria subCategoria = subCategoriaService.buscarPorId(request.getIdSubCategoria());
             producto.setSubCategoria(subCategoria);
         }
 
         EnumTipoProducto tipoActual = tipoDe(producto);
-        if (productoDTO.getTipo() != null && productoDTO.getTipo() != tipoActual) {
+        if (request.getTipo() != null && request.getTipo() != tipoActual) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "No se puede cambiar el tipo de un producto existente.");
         }
 
-        Plato plato = entityManager.find(Plato.class, productoDTO.getIdProducto());
-        if (plato != null) {
-            if (productoDTO.getPlato() != null
-                    && productoDTO.getPlato().getTiempoPreparacionMinutos() != null) {
-                plato.setTiempoPreparacionMinutos(productoDTO.getPlato().getTiempoPreparacionMinutos());
+        switch (tipoActual) {
+            case Plato -> {
+                Plato plato = (Plato) producto;
+                if (request.getPlato() != null
+                        && request.getPlato().getTiempoPreparacionMinutos() != null) {
+                    plato.setTiempoPreparacionMinutos(request.getPlato().getTiempoPreparacionMinutos());
+                }
+                if (request.getIngredientes() != null) {
+                    vincularIngredientesPlato(plato, request.getIngredientes(), idRestaurante);
+                }
             }
-            if (productoDTO.getIngredientes() != null) {
-                vincularIngredientesPlato(plato, productoDTO.getIngredientes(), idRestaurante);
+            case Combo -> {
+                if (request.getCombo() != null
+                        && request.getCombo().getProductosIncluidosIds() != null) {
+                    Combo combo = (Combo) producto;
+                    List<Producto> productosIncluidos = request.getCombo().getProductosIncluidosIds().stream()
+                            .map(id -> productoRepository.findById(id)
+                                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                            "Producto incluido en el combo no encontrado con id: " + id)))
+                            .collect(Collectors.toList());
+                    combo.setProductosIncluidos(productosIncluidos);
+                }
             }
-        } else if (producto instanceof Combo combo && productoDTO.getCombo() != null
-                && productoDTO.getCombo().getProductosIncluidosIds() != null) {
-            List<Producto> productosIncluidos = productoDTO.getCombo().getProductosIncluidosIds().stream()
-                    .map(id -> productoRepository.findById(id)
-                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                    "Producto incluido en el combo no encontrado con id: " + id)))
-                    .collect(Collectors.toList());
-            combo.setProductosIncluidos(productosIncluidos);
+            case Articulo -> {
+                // Sin campos adicionales en el modelo actual.
+            }
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Tipo de producto inválido: " + tipoActual);
         }
 
         productoRepository.save(producto);
         return toDTO(producto);
-    }
-
-    @Transactional
-    public void eliminarProducto(Integer idProducto) {
-        String rol = currentUserService.getCurrentRol();
-        if (!"Restaurante".equals(rol)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "El endpoint solo está disponible para restaurantes autenticados (rol actual: " + rol + ")");
-        }
-        if (idProducto == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El idProducto es obligatorio.");
-        }
-
-        Integer idRestaurante = currentUserService.getCurrentId();
-        Producto producto = productoRepository.findById(idProducto)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Producto no encontrado con id: " + idProducto));
-
-        if (producto.getRestaurante() == null
-                || !Objects.equals(producto.getRestaurante().getIdUsuario(), idRestaurante)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "El producto no pertenece al restaurante autenticado.");
-        }
-
-        productoRepository.delete(producto);
     }
 
     public DTOFirma generarFirma(String nombreArchivo, String tipoArchivo) {

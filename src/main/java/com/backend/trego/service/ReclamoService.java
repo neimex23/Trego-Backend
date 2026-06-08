@@ -2,7 +2,6 @@ package com.backend.trego.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.EnumSet;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -28,11 +27,6 @@ import org.springframework.context.annotation.Lazy;
 @Service
 public class ReclamoService {
 
-    private static final EnumSet<EnumEstadoPedido> ESTADOS_SIN_RECLAMO = EnumSet.of(
-            EnumEstadoPedido.Pagado,
-            EnumEstadoPedido.Cancelado,
-            EnumEstadoPedido.Reembolsado);
-
     private final PedidoRepository pedidoRepository;
     private final NotificacionesService notificacionesService;
     private final CurrentUserService currentUserService;
@@ -55,7 +49,7 @@ public class ReclamoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Pedido " + request.getIdPedido() + " no encontrado"));
 
-        if (ESTADOS_SIN_RECLAMO.contains(pedido.getEstado())) {
+        if (!pedido.getEstado().permiteReclamo()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "No se puede reclamar un pedido en estado " + pedido.getEstado());
         }

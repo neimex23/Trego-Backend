@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,7 +143,9 @@ public class UsuarioService {
     }
 
     public String enviarCodigoVerificacion(String email) {
-        return notificacionesService.codigoVerificacionEmail(email);
+        String codigo = String.valueOf(100000 + new Random().nextInt(900000));
+        notificacionesService.enviarCodigoVerificacionEmail(email, codigo);
+        return codigo;
     }
 
     // Valida el código que el usuario ingresó y, si es correcto, da de alta el

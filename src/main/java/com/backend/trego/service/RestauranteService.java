@@ -7,6 +7,7 @@ import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.ProductoPedido;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTOComentario;
+import com.backend.trego.entity.DTOs.DTOCrearComentarioRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOEstadisticas;
 import com.backend.trego.entity.DTOs.DTOIngrediente;
@@ -575,7 +576,7 @@ public class RestauranteService {
     }
 
     @Transactional
-    public DTOComentario agregarComentario(DTOComentario request) {
+    public DTOComentario agregarComentario(DTOCrearComentarioRequest request) {
         if (request.getIdRestaurante() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El id del restaurante es obligatorio");
         }
