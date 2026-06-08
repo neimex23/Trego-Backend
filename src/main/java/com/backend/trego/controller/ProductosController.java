@@ -57,6 +57,15 @@ public class ProductosController {
         return ResponseEntity.ok(productosService.listarProductos(null, true));
     }
 
+    @GetMapping("/listarProductosHabilitados")
+    @Operation(summary = "Listar Productos Habilitados", description = "Obtiene solo los productos disponibles (habilitados) del restaurante actualmente logueado")
+    @ApiResponse(responseCode = "200", description = "Productos listados")
+    @ApiResponse(responseCode = "404", description = "No hay productos habilitados para el restaurante")
+    @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene rol Restaurante")
+    public ResponseEntity<List<DTOProducto>> listarProductosHabilitados() {
+        return ResponseEntity.ok(productosService.listarSoloProductosHabilitados(null, true));
+    }
+
     @PostMapping("agregarProducto")
     @Operation(summary = "Agregar Producto", description = "Agrega un nuevo producto al restaurante actualmente logueado")
     @ApiResponse(responseCode = "200", description = "Producto agregado correctamente")
@@ -83,6 +92,26 @@ public class ProductosController {
     public ResponseEntity<Void> eliminarProducto(@PathVariable Integer idProducto) {
         productosService.eliminarProducto(idProducto);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{idProducto}/deshabilitar")
+    @Operation(summary = "Deshabilitar Producto", description = "Deshabilita un producto del restaurante actualmente logueado (disponible = false)")
+    @ApiResponse(responseCode = "200", description = "Producto deshabilitado correctamente")
+    @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene rol Restaurante o el producto no le pertenece")
+    public ResponseEntity<Void> deshabilitarProducto(@PathVariable Integer idProducto) {
+        productosService.deshabilitarProducto(idProducto);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{idProducto}/habilitar")
+    @Operation(summary = "Habilitar Producto", description = "Vuelve a habilitar un producto del restaurante actualmente logueado (disponible = true)")
+    @ApiResponse(responseCode = "200", description = "El producto vuelve a estar disponible")
+    @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene rol Restaurante o el producto no le pertenece")
+    public ResponseEntity<Void> habilitarProducto(@PathVariable Integer idProducto) {
+        productosService.habilitarProducto(idProducto);
+        return ResponseEntity.ok().build();
     }
 
 }

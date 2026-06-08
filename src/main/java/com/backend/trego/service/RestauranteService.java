@@ -287,7 +287,7 @@ public class RestauranteService {
 
     public boolean estaAbierto(String restauranteId) {
         Restaurante restaurante = buscarRestaurante(restauranteId);
-        if (!restaurante.isHabilitado()) {
+        if (!restaurante.isHabilitado() || !restaurante.getAbierto()) {
             return false;
         }
         LocalTime apertura = restaurante.getApertura();
@@ -391,7 +391,7 @@ public class RestauranteService {
 
         List<DTOProducto> productos;
         try {
-            productos = productosService.listarProductos(id, false);
+            productos = productosService.listarSoloProductosHabilitados(id, false);
         } catch (ResponseStatusException e) {
             // listarProductos devuelve 404 si no hay productos; en verMenu eso es menú vacío, no local inexistente.
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
@@ -515,6 +515,15 @@ public class RestauranteService {
         if (dto.getRadioEntrega() != null && !dto.getRadioEntrega().equals(restaurante.getRadioEntrega())) {
             restaurante.setRadioEntrega(dto.getRadioEntrega());
         }
+
+        if (dto.getHoraApertura() != null && !dto.getHoraApertura().equals(restaurante.getApertura())) {
+            restaurante.setApertura(dto.getHoraApertura());
+        }
+
+        if (dto.getHoraCierre() != null && !dto.getHoraCierre().equals(restaurante.getCierre())) {
+            restaurante.setCierre(dto.getHoraCierre());
+        }
+
         Restaurante actualizado = restauranteRepository.save(restaurante);
         return toDTO(actualizado);
     }

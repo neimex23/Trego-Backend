@@ -10,5 +10,6 @@ import com.backend.trego.entity.Producto;
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Integer> {
 	List<Producto> findByRestauranteIdUsuario(Integer idRestaurante);
+	List<Producto> findByRestauranteIdUsuarioAndDisponibleTrue(Integer idRestaurante);
 }
 

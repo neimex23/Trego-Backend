@@ -80,6 +80,31 @@ public class ProductosService {
         return productos;
     }
 
+    public List<DTOProducto> listarSoloProductosHabilitados(String idRestaurante, boolean restauranteActual) {
+        if (restauranteActual) {
+            String rol = currentUserService.getCurrentRol();
+            if (!"Restaurante".equals(rol)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "El endpoint solo está disponible para restaurantes autenticados (rol actual: " + rol + ")");
+            } else {
+                idRestaurante = String.valueOf(currentUserService.getCurrentId());
+            }
+        }
+
+        Integer id = parseId(idRestaurante);
+
+        var productos = productoRepository.findByRestauranteIdUsuarioAndDisponibleTrue(id).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+
+        if (productos.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "No se encontraron productos habilitados para el restaurante con id: " + id);
+        }
+
+        return productos;
+    }
+
     @Transactional
     public DTOProducto crearProducto(DTOProducto productoDTO) {
         // Validar que el restaurante existe y pertenece al usuario autenticado.
@@ -375,4 +400,51 @@ public class ProductosService {
                     HttpStatus.BAD_REQUEST, "Id de restaurante inválido: " + idRestaurante);
         }
     }
+
+    @Transactional
+    public void deshabilitarProducto(Integer idProducto) {
+        String rol = currentUserService.getCurrentRol();
+        if (!"Restaurante".equals(rol)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "El endpoint solo está disponible para restaurantes autenticados (rol actual: " + rol + ")");
+        }
+
+        Integer idRestaurante = currentUserService.getCurrentId();
+
+        Producto producto = productoRepository.findById(idProducto)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Producto no encontrado con id: " + idProducto));
+
+        if (!producto.getRestaurante().getIdUsuario().equals(idRestaurante)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "No tenés permisos para modificar este producto.");
+        }
+
+        producto.setDisponible(false);
+        productoRepository.save(producto);
+    }
+
+    @Transactional
+    public void habilitarProducto(Integer idProducto) {
+        String rol = currentUserService.getCurrentRol();
+        if (!"Restaurante".equals(rol)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "El endpoint solo está disponible para restaurantes autenticados (rol actual: " + rol + ")");
+        }
+
+        Integer idRestaurante = currentUserService.getCurrentId();
+
+        Producto producto = productoRepository.findById(idProducto)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Producto no encontrado con id: " + idProducto));
+
+        if (!producto.getRestaurante().getIdUsuario().equals(idRestaurante)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "No tenés permisos para modificar este producto.");
+        }
+
+        producto.setDisponible(true);
+        productoRepository.save(producto);
+    }
+
 }
