@@ -52,6 +52,8 @@ public class CarritoService {
                 .orElseThrow(() -> new NoSuchElementException(
                         "Producto no encontrado con id: " + request.getProducto().getIdProducto()));
 
+        float precioUnitario = producto.getPrecioConDescuento();
+
         Integer idRestauranteRequest = request.getProducto().getIdRestaurante();
         final Integer idRestauranteSolicitado = idRestauranteRequest != null
                 ? idRestauranteRequest
@@ -96,7 +98,7 @@ public class CarritoService {
                                 request.getIngredientesAQuitar(), producto));
             }
         } else {
-            LineaCarrito linea = new LineaCarrito(carrito, producto, cantidad, observaciones);
+            LineaCarrito linea = new LineaCarrito(carrito, producto, cantidad, observaciones, precioUnitario);
             linea.setIngredientesAQuitar(
                     ingredientePedidoService.resolverIngredientesAQuitar(
                             request.getIngredientesAQuitar(), producto));

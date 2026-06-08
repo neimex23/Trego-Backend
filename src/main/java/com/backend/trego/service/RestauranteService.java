@@ -3,7 +3,9 @@ package com.backend.trego.service;
 import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.Comentario;
 import com.backend.trego.entity.Ingrediente;
+import com.backend.trego.entity.Oferta;
 import com.backend.trego.entity.Pedido;
+import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.ProductoPedido;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTOComentario;
@@ -11,6 +13,7 @@ import com.backend.trego.entity.DTOs.DTOCrearComentarioRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOEstadisticas;
 import com.backend.trego.entity.DTOs.DTOIngrediente;
+import com.backend.trego.entity.DTOs.DTOOferta;
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTOProductoSimplificado;
 import com.backend.trego.entity.DTOs.DTORestaurante;
@@ -21,6 +24,7 @@ import com.backend.trego.repository.PedidoRepository;
 import com.backend.trego.repository.UsuarioRepository;
 
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -730,5 +734,79 @@ public class RestauranteService {
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().floatValue()));
 
         return new DTOEstadisticas(fechaInicio, fechaFin, productosMasVendidos, ventasPorFecha, ingresosPorFecha);
+    }
+
+    @Transactional
+    public DTOOferta crearOferta(DTOOferta request, Integer idProducto) {
+        Restaurante restaurante = restauranteRepository.findRestauranteById(currentUserService.getCurrentId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante no encontrado"));
+
+        Producto producto = restaurante.getProductos().stream()
+                .filter(p -> p.getIdProducto().equals(idProducto))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado con id: " + idProducto));
+
+        if (request.getDescuento() <= 0 || request.getDescuento() >= 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El descuento debe ser un valor entre 0 y 100");
+        }
+        if (request.getFechaInicio() == null || request.getFechaFin() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Se requieren ambas fechas para la oferta");
+        }
+        if (request.getFechaFin().isBefore(request.getFechaInicio())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La fecha de fin debe ser posterior a la fecha de inicio");
+        }
+
+        Oferta oferta = new Oferta(
+                request.getDescripcion(),
+                request.getDescuento(),
+                request.getUrlImagen(),
+                request.getFechaInicio(),
+                request.getFechaFin());
+
+        producto.setOferta(oferta);
+        if (request.getFechaInicio().isBefore(LocalDateTime.now()) && request.getFechaFin().isAfter(LocalDateTime.now())) {
+            producto.setOfertaActiva(true);
+        }
+        productosService.modificarProducto(producto);
+
+        return DTOOferta.desde(oferta);
+    }
+
+    @Transactional
+    @Modifying
+    public void eliminarOferta(Integer idProducto) {
+        Restaurante restaurante = restauranteRepository.findRestauranteById(currentUserService.getCurrentId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante no encontrado"));
+
+        Producto producto = restaurante.getProductos().stream()
+                .filter(p -> p.getIdProducto().equals(idProducto))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado con id: " + idProducto));
+
+        if (producto.getOferta() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El producto no tiene una oferta activa para eliminar");
+        }
+
+        producto.setOferta(null);
+        producto.setOfertaActiva(false);
+        productosService.modificarProducto(producto);
+    }
+
+    @Transactional
+    public void activarDesactivarOferta(Integer idProducto, boolean activar) {
+        Restaurante restaurante = restauranteRepository.findRestauranteById(currentUserService.getCurrentId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante no encontrado"));
+
+        Producto producto = restaurante.getProductos().stream()
+                .filter(p -> p.getIdProducto().equals(idProducto))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado con id: " + idProducto));
+
+        if (producto.getOferta() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El producto no tiene una oferta para activar/desactivar");
+        }
+
+        producto.setOfertaActiva(activar);
+        productosService.modificarProducto(producto);
     }
 }

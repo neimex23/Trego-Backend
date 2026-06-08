@@ -5,6 +5,7 @@ import com.backend.trego.entity.DTOs.DTOComentario;
 import com.backend.trego.entity.DTOs.DTOCrearComentarioRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOEstadisticas;
+import com.backend.trego.entity.DTOs.DTOOferta;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.service.RestauranteService;
 
@@ -176,4 +177,33 @@ public class RestauranteController {
         return ResponseEntity.ok(restauranteService.obtenerEstadisticas(request));
     }
 
+    @PostMapping("/ofertas/crear")
+    @Operation(summary = "Crear oferta", description = "Crea o sobreescribe una nueva oferta para el restaurante autenticado.")
+    @ApiResponse(responseCode = "201", description = "Oferta creada exitosamente")
+    @ApiResponse(responseCode = "400", description = "Datos de la oferta inválidos")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    public ResponseEntity<DTOOferta> crearOferta(@RequestBody DTOOferta request, @RequestParam Integer idProducto) {
+        return ResponseEntity.status(201).body(restauranteService.crearOferta(request, idProducto));
+    }
+
+    @PostMapping("/ofertas/desactivar")
+    @Operation(summary = "Desactivar oferta", description = "Desactiva la oferta vigente del producto indicado para el restaurante autenticado.")
+    @ApiResponse(responseCode = "200", description = "Oferta desactivada exitosamente")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    public ResponseEntity<Void> activarDesactivarOferta(@RequestParam Integer idProducto, @RequestParam Boolean activar) {
+        restauranteService.activarDesactivarOferta(idProducto, activar);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/ofertas/eliminar")
+    @Operation(summary = "Eliminar oferta", description = "Elimina la oferta vigente del producto indicado para el restaurante autenticado.")
+    @ApiResponse(responseCode = "200", description = "Oferta eliminada exitosamente")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    public ResponseEntity<Void> eliminarOferta(@RequestParam Integer idProducto) {
+        restauranteService.eliminarOferta(idProducto);
+        return ResponseEntity.ok().build();
+    }
 }

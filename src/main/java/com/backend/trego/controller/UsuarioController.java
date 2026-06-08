@@ -4,7 +4,6 @@ import com.backend.trego.config.AuthenticatedUser;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOLoginResponse;
 import com.backend.trego.entity.DTOs.DTORegistroRestaurante;
-import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.service.UsuarioService;
 
 import io.swagger.v3.oas.annotations.Operation;

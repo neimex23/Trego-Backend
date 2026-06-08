@@ -32,6 +32,8 @@ public class LineaCarrito {
 
     private Integer cantidad;
 
+    private float precioUnitario;
+
     private String observaciones;
 
     @ManyToMany
@@ -44,17 +46,19 @@ public class LineaCarrito {
     protected LineaCarrito() {
     }
 
-    public LineaCarrito(Carrito carrito, Producto producto, Integer cantidad) {
+    public LineaCarrito(Carrito carrito, Producto producto, Integer cantidad, float precioUnitario) {
         this.carrito = carrito;
         this.producto = producto;
         this.cantidad = cantidad;
+        this.precioUnitario = precioUnitario;
     }
 
-    public LineaCarrito(Carrito carrito, Producto producto, Integer cantidad, String observaciones) {
+    public LineaCarrito(Carrito carrito, Producto producto, Integer cantidad, String observaciones, float precioUnitario) {
         this.carrito = carrito;
         this.producto = producto;
         this.cantidad = cantidad;
         this.observaciones = observaciones;
+        this.precioUnitario = precioUnitario;
     }
 
     public Integer getIdLinea() {
@@ -101,11 +105,16 @@ public class LineaCarrito {
         this.ingredientesAQuitar = ingredientesAQuitar != null ? ingredientesAQuitar : new ArrayList<>();
     }
 
+    public float getPrecioUnitario() {
+        return precioUnitario;
+    }
+
+    public void setPrecioUnitario(float precioUnitario) {
+        this.precioUnitario = precioUnitario;
+    }
+
     public double getSubtotal() {
-        if (producto == null) {
-            return 0.0;
-        }
-        return producto.getPrecio() * cantidad;
+        return precioUnitario * cantidad;
     }
 
     public DTOProductoPedido toDTO() {

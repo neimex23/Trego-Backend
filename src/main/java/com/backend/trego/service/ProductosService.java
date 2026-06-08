@@ -25,6 +25,7 @@ import com.backend.trego.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.http.HttpStatus;
 
 import java.util.Collections;
@@ -424,6 +425,12 @@ public class ProductosService {
         }
 
         producto.setDisponible(true);
+        productoRepository.save(producto);
+    }
+
+    @Modifying
+    @Transactional
+    public void modificarProducto(Producto producto) {
         productoRepository.save(producto);
     }
 

@@ -120,4 +120,12 @@ public abstract class Producto {
     public void setDisponible(boolean disponible) {
         this.disponible = disponible;
     }
+
+    public float getPrecioConDescuento() {
+        if (this.oferta != null && this.ofertaActiva) {
+            float descuento = this.precio * (this.oferta.getDescuento() / 100);
+            return this.precio - descuento;
+        }
+        return this.precio;
+    }
 }
