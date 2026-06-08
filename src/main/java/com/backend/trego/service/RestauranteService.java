@@ -375,7 +375,7 @@ public class RestauranteService {
 
         List<DTOProducto> productos;
         try {
-            productos = productosService.listarProductos(id, false);
+            productos = productosService.listarSoloProductosHabilitados(id, false);
         } catch (ResponseStatusException e) {
             // listarProductos devuelve 404 si no hay productos; en verMenu eso es menú vacío, no local inexistente.
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {

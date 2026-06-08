@@ -63,7 +63,7 @@ public class ProductosController {
     @ApiResponse(responseCode = "404", description = "No hay productos habilitados para el restaurante")
     @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene rol Restaurante")
     public ResponseEntity<List<DTOProducto>> listarProductosHabilitados() {
-        return ResponseEntity.ok(productosService.listarProductosHabilitados());
+        return ResponseEntity.ok(productosService.listarSoloProductosHabilitados(null, true));
     }
 
     @PostMapping("agregarProducto")

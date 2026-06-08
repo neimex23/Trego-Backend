@@ -70,22 +70,26 @@ public class ProductosService {
         return productos;
     }
 
-    public List<DTOProducto> listarProductosHabilitados() {
-        String rol = currentUserService.getCurrentRol();
-        if (!"Restaurante".equals(rol)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "El endpoint solo está disponible para restaurantes autenticados (rol actual: " + rol + ")");
+    public List<DTOProducto> listarSoloProductosHabilitados(String idRestaurante, boolean restauranteActual) {
+        if (restauranteActual) {
+            String rol = currentUserService.getCurrentRol();
+            if (!"Restaurante".equals(rol)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "El endpoint solo está disponible para restaurantes autenticados (rol actual: " + rol + ")");
+            } else {
+                idRestaurante = String.valueOf(currentUserService.getCurrentId());
+            }
         }
 
-        Integer idRestaurante = currentUserService.getCurrentId();
+        Integer id = parseId(idRestaurante);
 
-        var productos = productoRepository.findByRestauranteIdUsuarioAndDisponibleTrue(idRestaurante).stream()
+        var productos = productoRepository.findByRestauranteIdUsuarioAndDisponibleTrue(id).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
 
         if (productos.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "No se encontraron productos habilitados para el restaurante con id: " + idRestaurante);
+                    "No se encontraron productos habilitados para el restaurante con id: " + id);
         }
 
         return productos;
