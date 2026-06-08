@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -73,4 +74,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     @Query("SELECT r FROM Restaurante r WHERE r.categoria = :categoria")
     List<Restaurante> findRestaurantesPorCategoria(@Param("categoria") EnumCategoriaRestaurante categoria);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Restaurante r SET r.calificacionProm = :promedio WHERE r.idUsuario = :idRestaurante")
+    void updateCalificacionProm(
+            @Param("idRestaurante") Integer idRestaurante,
+            @Param("promedio") float promedio);
 }

@@ -73,24 +73,48 @@ public class DTOProducto {
         return idProducto;
     }
 
+    public void setIdProducto(Integer idProducto) {
+        this.idProducto = idProducto;
+    }
+
     public String getNombre() {
         return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
     }
 
     public String getDescripcion() {
         return descripcion;
     }
 
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
     public float getPrecio() {
         return precio;
+    }
+
+    public void setPrecio(float precio) {
+        this.precio = precio;
     }
 
     public String getUrlImagen() {
         return urlImagen;
     }
 
+    public void setUrlImagen(String urlImagen) {
+        this.urlImagen = urlImagen;
+    }
+
     public EnumCategoriaProducto getCategoria() {
         return categoria;
+    }
+
+    public void setCategoria(EnumCategoriaProducto categoria) {
+        this.categoria = categoria;
     }
 
     public Integer getIdRestaurante() {
@@ -101,24 +125,48 @@ public class DTOProducto {
         return ingredientes;
     }
 
+    public void setIngredientes(List<DTOIngrediente> ingredientes) {
+        this.ingredientes = ingredientes != null ? ingredientes : new ArrayList<>();
+    }
+
     public Boolean getDisponible() {
         return disponible;
+    }
+
+    public void setDisponible(Boolean disponible) {
+        this.disponible = disponible;
     }
 
     public EnumTipoProducto getTipo() {
         return tipo;
     }
 
+    public void setTipo(EnumTipoProducto tipo) {
+        this.tipo = tipo;
+    }
+
     public DTOPlato getPlato() {
         return plato;
+    }
+
+    public void setPlato(DTOPlato plato) {
+        this.plato = plato;
     }
 
     public DTOArticulo getArticulo() {
         return articulo;
     }
 
+    public void setArticulo(DTOArticulo articulo) {
+        this.articulo = articulo;
+    }
+
     public DTOCombo getCombo() {
         return combo;
+    }
+
+    public void setCombo(DTOCombo combo) {
+        this.combo = combo;
     }
 
     public DTOOferta getOferta() {

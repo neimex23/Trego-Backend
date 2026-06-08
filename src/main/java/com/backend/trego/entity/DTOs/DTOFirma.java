@@ -9,7 +9,8 @@ public class DTOFirma {
     private String cloudName;
     private String uploadUrl;
     private String publicId;
-    
+    private String mockImageUrl;
+
     public String getFirma() {
         return firma;
     }

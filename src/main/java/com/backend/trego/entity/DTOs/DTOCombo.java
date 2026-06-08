@@ -17,4 +17,10 @@ public class DTOCombo {
     public List<Integer> getProductosIncluidosIds() {
         return productosIncluidosIds;
     }
+
+    public void setProductosIncluidosIds(List<Integer> productosIncluidosIds) {
+        this.productosIncluidosIds = productosIncluidosIds != null
+                ? productosIncluidosIds
+                : new ArrayList<>();
+    }
 }

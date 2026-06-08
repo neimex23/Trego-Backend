@@ -17,7 +17,10 @@ import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTOSubCategoria;
 import com.backend.trego.entity.Enums.EnumCategoriaProducto;
 import com.backend.trego.entity.Enums.EnumTipoProducto;
+import com.backend.trego.repository.IngredienteRepository;
 import com.backend.trego.repository.ProductoRepository;
+
+import jakarta.persistence.EntityManager;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +29,7 @@ import org.springframework.http.HttpStatus;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 // Catálogo de productos e ingredientes de cada restaurante.
@@ -33,22 +37,28 @@ import java.util.stream.Collectors;
 public class ProductosService {
 
     private final ProductoRepository productoRepository;
+    private final IngredienteRepository ingredienteRepository;
     private final RestauranteService restauranteService;
     private final CloudinaryService cloudinaryService;
     private final CurrentUserService currentUserService;
     private final SubCategoriaService subCategoriaService;
+    private final EntityManager entityManager;
 
-    public ProductosService(ProductoRepository productoRepository, RestauranteService restauranteService,
-            CloudinaryService cloudinaryService, CurrentUserService currentUserService,
-            SubCategoriaService subCategoriaService) {
+    public ProductosService(ProductoRepository productoRepository, IngredienteRepository ingredienteRepository,
+            RestauranteService restauranteService, CloudinaryService cloudinaryService,
+            CurrentUserService currentUserService, SubCategoriaService subCategoriaService,
+            EntityManager entityManager) {
         this.productoRepository = productoRepository;
+        this.ingredienteRepository = ingredienteRepository;
         this.restauranteService = restauranteService;
         this.cloudinaryService = cloudinaryService;
         this.currentUserService = currentUserService;
         this.subCategoriaService = subCategoriaService;
+        this.entityManager = entityManager;
     }
 
     // Devuelve los productos del menú de un restaurante, ya mapeados a DTO.
+    @Transactional(readOnly = true)
     public List<DTOProducto> listarProductos(String idRestaurante, boolean restauranActual) {
         if (restauranActual) {
             String rol = currentUserService.getCurrentRol();
@@ -141,25 +151,107 @@ public class ProductosService {
             producto.setDisponible(productoDTO.getDisponible());
         }
 
-        // Ingredientes del Plato: solo se aceptan los que ya están en
-        // ingredientesDisponibles del restaurante autenticado.
         if (producto instanceof Plato plato && productoDTO.getIngredientes() != null) {
-            for (DTOIngrediente dtoIng : productoDTO.getIngredientes()) {
-                if (dtoIng.getIdIngrediente() == null) {
-                    continue;
-                }
-                Ingrediente ingrediente = restaurante.getIngredientesDisponibles().stream()
-                        .filter(i -> i.getIdIngrediente() == dtoIng.getIdIngrediente())
-                        .findFirst()
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                "El ingrediente con id " + dtoIng.getIdIngrediente()
-                                        + " no pertenece a los ingredientes disponibles del restaurante."));
-                plato.addIngrediente(ingrediente);
-            }
+            vincularIngredientesPlato(plato, productoDTO.getIngredientes(), idRestaurante);
         }
 
         productoRepository.save(producto);
         return toDTO(producto);
+    }
+
+    @Transactional
+    public DTOProducto modificarProducto(DTOProducto productoDTO) {
+        String rol = currentUserService.getCurrentRol();
+        if (!"Restaurante".equals(rol)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "El endpoint solo está disponible para restaurantes autenticados (rol actual: " + rol + ")");
+        }
+        if (productoDTO.getIdProducto() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El idProducto es obligatorio para modificar un producto.");
+        }
+
+        Integer idRestaurante = currentUserService.getCurrentId();
+        Producto producto = productoRepository.findById(productoDTO.getIdProducto())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Producto no encontrado con id: " + productoDTO.getIdProducto()));
+
+        if (producto.getRestaurante() == null
+                || !Objects.equals(producto.getRestaurante().getIdUsuario(), idRestaurante)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "El producto no pertenece al restaurante autenticado.");
+        }
+
+        if (productoDTO.getNombre() != null) {
+            producto.setNombre(productoDTO.getNombre());
+        }
+        if (productoDTO.getDescripcion() != null) {
+            producto.setDescripcion(productoDTO.getDescripcion());
+        }
+        producto.setPrecio(productoDTO.getPrecio());
+        if (productoDTO.getUrlImagen() != null) {
+            producto.setUrlImagen(productoDTO.getUrlImagen());
+        }
+        if (productoDTO.getDisponible() != null) {
+            producto.setDisponible(productoDTO.getDisponible());
+        }
+        if (productoDTO.getIdSubCategoria() != null) {
+            SubCategoria subCategoria = subCategoriaService.buscarPorId(productoDTO.getIdSubCategoria());
+            producto.setSubCategoria(subCategoria);
+        }
+
+        EnumTipoProducto tipoActual = tipoDe(producto);
+        if (productoDTO.getTipo() != null && productoDTO.getTipo() != tipoActual) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No se puede cambiar el tipo de un producto existente.");
+        }
+
+        Plato plato = entityManager.find(Plato.class, productoDTO.getIdProducto());
+        if (plato != null) {
+            if (productoDTO.getPlato() != null
+                    && productoDTO.getPlato().getTiempoPreparacionMinutos() != null) {
+                plato.setTiempoPreparacionMinutos(productoDTO.getPlato().getTiempoPreparacionMinutos());
+            }
+            if (productoDTO.getIngredientes() != null) {
+                vincularIngredientesPlato(plato, productoDTO.getIngredientes(), idRestaurante);
+            }
+        } else if (producto instanceof Combo combo && productoDTO.getCombo() != null
+                && productoDTO.getCombo().getProductosIncluidosIds() != null) {
+            List<Producto> productosIncluidos = productoDTO.getCombo().getProductosIncluidosIds().stream()
+                    .map(id -> productoRepository.findById(id)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                    "Producto incluido en el combo no encontrado con id: " + id)))
+                    .collect(Collectors.toList());
+            combo.setProductosIncluidos(productosIncluidos);
+        }
+
+        productoRepository.save(producto);
+        return toDTO(producto);
+    }
+
+    @Transactional
+    public void eliminarProducto(Integer idProducto) {
+        String rol = currentUserService.getCurrentRol();
+        if (!"Restaurante".equals(rol)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "El endpoint solo está disponible para restaurantes autenticados (rol actual: " + rol + ")");
+        }
+        if (idProducto == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El idProducto es obligatorio.");
+        }
+
+        Integer idRestaurante = currentUserService.getCurrentId();
+        Producto producto = productoRepository.findById(idProducto)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Producto no encontrado con id: " + idProducto));
+
+        if (producto.getRestaurante() == null
+                || !Objects.equals(producto.getRestaurante().getIdUsuario(), idRestaurante)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "El producto no pertenece al restaurante autenticado.");
+        }
+
+        productoRepository.delete(producto);
     }
 
     public DTOFirma generarFirma(String nombreArchivo, String tipoArchivo) {
@@ -225,6 +317,26 @@ public class ProductosService {
         return null;
     }
 
+    private void vincularIngredientesPlato(Plato plato, List<DTOIngrediente> ingredientesDTO,
+            Integer idRestaurante) {
+        plato.getIngredientes().clear();
+        for (DTOIngrediente dtoIng : ingredientesDTO) {
+            if (dtoIng.getIdIngrediente() == null) {
+                continue;
+            }
+            Integer idIngrediente = dtoIng.getIdIngrediente();
+            if (ingredienteRepository.countByIdAndRestauranteId(idIngrediente, idRestaurante) == 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "El ingrediente con id " + idIngrediente
+                                + " no pertenece a los ingredientes disponibles del restaurante.");
+            }
+            Ingrediente ingrediente = ingredienteRepository.findById(idIngrediente)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Ingrediente no encontrado con id: " + idIngrediente));
+            plato.addIngrediente(ingrediente);
+        }
+    }
+
     // Solo los platos tienen ingredientes asociados en el modelo actual.
     private List<DTOIngrediente> mapearIngredientes(Producto producto) {
         if (!(producto instanceof Plato plato)) {
@@ -233,7 +345,11 @@ public class ProductosService {
         Integer idRestaurante = producto.getRestaurante() != null
                 ? producto.getRestaurante().getIdUsuario()
                 : null;
-        return plato.getIngredientes().stream()
+        List<Ingrediente> ingredientes = plato.getIngredientes();
+        if (ingredientes == null || ingredientes.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return ingredientes.stream()
                 .map(ing -> new DTOIngrediente(ing.getIdIngrediente(), ing.getNombre(), idRestaurante))
                 .collect(Collectors.toList());
     }

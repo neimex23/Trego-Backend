@@ -1,7 +1,9 @@
 package com.backend.trego.service;
 
+import com.backend.trego.config.JWTUtil;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOFirma;
+import com.backend.trego.entity.DTOs.DTOLoginResponse;
 import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.repository.UsuarioRepository;
 import com.backend.trego.entity.RegistroTemporal;
@@ -28,18 +30,20 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final CurrentUserService currentUserService;
     private final CloudinaryService cloudinaryService;
+    private final JWTUtil jwtUtil;
 
     // Mapa en memoria: email -> datos del registro pendiente (código + contraseña)
     private final Map<String, RegistroTemporal> registrosPendientes = new ConcurrentHashMap<>();
 
     public UsuarioService(UsuarioRepository usuarioRepository, NotificacionesService notificacionesService,
             PasswordEncoder passwordEncoder, CurrentUserService currentUserService,
-            CloudinaryService cloudinaryService) {
+            CloudinaryService cloudinaryService, JWTUtil jwtUtil) {
         this.usuarioRepository = usuarioRepository;
         this.notificacionesService = notificacionesService;
         this.passwordEncoder = passwordEncoder;
         this.currentUserService = currentUserService;
         this.cloudinaryService = cloudinaryService;
+        this.jwtUtil = jwtUtil;
     }
 
     // Da de alta un cliente nuevo a partir del DTO y lo devuelve ya con su id.
@@ -142,16 +146,22 @@ public class UsuarioService {
     }
 
     // Valida el código que el usuario ingresó y, si es correcto, da de alta el
-    // restaurante.
-    public DTOUsuario verificarCodigo(String email, String codigo) {
+    // restaurante y devuelve sesión (JWT) para continuar el flujo sin volver a loguearse.
+    public DTOLoginResponse verificarCodigo(String email, String codigo) {
         RegistroTemporal pendiente = registrosPendientes.get(email);
 
         if (pendiente == null || pendiente.estaExpiradoCodigo() || !pendiente.getCodigoVerificacion().equals(codigo)) {
             throw new IllegalArgumentException("Código inválido o expirado");
         }
 
-        return registrarRestaurante(pendiente.getEmail(), pendiente.getPassword());
+        DTOUsuario usuario = registrarRestaurante(pendiente.getEmail(), pendiente.getPassword());
+        String token = jwtUtil.generateToken(
+                usuario.getEmail(),
+                usuario.getRol().name(),
+                null,
+                usuario.getIdUsuario());
 
+        return new DTOLoginResponse(token, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
     }
 
     // Reenvía el código reutilizando los datos que quedaron guardados en el mapa.

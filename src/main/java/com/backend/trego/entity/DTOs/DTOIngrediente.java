@@ -27,4 +27,16 @@ public class DTOIngrediente {
     public Integer getIdRestaurante() {
         return idRestaurante;
     }
+
+    public void setIdIngrediente(Integer idIngrediente) {
+        this.idIngrediente = idIngrediente;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void setIdRestaurante(Integer idRestaurante) {
+        this.idRestaurante = idRestaurante;
+    }
 }

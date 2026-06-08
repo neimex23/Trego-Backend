@@ -13,8 +13,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 
 // Endpoints de restaurantes.
 @RestController
@@ -120,22 +122,40 @@ public class RestauranteController {
         return ResponseEntity.ok().build();
     }
 
-    // Agregar y asignar un nuevo comentario a un restaurante
+    // CU-CLI: Comentar y calificar un restaurante (requiere pedido previo)
     @PostMapping("/comentarios/agregar")
-    @Operation(summary = "Agregar comentario", description = "Agrega un nuevo comentario al restaurante especificado, con el usuario autenticado como autor.")
+    @Operation(summary = "Agregar comentario", description = "Permite a un cliente comentar y calificar (1-5) un restaurante. "
+            + "Requiere haber realizado al menos un pedido pagado en ese local.")
     @ApiResponse(responseCode = "200", description = "Comentario agregado exitosamente")
     @ApiResponse(responseCode = "400", description = "Datos incompletos o erróneos")
+    @ApiResponse(responseCode = "403", description = "Sin pedido previo en el restaurante")
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
-    public ResponseEntity<DTOComentario> agregarComentario(@RequestBody DTOComentario request) {
-        return ResponseEntity.ok(restauranteService.agregarComentario(request));
+    @ApiResponse(responseCode = "409", description = "El cliente ya comentó este restaurante")
+    public ResponseEntity<?> agregarComentario(@RequestBody DTOComentario request) {
+        try {
+            return ResponseEntity.ok(restauranteService.agregarComentario(request));
+        } catch (ResponseStatusException ex) {
+            String mensaje = ex.getReason() != null ? ex.getReason() : "No se pudo agregar el comentario";
+            return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", mensaje));
+        }
+    }
+
+    @GetMapping("/comentarios/yaComente")
+    @Operation(summary = "¿El cliente ya comentó?", description = "Indica si el cliente autenticado ya dejó una reseña en el restaurante indicado.")
+    @ApiResponse(responseCode = "200", description = "Estado consultado correctamente")
+    public ResponseEntity<Map<String, Boolean>> yaComente(@RequestParam Integer idRestaurante) {
+        return ResponseEntity.ok(Map.of("yaComento", restauranteService.clienteYaComentoEnRestaurante(idRestaurante)));
     }
 
     @GetMapping("/comentarios/listar")
-    @Operation(summary = "Listar comentarios", description = "Lista todos los comentarios del restaurante autenticado.")
+    @Operation(summary = "Listar comentarios", description = "Lista comentarios de un restaurante. "
+            + "Con idRestaurante: cualquier usuario autenticado. Sin parámetro: restaurante autenticado.")
     @ApiResponse(responseCode = "200", description = "Comentarios listados exitosamente")
+    @ApiResponse(responseCode = "400", description = "Falta idRestaurante para clientes")
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
-    public ResponseEntity<List<DTOComentario>> listarComentarios() {
-        return ResponseEntity.ok(restauranteService.listarComentarios());
+    public ResponseEntity<List<DTOComentario>> listarComentarios(
+            @RequestParam(required = false) Integer idRestaurante) {
+        return ResponseEntity.ok(restauranteService.listarComentarios(idRestaurante));
     }
 
     @GetMapping("/calificacion/obtener/{id}")

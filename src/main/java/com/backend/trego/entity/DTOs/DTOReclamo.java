@@ -15,13 +15,14 @@ public class DTOReclamo {
     private EnumEstadoReclamo estado;
     private LocalDateTime fechaReclamo;
     private String motivoRechazo;
+    private Float totalPedido;
 
     protected DTOReclamo() {
     }
 
     public DTOReclamo(Integer idReclamo, Integer idPedido, String nombreUsuario, String emailUsuario,
             String motivoReclamo, EnumEstadoReclamo estado, LocalDateTime fechaReclamo,
-            String motivoRechazo) {
+            String motivoRechazo, Float totalPedido) {
         this.idReclamo = idReclamo;
         this.idPedido = idPedido;
         this.nombreUsuario = nombreUsuario;
@@ -30,6 +31,7 @@ public class DTOReclamo {
         this.estado = estado;
         this.fechaReclamo = fechaReclamo;
         this.motivoRechazo = motivoRechazo;
+        this.totalPedido = totalPedido;
     }
 
     public Integer getIdReclamo() {
@@ -62,5 +64,9 @@ public class DTOReclamo {
 
     public String getMotivoRechazo() {
         return motivoRechazo;
+    }
+
+    public Float getTotalPedido() {
+        return totalPedido;
     }
 }

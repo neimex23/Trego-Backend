@@ -2,6 +2,7 @@ package com.backend.trego.controller;
 
 import com.backend.trego.config.AuthenticatedUser;
 import com.backend.trego.entity.DTOs.DTODireccion;
+import com.backend.trego.entity.DTOs.DTOLoginResponse;
 import com.backend.trego.entity.DTOs.DTORegistroRestaurante;
 import com.backend.trego.entity.DTOs.DTOUsuario;
 import com.backend.trego.service.UsuarioService;
@@ -51,8 +52,8 @@ public class UsuarioController {
     @ApiResponse(responseCode = "400", description = "Código inválido o expirado.")
     public ResponseEntity<?> confirmarRegistro(@RequestParam String email, @RequestParam String codigo) {
         try {
-            DTOUsuario usuarioDTO = usuarioService.verificarCodigo(email, codigo);
-            return ResponseEntity.ok(usuarioDTO);
+            DTOLoginResponse sesion = usuarioService.verificarCodigo(email, codigo);
+            return ResponseEntity.ok(sesion);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

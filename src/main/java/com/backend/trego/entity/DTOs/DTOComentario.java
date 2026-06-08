@@ -8,25 +8,11 @@ public class DTOComentario {
     private String fechaCreacion;
     private String nombreCliente;
 
-    public Integer getIdComentario() {
-        return idComentario;
+    protected DTOComentario() {
     }
-    public String getTexto() {
-        return texto;
-    }
-    public Integer getIdRestaurante() {
-        return idRestaurante;
-    }
-    public Integer getCalificacion() {
-        return calificacion;
-    }
-    public String getFechaCreacion() {
-        return fechaCreacion;
-    }
-    public String getNombreCliente() {
-        return nombreCliente;
-    }
-    public DTOComentario(Integer idComentario, String texto, Integer idRestaurante, Integer calificacion, String fechaCreacion, String nombreCliente) {
+
+    public DTOComentario(Integer idComentario, String texto, Integer idRestaurante, Integer calificacion,
+            String fechaCreacion, String nombreCliente) {
         this.idComentario = idComentario;
         this.texto = texto;
         this.idRestaurante = idRestaurante;
@@ -35,5 +21,39 @@ public class DTOComentario {
         this.nombreCliente = nombreCliente;
     }
 
-    
+    public Integer getIdComentario() {
+        return idComentario;
+    }
+
+    public String getTexto() {
+        return texto;
+    }
+
+    public void setTexto(String texto) {
+        this.texto = texto;
+    }
+
+    public Integer getIdRestaurante() {
+        return idRestaurante;
+    }
+
+    public void setIdRestaurante(Integer idRestaurante) {
+        this.idRestaurante = idRestaurante;
+    }
+
+    public Integer getCalificacion() {
+        return calificacion;
+    }
+
+    public void setCalificacion(Integer calificacion) {
+        this.calificacion = calificacion;
+    }
+
+    public String getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public String getNombreCliente() {
+        return nombreCliente;
+    }
 }

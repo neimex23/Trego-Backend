@@ -54,6 +54,9 @@ public class NotificacionesService {
     @Value("${mail.from.name}")
     private String mailFromName;
 
+    @Value("${app.dev.mail-log-only:false}")
+    private boolean mailLogOnly;
+
     public NotificacionesService(JavaMailSender mailSender, ManejadorPDFService generarPDF,
             UsuarioRepository usuarioRepository) {
         this.mailSender = mailSender;
@@ -518,9 +521,13 @@ public class NotificacionesService {
     }
 
     // Envía un código de verificación por email y devuelve el código generado.
-    @Async
+    // No es @Async: el registro del restaurante necesita el código de vuelta al instante.
     public String codigoVerificacionEmail(String email) {
         String codigoGenerado = String.valueOf(100000 + new Random().nextInt(900000));
+        if (mailLogOnly) {
+            System.out.println("[DEV mail-log-only] Código de verificación para " + email + ": " + codigoGenerado);
+            return codigoGenerado;
+        }
         try {
             SimpleMailMessage mensaje = new SimpleMailMessage();
             mensaje.setFrom(mailFrom);
@@ -901,7 +908,12 @@ public class NotificacionesService {
             data.put("idPedido", String.valueOf(pedido.getIdPedido()));
             data.put("idReclamo", String.valueOf(reclamo.getIdReclamo()));
             data.put("estado", reclamo.getEstado().name());
-            if (!aceptado && reclamo.getMotivoRechazo() != null) {
+            data.put("estadoFinal", reclamo.getEstado().name());
+            data.put("motivoReclamo", textoOGuion(reclamo.getTexto()));
+            if (aceptado) {
+                data.put("detalleReintegro",
+                        "Reintegro de $" + pedido.getTotal() + " por el pedido #" + pedido.getIdPedido());
+            } else if (reclamo.getMotivoRechazo() != null) {
                 data.put("motivoRechazo", reclamo.getMotivoRechazo());
             }
             data.put("tipo", "RECLAMO");

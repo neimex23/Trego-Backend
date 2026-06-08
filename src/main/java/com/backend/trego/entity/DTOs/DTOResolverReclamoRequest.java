@@ -17,4 +17,12 @@ public class DTOResolverReclamoRequest {
     public String getMotivoRechazo() {
         return motivoRechazo;
     }
+
+    public void setAccion(Boolean accion) {
+        this.accion = accion;
+    }
+
+    public void setMotivoRechazo(String motivoRechazo) {
+        this.motivoRechazo = motivoRechazo;
+    }
 }

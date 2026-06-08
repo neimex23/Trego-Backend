@@ -79,7 +79,11 @@ public class JWTUtil {
     }
 
     public String extractRol(String token) {
-        Object rol = parseClaims(token).get("rol");
+        var claims = parseClaims(token);
+        Object rol = claims.get("rol");
+        if (rol == null) {
+            rol = claims.get("role");
+        }
         return rol == null ? null : rol.toString();
     }
 
