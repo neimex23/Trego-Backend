@@ -275,7 +275,7 @@ public class RestauranteService {
 
     public boolean estaAbierto(String restauranteId) {
         Restaurante restaurante = buscarRestaurante(restauranteId);
-        if (!restaurante.isHabilitado()) {
+        if (!restaurante.isHabilitado() || !restaurante.getAbierto()) {
             return false;
         }
         LocalTime apertura = restaurante.getApertura();
@@ -507,7 +507,7 @@ public class RestauranteService {
         if (dto.getHoraApertura() != null && !dto.getHoraApertura().equals(restaurante.getApertura())) {
             restaurante.setApertura(dto.getHoraApertura());
         }
-        
+
         if (dto.getHoraCierre() != null && !dto.getHoraCierre().equals(restaurante.getCierre())) {
             restaurante.setCierre(dto.getHoraCierre());
         }
