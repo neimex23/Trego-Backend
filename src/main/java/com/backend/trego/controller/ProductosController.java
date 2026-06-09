@@ -7,6 +7,7 @@ import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.service.ProductosService;
 import com.backend.trego.service.RestauranteService;
 
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -73,7 +74,7 @@ public class ProductosController {
     @ApiResponse(responseCode = "200", description = "Producto agregado correctamente")
     @ApiResponse(responseCode = "404", description = "Restaurante no existe")
     @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene rol Restaurante")
-    public ResponseEntity<DTOProducto> agregarProducto(@RequestBody DTOCrearProductoRequest producto){
+    public ResponseEntity<DTOProducto> agregarProducto(@Valid @RequestBody DTOCrearProductoRequest producto){
         return ResponseEntity.ok(productosService.crearProducto(producto));
     }
 
@@ -82,7 +83,7 @@ public class ProductosController {
     @ApiResponse(responseCode = "200", description = "Producto modificado correctamente")
     @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene rol Restaurante")
-    public ResponseEntity<DTOProducto> modificarProducto(@RequestBody DTOModificarProductoRequest producto) {
+    public ResponseEntity<DTOProducto> modificarProducto(@Valid @RequestBody DTOModificarProductoRequest producto) {
         return ResponseEntity.ok(productosService.modificarProducto(producto));
     }
 

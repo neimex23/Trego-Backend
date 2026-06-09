@@ -51,6 +51,14 @@ public class CarritoService {
         Producto producto = productoRepository.findById(request.getProducto().getIdProducto())
                 .orElseThrow(() -> new NoSuchElementException(
                         "Producto no encontrado con id: " + request.getProducto().getIdProducto()));
+        if (!producto.getDisponible()) {
+            throw new IllegalArgumentException("El producto no está disponible");
+        }
+        
+        if (producto.isOfertaActiva() && (producto.getOferta() == null || !producto.getOferta().isVigente())) {
+            producto.setOfertaActiva(false);
+            productoRepository.save(producto);
+        }
 
         float precioUnitario = producto.getPrecioConDescuento();
 

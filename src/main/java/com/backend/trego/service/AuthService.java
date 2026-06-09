@@ -90,25 +90,17 @@ public class AuthService {
             String nombre;
             String fotoPerfil = "http://imagen_de_prueba.com/foto.jpg";
 
-            if ("TOKEN_TEST_GOOGLE".equals(idToken)) {
-                uid = "firebase-uid-damaso-123"; 
-                email = "damasomai@gmail.com";    
-                nombre = "Dámaso Tor";            
-                fotoPerfil = "http://imagen_de_prueba.com/foto.jpg";
-                System.out.println(">>> [BYPASS] Ejecutando login de Google simulado para: " + email);
-            } else {
-                FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
-                uid = decodedToken.getUid();
-                email = decodedToken.getEmail();
-                nombre = decodedToken.getName();
-                fotoPerfil = decodedToken.getPicture();
-            }
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
+            uid = decodedToken.getUid();
+            email = decodedToken.getEmail();
+            nombre = decodedToken.getName();
+            fotoPerfil = decodedToken.getPicture();
 
             Optional<Cliente> usuarioOpt = usuarioRepository.findByUidCliente(uid);
             Usuario usuario;
 
             if (usuarioOpt.isEmpty()) {
-                System.out.println(">>> [BYPASS] El usuario no existe en la BD local. Registrando cliente nuevo... \n");
+                System.out.println("El usuario no existe en la BD local. Registrando cliente nuevo...");
                 DTOUsuario nuevoUsuarioDTO = new DTOUsuario(
                         null,
                         uid,

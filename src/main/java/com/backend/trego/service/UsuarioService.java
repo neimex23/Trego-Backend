@@ -123,8 +123,6 @@ public class UsuarioService {
 
         Restaurante restauranteGuardado = usuarioRepository.save(nuevoRestaurante);
 
-        registrosPendientes.remove(email);
-
         DTOUsuario usuario = new DTOUsuario(
                 restauranteGuardado.getIdUsuario(),
                 null,
@@ -150,10 +148,16 @@ public class UsuarioService {
 
     // Valida el código que el usuario ingresó y, si es correcto, da de alta el
     // restaurante y devuelve sesión (JWT) para continuar el flujo sin volver a loguearse.
+    // La eliminación del mapa es atómica: si un hilo concurrente ya procesó o expiró
+    // la entrada, remove(email, pendiente) devuelve false y se rechaza la solicitud.
     public DTOLoginResponse verificarCodigo(String email, String codigo) {
         RegistroTemporal pendiente = registrosPendientes.get(email);
 
         if (pendiente == null || pendiente.estaExpiradoCodigo() || !pendiente.getCodigoVerificacion().equals(codigo)) {
+            throw new IllegalArgumentException("Código inválido o expirado");
+        }
+
+        if (!registrosPendientes.remove(email, pendiente)) {
             throw new IllegalArgumentException("Código inválido o expirado");
         }
 

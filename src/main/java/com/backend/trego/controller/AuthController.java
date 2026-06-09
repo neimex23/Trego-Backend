@@ -65,6 +65,9 @@ public class AuthController {
     @ApiResponse(responseCode = "501", description = "Proveedor de identidad no soportado")
     public ResponseEntity<?> loginConFirebase(@RequestBody Map<String, String> body) {
         String idToken = body.get("idToken");
+        if (idToken == null || idToken.isBlank()) {
+            return ResponseEntity.badRequest().body("El campo 'idToken' es requerido");
+        }
         try {
             DTOLoginResponse response = authService.loginConGoogle(idToken);
             return ResponseEntity.ok(response);
@@ -87,6 +90,9 @@ public class AuthController {
     @ApiResponse(responseCode = "501", description = "Proveedor de identidad no soportado")
     public ResponseEntity<?> loginConSMS(@RequestBody Map<String, String> body) {
         String firebaseToken = body.get("firebaseToken");
+        if (firebaseToken == null || firebaseToken.isBlank()) {
+            return ResponseEntity.badRequest().body("El campo 'firebaseToken' es requerido");
+        }
         try {
             DTOLoginResponse response = authService.loginConSMS(firebaseToken);
             return ResponseEntity.ok(response);

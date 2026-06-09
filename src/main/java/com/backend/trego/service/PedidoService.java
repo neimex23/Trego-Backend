@@ -219,6 +219,7 @@ public class PedidoService {
             Producto producto = productoRepository.findById(linea.getIdProducto())
                     .orElseThrow(() -> new NoSuchElementException(
                             "Producto no encontrado con id: " + linea.getIdProducto()));
+                            
             Integer cantidad = (linea.getCantidad() == null || linea.getCantidad() <= 0)
                     ? 1
                     : linea.getCantidad();
@@ -382,6 +383,17 @@ public class PedidoService {
     public DTOPedido confirmarPedidoPendiente(Integer pedidoId) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
+
+        Integer idRestauranteAutenticado;
+        try {
+            idRestauranteAutenticado = Integer.valueOf(currentUserService.getCurrentId());
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario autenticado inválido");
+        }
+        if (!idRestauranteAutenticado.equals(pedido.getRestaurante().getIdUsuario())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tenés permiso para confirmar este pedido");
+        }
+
         if (pedido.getEstado() == EnumEstadoPedido.Cancelado) {
             throw new PedidoCanceladoException("El pedido ha sido cancelado");
         }
