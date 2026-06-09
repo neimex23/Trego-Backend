@@ -10,7 +10,6 @@ import com.backend.trego.entity.Carrito;
 import com.backend.trego.entity.LineaCarrito;
 import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.DTOs.DTOCarrito;
-import com.backend.trego.entity.DTOs.DTOCarritoConAviso;
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
 import com.backend.trego.repository.CarritoRepository;
 import com.backend.trego.repository.ProductoRepository;
@@ -44,7 +43,7 @@ public class CarritoService {
     }
 
     @Transactional
-    public DTOCarritoConAviso agregarProducto(DTOProductoPedido request) {
+    public DTOCarrito agregarProducto(DTOProductoPedido request) {
         if (request == null || request.getProducto() == null || request.getProducto().getIdProducto() == null) {
             throw new IllegalArgumentException("La petición debe incluir producto.idProducto");
         }
@@ -52,12 +51,13 @@ public class CarritoService {
         Producto producto = productoRepository.findById(request.getProducto().getIdProducto())
                 .orElseThrow(() -> new NoSuchElementException(
                         "Producto no encontrado con id: " + request.getProducto().getIdProducto()));
-
-        String aviso = null;
+        if (!producto.getDisponible()) {
+            throw new IllegalArgumentException("El producto no está disponible");
+        }
+        
         if (producto.isOfertaActiva() && (producto.getOferta() == null || !producto.getOferta().isVigente())) {
             producto.setOfertaActiva(false);
             productoRepository.save(producto);
-            aviso = "La oferta de \"" + producto.getNombre() + "\" ya no es válida y fue desactivada. Se aplicó el precio regular.";
         }
 
         float precioUnitario = producto.getPrecioConDescuento();
@@ -114,8 +114,7 @@ public class CarritoService {
         }
 
         carrito.recalcularTotal();
-        DTOCarrito carritoDTO = carritoRepository.save(carrito).toDTO();
-        return new DTOCarritoConAviso(carritoDTO, aviso);
+        return carritoRepository.save(carrito).toDTO();
     }
 
     @Transactional
