@@ -219,6 +219,13 @@ public class PedidoService {
             Producto producto = productoRepository.findById(linea.getIdProducto())
                     .orElseThrow(() -> new NoSuchElementException(
                             "Producto no encontrado con id: " + linea.getIdProducto()));
+
+            // Si la oferta está marcada activa pero ya expiró, desactivarla
+            if (producto.isOfertaActiva() && (producto.getOferta() == null || !producto.getOferta().isVigente())) {
+                producto.setOfertaActiva(false);
+                productoRepository.save(producto);
+            }
+
             Integer cantidad = (linea.getCantidad() == null || linea.getCantidad() <= 0)
                     ? 1
                     : linea.getCantidad();

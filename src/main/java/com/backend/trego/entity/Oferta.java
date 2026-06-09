@@ -74,4 +74,10 @@ public class Oferta {
     public void setFechaFin(LocalDateTime fechaFin) {
         this.fechaFin = fechaFin;
     }
+
+    public boolean isVigente() {
+        if (fechaInicio == null || fechaFin == null) return false;
+        LocalDateTime ahora = LocalDateTime.now();
+        return !ahora.isBefore(fechaInicio) && !ahora.isAfter(fechaFin);
+    }
 }

@@ -471,6 +471,9 @@ public class RestauranteService {
         if (dto.getFotoPortada() != null && !dto.getFotoPortada().isBlank() && !dto.getFotoPortada().equals(restaurante.getFotoPortada())) {
             restaurante.setFotoPortada(dto.getFotoPortada());
         }
+        if (dto.getFotoPerfil() != null && !dto.getFotoPerfil().isBlank() && !dto.getFotoPerfil().equals(restaurante.getFotoPerfil())) {
+            restaurante.setFotoPerfil(dto.getFotoPerfil());
+        }
         if (dto.getDescripcion() != null && !dto.getDescripcion().isBlank() && !dto.getDescripcion().equals(restaurante.getDescripcion())) {
             restaurante.setDescripcion(dto.getDescripcion());
         }
@@ -761,6 +764,18 @@ public class RestauranteService {
 
         if (producto.getOferta() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El producto no tiene una oferta para activar/desactivar");
+        }
+
+        if (activar) {
+            Oferta oferta = producto.getOferta();
+            if (oferta.getFechaInicio() == null || oferta.getFechaFin() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "La oferta no tiene fechas configuradas. Definí fechaInicio y fechaFin antes de activarla");
+            }
+            if (!oferta.isVigente()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "No se puede activar la oferta: las fechas (" + oferta.getFechaInicio() + " - " + oferta.getFechaFin() + ") ya no son válidas para la fecha actual");
+            }
         }
 
         producto.setOfertaActiva(activar);
