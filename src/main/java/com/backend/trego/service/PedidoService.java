@@ -195,13 +195,6 @@ public class PedidoService {
         if (carritoDTO == null || carritoDTO.getProductos() == null || carritoDTO.getProductos().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El carrito está vacío");
         }
-
-        String restauranteId = String.valueOf(restauranteDTO.getIdRestaurante());
-        if (!verificarRestauranteAbierto(restauranteId)) {
-            throw new RestauranteCerradoException(
-                    "El restaurante " + restauranteDTO.getNombre() + " está cerrado en este momento");
-        }
-
         Cliente cliente = usuarioRepository.findClienteByUidCliente(currentUserService.getCurrentUid())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Cliente no encontrado"));
@@ -209,6 +202,11 @@ public class PedidoService {
         Restaurante restaurante = usuarioRepository.findRestauranteById(restauranteDTO.getIdRestaurante())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Restaurante no encontrado"));
+
+         if (!restaurante.estaAbierto()) {
+            throw new RestauranteCerradoException(
+                    "El restaurante " + restauranteDTO.getNombre() + " está cerrado en este momento");
+        }
 
         Pedido pedido = new Pedido(0f, EnumEstadoPedido.Solicitado, mapDireccion(direccionDTO), null);
         pedido.setCliente(cliente);
@@ -238,10 +236,6 @@ public class PedidoService {
 
     public DTORestaurante obtenerRestaurante(String idRestaurante) {
         return restauranteService.obtenerRestaurante(idRestaurante);
-    }
-
-    public boolean verificarRestauranteAbierto(String restauranteID) {
-        return restauranteService.estaAbierto(restauranteID);
     }
 
     private DTODireccion mapDireccion(DTODireccion d) {

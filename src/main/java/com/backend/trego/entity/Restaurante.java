@@ -154,4 +154,9 @@ public class Restaurante extends Usuario {
         return ingredientesDisponibles.stream()
             .anyMatch(i -> i.getNombre().equalsIgnoreCase(nombre));
     }
+
+    public boolean estaAbierto() {
+        if (!habilitado) return false;
+        return this.abierto;
+    }
 }

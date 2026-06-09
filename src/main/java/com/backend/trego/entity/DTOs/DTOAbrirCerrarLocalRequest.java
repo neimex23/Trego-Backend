@@ -1,16 +1,18 @@
 package com.backend.trego.entity.DTOs;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalTime;
 
 public class DTOAbrirCerrarLocalRequest {
     
+    private final LocalTime horaApertura;
     private final LocalTime horaCierre;
 
-    @JsonCreator
-    public DTOAbrirCerrarLocalRequest(@JsonProperty("horaCierre") LocalTime horaCierre) {
+    public DTOAbrirCerrarLocalRequest(LocalTime horaApertura, LocalTime horaCierre) {
+        this.horaApertura = horaApertura;
         this.horaCierre = horaCierre;
+    }
+
+    public LocalTime getHoraApertura() {
+        return horaApertura;
     }
 
     public LocalTime getHoraCierre() {

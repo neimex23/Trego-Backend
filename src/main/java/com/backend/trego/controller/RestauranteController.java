@@ -98,7 +98,7 @@ public class RestauranteController {
     @ApiResponse(responseCode = "400", description = "Datos incompletos o erroneos")
     @ApiResponse(responseCode = "409", description = "Local ya abierto o sin productos")
     public ResponseEntity<Void> abrirLocal(@RequestBody DTOAbrirCerrarLocalRequest request) {
-        restauranteService.abrirLocal(request.getHoraCierre());
+        restauranteService.abrirLocal(request.getHoraApertura(), request.getHoraCierre());
         return ResponseEntity.ok().build();
     }
 
