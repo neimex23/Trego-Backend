@@ -79,15 +79,18 @@ public class RestauranteService {
         this.comentarioRepository = comentarioRepository;
     }
 
-    public void abrirLocal(LocalTime horaCierre) {
+    public void abrirLocal(LocalTime horaApertura, LocalTime horaCierre) {
         Integer restauranteId = currentUserService.getCurrentId();
         Restaurante restaurante = restauranteRepository.findRestauranteById(restauranteId)
                 .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
-        
+
         // Precondición: el local debe estar cerrado
         if (restaurante.getAbierto()) {
             throw new RestauranteCerradoException("El local ya se encuentra abierto");
         }
+
+        restaurante.setHorario(horaApertura, horaCierre);
+        restauranteRepository.save(restaurante);
 
         List<DTOProducto> productos;
         try {
@@ -236,7 +239,7 @@ public class RestauranteService {
 
     public List<DTORestaurante> listarRestaurantesHabilitadosNoCerrados() {
         return restauranteRepository.findRestaurantesHabilitados().stream()
-                .filter(this::estaAbiertoDe)
+                .filter(Restaurante::estaAbierto)
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -288,24 +291,6 @@ public class RestauranteService {
                         HttpStatus.NOT_FOUND, "Restaurante no encontrado con id: " + restauranteId));
     }
 
-    public boolean estaAbierto(String restauranteId) {
-        Restaurante restaurante = buscarRestaurante(restauranteId);
-        if (!restaurante.isHabilitado() || !restaurante.getAbierto()) {
-            return false;
-        }
-        LocalTime apertura = restaurante.getApertura();
-        LocalTime cierre = restaurante.getCierre();
-        if (apertura == null || cierre == null) {
-            return true;
-        }
-        LocalTime ahora = LocalTime.now();
-        if (cierre.isAfter(apertura)) {
-            return !ahora.isBefore(apertura) && !ahora.isAfter(cierre);
-        }
-        // Horario que cruza la medianoche (ej. 20:00 - 02:00).
-        return !ahora.isBefore(apertura) || !ahora.isAfter(cierre);
-    }
-
     private Integer parseId(String restauranteId) {
         try {
             return Integer.valueOf(restauranteId);
@@ -354,26 +339,6 @@ public class RestauranteService {
                 null,
                 null,
                 null);
-    }
-
-    
-
-    // Misma lógica que estaAbierto pero sobre una entidad ya cargada, para no
-    // volver a consultar la base.
-    private boolean estaAbiertoDe(Restaurante restaurante) {
-        if (!restaurante.isHabilitado()) {
-            return false;
-        }
-        LocalTime apertura = restaurante.getApertura();
-        LocalTime cierre = restaurante.getCierre();
-        if (apertura == null || cierre == null) {
-            return true;
-        }
-        LocalTime ahora = LocalTime.now();
-        if (cierre.isAfter(apertura)) {
-            return !ahora.isBefore(apertura) && !ahora.isAfter(cierre);
-        }
-        return !ahora.isBefore(apertura) || !ahora.isAfter(cierre);
     }
 
     public List<DTORestaurante> buscarRestaurantePorNombre(String nombre) {
@@ -517,14 +482,6 @@ public class RestauranteService {
         }
         if (dto.getRadioEntrega() != null && !dto.getRadioEntrega().equals(restaurante.getRadioEntrega())) {
             restaurante.setRadioEntrega(dto.getRadioEntrega());
-        }
-
-        if (dto.getHoraApertura() != null && !dto.getHoraApertura().equals(restaurante.getApertura())) {
-            restaurante.setApertura(dto.getHoraApertura());
-        }
-
-        if (dto.getHoraCierre() != null && !dto.getHoraCierre().equals(restaurante.getCierre())) {
-            restaurante.setCierre(dto.getHoraCierre());
         }
 
         Restaurante actualizado = restauranteRepository.save(restaurante);

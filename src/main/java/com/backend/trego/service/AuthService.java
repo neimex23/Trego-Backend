@@ -13,6 +13,7 @@ import com.backend.trego.repository.UsuarioRepository;
 import com.backend.trego.config.JWTUtil;
 
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +71,9 @@ public class AuthService {
             if (!passwordEncoder.matches(password, rest.getPassword())) {
                 throw new BadCredentialsException("Error de autenticación");
             }
+            if (!rest.isHabilitado()) {
+                throw new DisabledException("Usuario deshabilitado");
+            }
             String token = jwtUtil.generateToken(rest.getEmail(), rest.getRol().name(), null, rest.getIdUsuario());
             return new DTOLoginResponse(token, rest.getRol().name(), rest.getNombre(), rest.getEmail());
         }
@@ -120,6 +124,11 @@ public class AuthService {
                 usuario = usuarioOpt.get();
             }
 
+            Cliente cliente = (Cliente) usuario; 
+            if (!cliente.isHabilitado()) {
+                throw new DisabledException("Usuario deshabilitado");
+            }
+
             Integer idUsuario = usuario.getIdUsuario();
             String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), uid, idUsuario);
             
@@ -154,6 +163,11 @@ public class AuthService {
                 usuario = usuarioService.altaUsuario(nuevoUsuarioDTO);
             } else {
                 usuario = usuarioOpt.get();
+            }
+
+            Cliente cliente = (Cliente) usuario;
+            if (!cliente.isHabilitado()) {
+                throw new DisabledException("Usuario deshabilitado");
             }
 
             String identificador = usuario.getEmail() != null ? usuario.getEmail() : uid;

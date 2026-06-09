@@ -24,6 +24,9 @@ public class ClienteService {
     }
 
     public List<Cliente> listar() {
+        if (!currentUserService.isAdmin()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado");
+        } 
         return repo.findAllClientes();
     }
 
