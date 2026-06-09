@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.trego.entity.MPResponse;
 import com.backend.trego.entity.Pago;
@@ -57,6 +58,7 @@ public class MercadoPagoService {
     // Crea la preferencia de pago en MercadoPago a partir del pedido y devuelve
     // las URLs de checkout. El externalReference lleva el idPedido para poder
     // resolver el pedido cuando llegue el webhook.
+    @Transactional
     public MPResponse crearOrden(Pedido pedido) {
         pedido.setPago(new Pago(LocalDateTime.now(), pedido.calcularTotal(), null, null));
 

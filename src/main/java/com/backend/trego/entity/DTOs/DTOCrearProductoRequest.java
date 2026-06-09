@@ -1,6 +1,7 @@
 package com.backend.trego.entity.DTOs;
 
 import com.backend.trego.entity.Enums.EnumTipoProducto;
+import jakarta.validation.constraints.Positive;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ public class DTOCrearProductoRequest {
 
     private String nombre;
     private String descripcion;
+    @Positive(message = "El precio debe ser mayor a cero")
     private float precio;
     private String urlImagen;
     private Boolean disponible = true;
