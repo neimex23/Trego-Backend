@@ -12,6 +12,7 @@ import com.backend.trego.entity.DTOs.DTOComentario;
 import com.backend.trego.entity.DTOs.DTOCrearComentarioRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOEstadisticas;
+import com.backend.trego.entity.DTOs.DTOModificarOfertaRequest;
 import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOOferta;
 import com.backend.trego.entity.DTOs.DTOProducto;
@@ -753,32 +754,37 @@ public class RestauranteService {
     }
 
     @Transactional
-    public void activarDesactivarOferta(Integer idProducto, boolean activar) {
+    public void activarDesactivarOferta(DTOModificarOfertaRequest request) {
         Restaurante restaurante = restauranteRepository.findRestauranteById(currentUserService.getCurrentId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurante no encontrado"));
 
         Producto producto = restaurante.getProductos().stream()
-                .filter(p -> p.getIdProducto().equals(idProducto))
+                .filter(p -> p.getIdProducto().equals(request.getIdProducto()))
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado con id: " + idProducto));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado con id: " + request.getIdProducto()));
 
         if (producto.getOferta() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El producto no tiene una oferta para activar/desactivar");
         }
 
-        if (activar) {
+        if (request.getHabilitar()) {
             Oferta oferta = producto.getOferta();
-            if (oferta.getFechaInicio() == null || oferta.getFechaFin() == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "La oferta no tiene fechas configuradas. Definí fechaInicio y fechaFin antes de activarla");
-            }
             if (!oferta.isVigente()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "No se puede activar la oferta: las fechas (" + oferta.getFechaInicio() + " - " + oferta.getFechaFin() + ") ya no son válidas para la fecha actual");
+                if (request.getFechaInicio() == null || request.getFechaFin() == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "La oferta no tiene fechas configuradas. Definí fechaInicio y fechaFin antes de activarla");
+                } else{
+                    if (request.getFechaFin().isBefore(request.getFechaInicio())) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "La fecha de fin debe ser posterior a la fecha de inicio");
+                    }
+                    oferta.setFechaInicio(request.getFechaInicio());
+                    oferta.setFechaFin(request.getFechaFin());
+                }      
             }
         }
 
-        producto.setOfertaActiva(activar);
+        producto.setOfertaActiva(request.getHabilitar());
         productosService.modificarProducto(producto);
     }
 }

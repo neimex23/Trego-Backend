@@ -5,6 +5,7 @@ import com.backend.trego.entity.DTOs.DTOComentario;
 import com.backend.trego.entity.DTOs.DTOCrearComentarioRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOEstadisticas;
+import com.backend.trego.entity.DTOs.DTOModificarOfertaRequest;
 import com.backend.trego.entity.DTOs.DTOOferta;
 import com.backend.trego.entity.DTOs.DTORestaurante;
 import com.backend.trego.service.RestauranteService;
@@ -192,8 +193,8 @@ public class RestauranteController {
     @ApiResponse(responseCode = "200", description = "Oferta desactivada exitosamente")
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
     @ApiResponse(responseCode = "404", description = "Producto no encontrado")
-    public ResponseEntity<Void> activarDesactivarOferta(@RequestParam Integer idProducto, @RequestParam Boolean activar) {
-        restauranteService.activarDesactivarOferta(idProducto, activar);
+    public ResponseEntity<Void> activarDesactivarOferta(@RequestBody DTOModificarOfertaRequest request) {
+        restauranteService.activarDesactivarOferta(request);
         return ResponseEntity.ok().build();
     }
 

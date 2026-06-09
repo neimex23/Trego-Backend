@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.backend.trego.entity.DTOs.DTOCarrito;
+import com.backend.trego.entity.DTOs.DTOCarritoConAviso;
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
 import com.backend.trego.service.CarritoService;
 
@@ -58,7 +59,7 @@ public class CarritoController {
             @ApiResponse(responseCode = "400", description = "Datos inválidos o producto de otro restaurante"),
             @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     })
-    public ResponseEntity<DTOCarrito> agregarProducto(@RequestBody DTOProductoPedido request) {
+    public ResponseEntity<DTOCarritoConAviso> agregarProducto(@RequestBody DTOProductoPedido request) {
         try {
             return ResponseEntity.ok(carritoService.agregarProducto(request));
         } catch (IllegalArgumentException e) {
