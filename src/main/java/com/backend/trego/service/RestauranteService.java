@@ -339,7 +339,9 @@ public class RestauranteService {
                 null,
                 null,
                 null,
-                null);
+                null,
+            null, 
+            restaurante.isCuentaHabilitada());
     }
 
     public List<DTORestaurante> buscarRestaurantePorNombre(String nombre) {
@@ -423,7 +425,11 @@ public class RestauranteService {
                 restaurante.getAbierto(),
                 restaurante.getApertura(),
                 restaurante.getCierre(),
-                productos);
+                productos,
+                restaurante.getIngredientesDisponibles().stream()
+                        .map(i -> new DTOIngrediente(i.getIdIngrediente(), i.getNombre(), restaurante.getIdUsuario()))
+                        .collect(Collectors.toList()),
+                restaurante.isCuentaHabilitada());
     }
 
     public List<DTORestaurante> listarRestaurantesNoHabilitados() {

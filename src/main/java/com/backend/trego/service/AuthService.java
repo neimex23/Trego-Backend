@@ -71,7 +71,7 @@ public class AuthService {
             if (!passwordEncoder.matches(password, rest.getPassword())) {
                 throw new BadCredentialsException("Error de autenticación");
             }
-            if (!rest.isHabilitado()) {
+            if (!rest.isCuentaHabilitada()) {
                 throw new DisabledException("Usuario deshabilitado");
             }
             String token = jwtUtil.generateToken(rest.getEmail(), rest.getRol().name(), null, rest.getIdUsuario());

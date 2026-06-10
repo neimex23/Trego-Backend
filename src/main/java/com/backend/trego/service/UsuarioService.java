@@ -405,7 +405,7 @@ public class UsuarioService {
             return;
         }
         if (u instanceof Restaurante restaurante) {
-            restaurante.setHabilitado(habilitar);
+            restaurante.setCuentaHabilitada(habilitar);
             usuarioRepository.save(restaurante);
             if (!habilitar) {
                 notificacionesService.notificarNoHabilitacionUsuario(restaurante.getEmail(), restaurante.getNombre(), motivoNoHabilitacion);
