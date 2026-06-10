@@ -147,6 +147,15 @@ public class CarritoService {
             return null;
         }
 
+        Producto producto = cargarProductoConIngredientes(
+                linea.getProducto(), linea.getProducto().getIdProducto());
+
+        if (producto.isOfertaActiva() && (producto.getOferta() == null || !producto.getOferta().isVigente())) {
+            producto.setOfertaActiva(false);
+            productoRepository.save(producto);
+        }
+        linea.setPrecioUnitario(producto.getPrecioConDescuento());
+
         if (nuevaCantidad != null) {
             linea.setCantidad(nuevaCantidad);
         }
@@ -154,11 +163,9 @@ public class CarritoService {
             linea.setObservaciones(request.getObservaciones());
         }
         if (request.getIngredientesAQuitar() != null) {
-            Producto productoLinea = cargarProductoConIngredientes(
-                    linea.getProducto(), linea.getProducto().getIdProducto());
             linea.setIngredientesAQuitar(
                     ingredientePedidoService.resolverIngredientesAQuitar(
-                            request.getIngredientesAQuitar(), productoLinea));
+                            request.getIngredientesAQuitar(), producto));
         }
 
         carrito.recalcularTotal();

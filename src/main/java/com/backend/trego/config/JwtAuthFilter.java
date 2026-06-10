@@ -67,7 +67,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     if (usuarioOpt.isPresent()) {
                         Usuario u = usuarioOpt.get();
                         boolean deshabilitado = (u instanceof Cliente c && !c.isHabilitado())
-                                             || (u instanceof Restaurante r && !r.isHabilitado());
+                                             || (u instanceof Restaurante r && !r.isCuentaHabilitada());
                         if (deshabilitado) {
                             System.out.println("DEBUG: Acceso denegado — usuario deshabilitado: " + email);
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
