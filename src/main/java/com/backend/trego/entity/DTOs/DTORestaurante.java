@@ -100,4 +100,5 @@ public class DTORestaurante {
     public List<DTOProducto> getProductos() { return productos; }
     public String getFotoPerfil() { return fotoPerfil; }
     public List<DTOIngrediente> getIngredientesDisponibles() { return ingredientesDisponibles; }
+    public Boolean getCuentahabilitada() { return cuentahabilitada;}
 }
