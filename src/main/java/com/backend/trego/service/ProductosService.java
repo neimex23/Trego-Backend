@@ -436,7 +436,7 @@ public class ProductosService {
 
     @Transactional
     public List<DTOProducto> listarProductoSubcategoria(DTOSubCategoria subCategoria){
-        List<Producto> todosLosProducto = productoRepository.findByRestauranteHabilitadoTrueAndRestauranteAbiertoTrueAndDisponibleTrueOrderBySubcategoriaIdAsc();
+        List<Producto> todosLosProducto = productoRepository.findByRestauranteHabilitadoTrueAndRestauranteAbiertoTrueAndDisponibleTrueOrderBySubCategoria_IdSubCategoriaAsc();
         var lista = todosLosProducto.stream()
             .filter(p -> p.getSubCategoria().getIdSubCategoria().equals(subCategoria.getIdSubCategoria()))
             .map(DTOProducto::desde)
@@ -449,7 +449,7 @@ public class ProductosService {
 
     @Transactional
     public List<DTOProducto> listarProductoOferta(){
-        var lista = productoRepository.findByRestauranteHabilitadoTrueAndRestauranteAbiertoTrueAndDisponibleTrueAndOfertaActivaTrueOrderByOfertaIdDesc().stream()
+        var lista = productoRepository.findByRestauranteHabilitadoTrueAndRestauranteAbiertoTrueAndDisponibleTrueAndOfertaActivaTrueOrderByOferta_IdOfertaDesc().stream()
         .map(DTOProducto::desde)
         .collect(Collectors.toList());
 
