@@ -10,8 +10,8 @@ import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.Enums.EnumEstadoReclamo;
 import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOPedido;
+import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
-import com.backend.trego.entity.DTOs.DTOProductoSimplificado;
 import com.backend.trego.repository.UsuarioRepository;
 
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -153,7 +153,7 @@ public class NotificacionesService {
             sb.append("<p style='color: #555; font-size: 16px;'><strong>Detalle del pedido:</strong></p>");
             sb.append("<ul style='color: #555;'>");
             for (DTOProductoPedido linea : productos) {
-                DTOProductoSimplificado prod = linea.getProducto();
+                DTOProducto prod = linea.getProducto();
                 String nombreProducto = (prod != null) ? textoOGuion(prod.getNombre()) : "—";
                 Integer cantidad = linea.getCantidad();
                 sb.append("<li>")

@@ -104,8 +104,8 @@ public class DTOPedido {
 
     private static DTOProductoPedido mapearLinea(ProductoPedido pp) {
         var producto = pp.getProducto();
-        DTOProductoSimplificado simplificado = producto != null
-                ? DTOProductoSimplificado.desde(producto)
+        DTOProducto simplificado = producto != null
+                ? DTOProducto.desde(producto)
                 : null;
         Integer idRestaurante = producto != null && producto.getRestaurante() != null
                 ? producto.getRestaurante().getIdUsuario()
