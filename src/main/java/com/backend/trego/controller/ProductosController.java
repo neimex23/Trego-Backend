@@ -4,6 +4,7 @@ import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOCrearProductoRequest;
 import com.backend.trego.entity.DTOs.DTOModificarProductoRequest;
 import com.backend.trego.entity.DTOs.DTOProducto;
+import com.backend.trego.entity.DTOs.DTOSubCategoria;
 import com.backend.trego.service.ProductosService;
 import com.backend.trego.service.RestauranteService;
 
@@ -67,6 +68,22 @@ public class ProductosController {
     @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene rol Restaurante")
     public ResponseEntity<List<DTOProducto>> listarProductosHabilitados() {
         return ResponseEntity.ok(productosService.listarSoloProductosHabilitados(null, true));
+    }
+
+    @GetMapping("/listarProductosSubcategorias")
+    @Operation(summary = "Listar Productos Habilitados por Subcategoria", description = "Obtiene solo los productos disponibles (habilitados) de todos los restaurantes filtrados por subcategoria")
+    @ApiResponse(responseCode = "200", description = "Productos listados")
+    @ApiResponse(responseCode = "404", description = "No hay productos listados para esta subcategoria")
+    public ResponseEntity<List<DTOProducto>> listarProductoSubcategoria(DTOSubCategoria subCategoria){
+        return ResponseEntity.ok(productosService.listarProductoSubcategoria(subCategoria));
+    }
+
+    @GetMapping("/listarProductosOferta")
+    @Operation(summary = "Listar productos Habilitados por Oferta", description = "Obtiene solo los productos disponibles y con oferta activa de todos los restaurantes")
+    @ApiResponse(responseCode = "200", description = "Productos listados")
+    @ApiResponse(responseCode = "404", description = "No hay productos listados para esta subcategoria")
+    public ResponseEntity<List<DTOProducto>> listarProductoOferta(){
+        return ResponseEntity.ok(productosService.listarProductoOferta());
     }
 
     @PostMapping("agregarProducto")

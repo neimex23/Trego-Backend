@@ -434,4 +434,29 @@ public class ProductosService {
         productoRepository.save(producto);
     }
 
+    @Transactional
+    public List<DTOProducto> listarProductoSubcategoria(DTOSubCategoria subCategoria){
+        List<Producto> todosLosProducto = productoRepository.findByRestauranteHabilitadoTrueAndRestauranteAbiertoTrueAndDisponibleTrueOrderBySubCategoria_IdSubCategoriaAsc();
+        var lista = todosLosProducto.stream()
+            .filter(p -> p.getSubCategoria().getIdSubCategoria().equals(subCategoria.getIdSubCategoria()))
+            .map(DTOProducto::desde)
+            .collect(Collectors.toList());
+        
+        if(lista.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No hay productos para listar");
+        return lista;    
+    }
+
+    @Transactional
+    public List<DTOProducto> listarProductoOferta(){
+        var lista = productoRepository.findByRestauranteHabilitadoTrueAndRestauranteAbiertoTrueAndDisponibleTrueAndOfertaActivaTrueOrderByOferta_IdOfertaDesc().stream()
+        .map(DTOProducto::desde)
+        .collect(Collectors.toList());
+
+        if(lista.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No hay productos para listar");
+        return lista;    
+    }
+
+
 }

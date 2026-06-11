@@ -17,5 +17,9 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
 
 	@Query("SELECT p FROM Producto p WHERE p.ofertaActiva = true AND (p.oferta IS NULL OR p.oferta.fechaFin < :now OR p.oferta.fechaInicio > :now)")
 	List<Producto> findProductosConOfertaInvalida(@Param("now") LocalDateTime now);
+
+	List<Producto> findByRestauranteHabilitadoTrueAndRestauranteAbiertoTrueAndDisponibleTrueOrderBySubCategoria_IdSubCategoriaAsc();
+
+	List<Producto> findByRestauranteHabilitadoTrueAndRestauranteAbiertoTrueAndDisponibleTrueAndOfertaActivaTrueOrderByOferta_IdOfertaDesc();
 }
 
