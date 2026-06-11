@@ -28,6 +28,7 @@ public class Restaurante extends Usuario {
     private String descripcion;
     private float calificacionProm;
     private boolean habilitado = false;
+    private boolean cuentahabilitada = true;
     private boolean abierto = false;
     private String fotoPortada;
 
@@ -112,6 +113,8 @@ public class Restaurante extends Usuario {
     public void setCalificacionProm(float calificacionProm) { this.calificacionProm = calificacionProm; }
     public boolean isHabilitado() { return habilitado; }
     public void setHabilitado(boolean habilitado) { this.habilitado = habilitado; }
+    public boolean isCuentaHabilitada() { return cuentahabilitada; }
+    public void setCuentaHabilitada(boolean cuentahabilitada) { this.cuentahabilitada = cuentahabilitada; }
     public boolean getAbierto() { return abierto; }
     public void setAbierto(boolean abierto) { this.abierto = abierto; }
     public String getFotoPortada() { return fotoPortada; }

@@ -43,7 +43,7 @@ public class IngredientePedidoService {
             if (dto == null) {
                 continue;
             }
-            Ingrediente ing = resolverUno(dto);
+            Ingrediente ing = resolverUno(dto, producto);
             if (!permitidos.isEmpty() && !permitidos.contains(ing.getIdIngrediente())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "El ingrediente '" + ing.getNombre() + "' no pertenece al producto seleccionado");
@@ -55,16 +55,24 @@ public class IngredientePedidoService {
         return resultado;
     }
 
-    private Ingrediente resolverUno(DTOIngrediente dto) {
+    private Ingrediente resolverUno(DTOIngrediente dto, Producto producto) {
         if (dto.getIdIngrediente() != null) {
             return ingredienteRepository.findById(dto.getIdIngrediente())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                             "Ingrediente no encontrado con id: " + dto.getIdIngrediente()));
         }
         if (dto.getNombre() != null && !dto.getNombre().isBlank()) {
-            return ingredienteRepository.findByNombre(dto.getNombre().trim())
+            String nombre = dto.getNombre().trim();
+            if (producto instanceof Plato plato) {
+                for (Ingrediente ing : plato.getIngredientes()) {
+                    if (ing.getNombre() != null && ing.getNombre().equalsIgnoreCase(nombre)) {
+                        return ing;
+                    }
+                }
+            }
+            return ingredienteRepository.findByNombre(nombre)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "Ingrediente no encontrado: " + dto.getNombre()));
+                            "Ingrediente no encontrado: " + nombre));
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ingrediente inválido en la petición");
     }

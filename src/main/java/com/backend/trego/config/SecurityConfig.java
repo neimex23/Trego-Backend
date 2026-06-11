@@ -94,8 +94,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/restaurantes/**").authenticated()
                 // Clientes y usuarios
                 .requestMatchers("/api/clientes/**").authenticated()
-                .requestMatchers("/api/usuarios/**").authenticated()
                 .requestMatchers("/api/usuarios/recuperarContraseña/**").permitAll()
+                .requestMatchers("/api/usuarios/**").authenticated()
                 // Reclamos
                 .requestMatchers("/api/reclamos/**").authenticated()
                 // Notificaciones

@@ -8,10 +8,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.trego.entity.Carrito;
 import com.backend.trego.entity.LineaCarrito;
+import com.backend.trego.entity.Plato;
 import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.DTOs.DTOCarrito;
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
 import com.backend.trego.repository.CarritoRepository;
+import com.backend.trego.repository.PlatoRepository;
 import com.backend.trego.repository.ProductoRepository;
 
 // Carrito del cliente. Un cliente tiene un solo carrito activo y todos sus
@@ -21,15 +23,18 @@ public class CarritoService {
 
     private final CarritoRepository carritoRepository;
     private final ProductoRepository productoRepository;
+    private final PlatoRepository platoRepository;
     private final CurrentUserService currentUserService;
     private final IngredientePedidoService ingredientePedidoService;
 
     public CarritoService(CarritoRepository carritoRepository,
                           ProductoRepository productoRepository,
+                          PlatoRepository platoRepository,
                           CurrentUserService currentUserService,
                           IngredientePedidoService ingredientePedidoService) {
         this.carritoRepository = carritoRepository;
         this.productoRepository = productoRepository;
+        this.platoRepository = platoRepository;
         this.currentUserService = currentUserService;
         this.ingredientePedidoService = ingredientePedidoService;
     }
@@ -48,9 +53,11 @@ public class CarritoService {
             throw new IllegalArgumentException("La petición debe incluir producto.idProducto");
         }
 
-        Producto producto = productoRepository.findById(request.getProducto().getIdProducto())
+        Integer idProducto = request.getProducto().getIdProducto();
+        Producto productoBase = productoRepository.findById(idProducto)
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Producto no encontrado con id: " + request.getProducto().getIdProducto()));
+                        "Producto no encontrado con id: " + idProducto));
+        final Producto producto = cargarProductoConIngredientes(productoBase, idProducto);
         if (!producto.getDisponible()) {
             throw new IllegalArgumentException("El producto no está disponible");
         }
@@ -140,6 +147,15 @@ public class CarritoService {
             return null;
         }
 
+        Producto producto = cargarProductoConIngredientes(
+                linea.getProducto(), linea.getProducto().getIdProducto());
+
+        if (producto.isOfertaActiva() && (producto.getOferta() == null || !producto.getOferta().isVigente())) {
+            producto.setOfertaActiva(false);
+            productoRepository.save(producto);
+        }
+        linea.setPrecioUnitario(producto.getPrecioConDescuento());
+
         if (nuevaCantidad != null) {
             linea.setCantidad(nuevaCantidad);
         }
@@ -149,12 +165,21 @@ public class CarritoService {
         if (request.getIngredientesAQuitar() != null) {
             linea.setIngredientesAQuitar(
                     ingredientePedidoService.resolverIngredientesAQuitar(
-                            request.getIngredientesAQuitar(), linea.getProducto()));
+                            request.getIngredientesAQuitar(), producto));
         }
 
         carrito.recalcularTotal();
         carritoRepository.save(carrito);
         return linea.toDTO();
+    }
+
+    private Producto cargarProductoConIngredientes(Producto producto, Integer idProducto) {
+        if (producto instanceof Plato) {
+            return platoRepository.findById(idProducto)
+                    .map(plat -> (Producto) plat)
+                    .orElse(producto);
+        }
+        return producto;
     }
 
     @Transactional

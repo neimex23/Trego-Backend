@@ -1,5 +1,6 @@
 package com.backend.trego.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,7 +24,7 @@ public abstract class Producto {
     private boolean ofertaActiva = false;
     private boolean disponible = true; 
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "oferta_id")
     private Oferta oferta;
 

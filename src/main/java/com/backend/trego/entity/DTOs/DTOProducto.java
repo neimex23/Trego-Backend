@@ -1,10 +1,16 @@
 package com.backend.trego.entity.DTOs;
 
+import com.backend.trego.entity.Articulo;
+import com.backend.trego.entity.Combo;
+import com.backend.trego.entity.Ingrediente;
+import com.backend.trego.entity.Plato;
+import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.Enums.EnumCategoriaProducto;
 import com.backend.trego.entity.Enums.EnumTipoProducto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * DTO de salida del catálogo (menú, listados, respuestas de alta/edición).
@@ -121,5 +127,86 @@ public class DTOProducto {
 
     public DTOSubCategoria getSubCategoria() {
         return subCategoria;
+    }
+
+    public static DTOProducto desde(Producto producto) {
+        if (producto == null) {
+            return null;
+        }
+
+        EnumCategoriaProducto categoria = producto.getSubCategoria() != null
+                ? producto.getSubCategoria().getCategoria()
+                : null;
+
+        Integer idRestaurante = producto.getRestaurante() != null
+                ? producto.getRestaurante().getIdUsuario()
+                : null;
+
+        return new DTOProducto(
+                producto.getIdProducto(),
+                producto.getNombre(),
+                producto.getDescripcion(),
+                producto.getPrecio(),
+                producto.getUrlImagen(),
+                categoria,
+                producto.getDisponible(),
+                idRestaurante,
+                mapearIngredientes(producto, idRestaurante),
+                tipoDe(producto),
+                DTOOferta.desde(producto.getOferta()),
+                mapearPlato(producto),
+                mapearArticulo(producto),
+                mapearCombo(producto),
+                DTOSubCategoria.desde(producto.getSubCategoria()));
+    }
+
+    private static EnumTipoProducto tipoDe(Producto producto) {
+        if (producto instanceof Plato) {
+            return EnumTipoProducto.Plato;
+        }
+        if (producto instanceof Articulo) {
+            return EnumTipoProducto.Articulo;
+        }
+        if (producto instanceof Combo) {
+            return EnumTipoProducto.Combo;
+        }
+        return null;
+    }
+
+    private static List<DTOIngrediente> mapearIngredientes(Producto producto, Integer idRestaurante) {
+        List<DTOIngrediente> ingredientesDto = new ArrayList<>();
+        if (producto instanceof Plato plato && plato.getIngredientes() != null) {
+            for (Ingrediente ing : plato.getIngredientes()) {
+                ingredientesDto.add(new DTOIngrediente(
+                        ing.getIdIngrediente(),
+                        ing.getNombre(),
+                        idRestaurante));
+            }
+        }
+        return ingredientesDto;
+    }
+
+    private static DTOPlato mapearPlato(Producto producto) {
+        if (producto instanceof Plato plato) {
+            return new DTOPlato(plato.getTiempoPreparacionMinutos());
+        }
+        return null;
+    }
+
+    private static DTOArticulo mapearArticulo(Producto producto) {
+        if (producto instanceof Articulo) {
+            return new DTOArticulo();
+        }
+        return null;
+    }
+
+    private static DTOCombo mapearCombo(Producto producto) {
+        if (producto instanceof Combo combo) {
+            List<Integer> ids = combo.getProductosIncluidos().stream()
+                    .map(Producto::getIdProducto)
+                    .collect(Collectors.toList());
+            return new DTOCombo(ids);
+        }
+        return null;
     }
 }

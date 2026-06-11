@@ -11,13 +11,13 @@ public class DTOProductoPedido {
     private String observaciones;
     private Integer cantidad;
     private Double subtotal;
-    private DTOProductoSimplificado producto;
+    private DTOProducto producto;
 
     protected DTOProductoPedido() {
     }
 
     public DTOProductoPedido(Integer cantidadDisponible, List<DTOIngrediente> ingredientes, String observaciones,
-            Integer cantidad, Double subtotal, DTOProductoSimplificado producto) {
+            Integer cantidad, Double subtotal, DTOProducto producto) {
         this.cantidadDisponible = cantidadDisponible;
         if (ingredientes != null) {
             this.ingredientesAQuitar = ingredientes;
@@ -52,12 +52,16 @@ public class DTOProductoPedido {
         return producto != null ? producto.getIdProducto() : null;
     }
 
-    public DTOProductoSimplificado getProducto() {
+    public DTOProducto getProducto() {
         return producto;
     }
 
     public double getTiempoPreparacion() {
-        return producto != null ? producto.getTiempoPreparacion() : 0;
+        if (producto == null || producto.getPlato() == null
+                || producto.getPlato().getTiempoPreparacionMinutos() == null) {
+            return 0;
+        }
+        return producto.getPlato().getTiempoPreparacionMinutos();
     }
 
     public static DTOProductoPedido desde(LineaCarrito linea) {
@@ -80,6 +84,6 @@ public class DTOProductoPedido {
                 linea.getObservaciones(),
                 linea.getCantidad(),
                 linea.getSubtotal(),
-                DTOProductoSimplificado.desde(linea.getProducto()));
+                DTOProducto.desde(linea.getProducto()));
     }
 }

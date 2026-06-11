@@ -23,6 +23,7 @@ public class DTORestaurante {
     private Float calificacionProm;
     private Integer radioEntrega = 10;
     private Boolean habilitado = false;
+    private Boolean cuentahabilitada = true;
     private Boolean abierto = false;
     private LocalTime horaApertura;
     private LocalTime horaCierre;
@@ -36,7 +37,7 @@ public class DTORestaurante {
     public DTORestaurante(Integer idRestaurante, String nombre, String email, String password, String rut,
             String telefono, String fotoPortada, String fotoPerfil, DTODireccion direccion, String descripcion,
             EnumCategoriaRestaurante categoria, Float calificacionProm, Integer radioEntrega, Boolean habilitado,
-            Boolean abierto, LocalTime horaApertura, LocalTime horaCierre, List<DTOProducto> productos) {
+            Boolean abierto, LocalTime horaApertura, LocalTime horaCierre, List<DTOProducto> productos, List<DTOIngrediente> ingredientesDisponibles, Boolean cuentahabilitada) {
         this.idRestaurante = idRestaurante;
         this.nombre = nombre;
         this.email = email;
@@ -55,6 +56,8 @@ public class DTORestaurante {
         this.horaApertura = horaApertura;
         this.horaCierre = horaCierre;
         this.productos = productos != null ? productos : new ArrayList<>();
+        this.ingredientesDisponibles = ingredientesDisponibles != null ? ingredientesDisponibles : new ArrayList<>();
+        this.cuentahabilitada = cuentahabilitada != null ? cuentahabilitada : true;
     }
 
     public DTORestaurante(Integer idRestaurante, String nombre, String email, String telefono,
@@ -97,4 +100,5 @@ public class DTORestaurante {
     public List<DTOProducto> getProductos() { return productos; }
     public String getFotoPerfil() { return fotoPerfil; }
     public List<DTOIngrediente> getIngredientesDisponibles() { return ingredientesDisponibles; }
+    public Boolean getCuentahabilitada() { return cuentahabilitada;}
 }
