@@ -68,7 +68,7 @@ public class MercadoPagoService {
                         .title(pp.getProducto().getNombre())
                         .description(pp.getProducto().getDescripcion())
                         .quantity(pp.getCantidad())
-                        .unitPrice(BigDecimal.valueOf(pp.getProducto().getPrecio()))
+                        .unitPrice(BigDecimal.valueOf(pp.getProducto().getPrecioConDescuento()))
                         .build())
                 .toList();
 

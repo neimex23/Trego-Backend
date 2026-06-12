@@ -103,7 +103,7 @@ public class ManejadorPDFService {
                 Producto p = pp.getProducto();
                 Integer cantidad = pp.getCantidad();
                 BigDecimal precioUnitario = (p != null)
-                        ? new BigDecimal(String.valueOf(p.getPrecio()))
+                        ? new BigDecimal(String.valueOf(p.getPrecioConDescuento()))
                         : BigDecimal.ZERO;
                 BigDecimal subtotal = new BigDecimal(String.valueOf(pp.getPrecioSuma()));
                 total = total.add(subtotal);

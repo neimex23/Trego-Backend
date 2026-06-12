@@ -11,6 +11,8 @@ import jakarta.persistence.UniqueConstraint;
 
 import java.time.LocalDateTime;
 
+import com.backend.trego.entity.DTOs.DTOComentario;
+
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = { "cliente_id", "restaurante_id" }))
 public class Comentario {
@@ -87,5 +89,15 @@ public class Comentario {
 
     public void setFechaCreacion(LocalDateTime fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
+    }
+
+    public static DTOComentario toDTOComentario(Comentario comentario, Integer idRestaurante) {
+        return new DTOComentario(
+                comentario.getIdComentario(),
+                comentario.getTexto(),
+                idRestaurante,
+                comentario.getCalificacion(),
+                comentario.getFechaCreacion().toString(),
+                comentario.getCliente().getNombre());
     }
 }

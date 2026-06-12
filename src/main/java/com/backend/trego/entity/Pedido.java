@@ -201,7 +201,7 @@ public class Pedido {
 
     public float calcularTotal() {
         return (float) productos.stream()
-                .mapToDouble(pp -> pp.getProducto().getPrecio() * pp.getCantidad())
+                .mapToDouble(pp -> pp.getProducto().getPrecioConDescuento() * pp.getCantidad())
                 .sum();
     }
 }

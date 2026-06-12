@@ -223,7 +223,7 @@ public class PedidoService {
             Integer cantidad = (linea.getCantidad() == null || linea.getCantidad() <= 0)
                     ? 1
                     : linea.getCantidad();
-            float precioSuma = producto.getPrecio() * cantidad;
+            float precioSuma = producto.getPrecioConDescuento() * cantidad;
             ProductoPedido pp = new ProductoPedido(producto, cantidad, precioSuma, linea.getObservaciones());
             pp.setIngredientesAQuitar(
                     ingredientePedidoService.resolverIngredientesAQuitar(
