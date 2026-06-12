@@ -14,7 +14,8 @@ import java.util.stream.Collectors;
 
 /**
  * DTO de salida del catálogo (menú, listados, respuestas de alta/edición).
- * Para requests usar {@link DTOCrearProductoRequest} o {@link DTOModificarProductoRequest}.
+ * Para requests usar {@link DTOCrearProductoRequest} o
+ * {@link DTOModificarProductoRequest}.
  * Para carrito y pedidos usar {@link DTOProductoPedido}.
  */
 public class DTOProducto {
@@ -202,10 +203,10 @@ public class DTOProducto {
 
     private static DTOCombo mapearCombo(Producto producto) {
         if (producto instanceof Combo combo) {
-            List<Integer> ids = combo.getProductosIncluidos().stream()
-                    .map(Producto::getIdProducto)
+            List<DTOCombo.ProductoIncluido> productosIncluidos = combo.getProductosIncluidos().stream()
+                    .map(prod -> new DTOCombo.ProductoIncluido(prod.getIdProducto(), prod.getNombre()))
                     .collect(Collectors.toList());
-            return new DTOCombo(ids);
+            return new DTOCombo(productosIncluidos);
         }
         return null;
     }
