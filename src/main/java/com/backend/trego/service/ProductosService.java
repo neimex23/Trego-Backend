@@ -63,7 +63,7 @@ public class ProductosService {
             if (!"Restaurante".equals(rol)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                         "El endpoint solo está disponible para restaurantes autenticados (rol actual: " + rol + ")");
-            }else {
+            } else {
                 idRestaurante = String.valueOf(currentUserService.getCurrentId());
             }
         }
@@ -71,10 +71,10 @@ public class ProductosService {
         var productos = productoRepository.findByRestauranteIdUsuario(id).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
-            if (productos.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No se encontraron productos para el restaurante con id: " + id);
-            }
+        if (productos.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "No se encontraron productos para el restaurante con id: " + id);
+        }
         return productos;
     }
 
@@ -121,12 +121,11 @@ public class ProductosService {
                             "El producto de tipo Plato debe incluir el campo 'plato' con los detalles específicos del plato.");
                 }
                 Plato plato = new Plato(
-                    request.getNombre(),
-                    request.getPrecio(),
-                    request.getDescripcion(),
-                    request.getUrlImagen(),
-                    request.getPlato().getTiempoPreparacionMinutos()
-                );
+                        request.getNombre(),
+                        request.getPrecio(),
+                        request.getDescripcion(),
+                        request.getUrlImagen(),
+                        request.getPlato().getTiempoPreparacionMinutos());
                 producto = plato;
             }
             case Combo -> {
@@ -140,20 +139,18 @@ public class ProductosService {
                                         "Producto incluido en el combo no encontrado con id: " + id)))
                         .collect(Collectors.toList());
                 producto = new Combo(
-                    request.getNombre(),
-                    request.getPrecio(),
-                    request.getDescripcion(),
-                    request.getUrlImagen()
-                );
+                        request.getNombre(),
+                        request.getPrecio(),
+                        request.getDescripcion(),
+                        request.getUrlImagen());
                 ((Combo) producto).setProductosIncluidos(productosIncluidos);
             }
             case Articulo -> {
                 producto = new Articulo(
-                    request.getNombre(),
-                    request.getPrecio(),
-                    request.getDescripcion(),
-                    request.getUrlImagen()
-                );
+                        request.getNombre(),
+                        request.getPrecio(),
+                        request.getDescripcion(),
+                        request.getUrlImagen());
             }
             default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Tipo de producto inválido: " + request.getTipo());
@@ -268,7 +265,8 @@ public class ProductosService {
         return cloudinaryService.firmar(nombreArchivo, tipoArchivo);
     }
 
-    // Convierte una entidad Producto (Plato, Articulo o Combo) a su DTO de catálogo.
+    // Convierte una entidad Producto (Plato, Articulo o Combo) a su DTO de
+    // catálogo.
     private DTOProducto toDTO(Producto producto) {
         EnumCategoriaProducto categoria = producto.getSubCategoria() != null
                 ? producto.getSubCategoria().getCategoria()
@@ -295,8 +293,7 @@ public class ProductosService {
                 mapearPlato(producto),
                 mapearArticulo(producto),
                 mapearCombo(producto),
-                DTOSubCategoria.desde(producto.getSubCategoria())
-        );
+                DTOSubCategoria.desde(producto.getSubCategoria()));
     }
 
     private DTOPlato mapearPlato(Producto producto) {
@@ -315,10 +312,10 @@ public class ProductosService {
 
     private DTOCombo mapearCombo(Producto producto) {
         if (producto instanceof Combo combo) {
-            List<Integer> ids = combo.getProductosIncluidos().stream()
-                    .map(Producto::getIdProducto)
+            List<DTOCombo.ProductoIncluido> productosIncluidos = combo.getProductosIncluidos().stream()
+                    .map(prod -> new DTOCombo.ProductoIncluido(prod.getIdProducto(), prod.getNombre()))
                     .collect(Collectors.toList());
-            return new DTOCombo(ids);
+            return new DTOCombo(productosIncluidos);
         }
         return null;
     }
