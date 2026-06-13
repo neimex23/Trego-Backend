@@ -185,7 +185,7 @@ public class RestauranteService {
 
     public List<DTORestaurante> listarRestaurantesZona(DTODireccion direccion) {
 
-        List<DTORestaurante> restaurantesHabilitados = listarRestaurantesHabilitadosNoCerrados();
+        List<DTORestaurante> restaurantesHabilitados = listarRestaurantes();
         if (restaurantesHabilitados.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
@@ -271,7 +271,7 @@ public class RestauranteService {
 
         Ingrediente ingrediente = new Ingrediente(nombre);
         restaurante.addIngredienteDisponible(ingrediente);
-        restauranteRepository.save(restaurante);
+        restauranteRepository.flush();
         return new DTOIngrediente(ingrediente.getIdIngrediente(), ingrediente.getNombre(), actualID);
     }
 
@@ -581,7 +581,7 @@ public class RestauranteService {
         comentarioRepository.save(comentario);
         actualizarCalificacionPromedioRestaurante(restaurante.getIdUsuario());
 
-        return toDTOComentario(comentario, restaurante.getIdUsuario());
+        return Comentario.toDTOComentario(comentario, restaurante.getIdUsuario());
     }
 
     @Transactional(readOnly = true)
@@ -613,10 +613,11 @@ public class RestauranteService {
         }
 
         Set<Integer> clientesVistos = new HashSet<>();
-        return comentarioRepository.findByRestauranteWithClienteOrderByFechaCreacionDesc(restauranteId).stream()
-                .filter(c -> clientesVistos.add(c.getCliente().getIdUsuario()))
-                .map(c -> toDTOComentario(c, restauranteId))
-                .collect(Collectors.toList());
+        return comentarioRepository.findByRestauranteWithClienteOrderByFechaCreacionDesc(restauranteId)
+            .stream()
+            .filter(c -> clientesVistos.add(c.getCliente().getIdUsuario()))
+            .map(c -> Comentario.toDTOComentario(c, restauranteId))
+            .collect(Collectors.toList());
     }
 
     private void actualizarCalificacionPromedioRestaurante(Integer idRestaurante) {
@@ -639,16 +640,6 @@ public class RestauranteService {
                             "Cliente autenticado no encontrado"));
         }
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente autenticado no encontrado");
-    }
-
-    private DTOComentario toDTOComentario(Comentario comentario, Integer idRestaurante) {
-        return new DTOComentario(
-                comentario.getIdComentario(),
-                comentario.getTexto(),
-                idRestaurante,
-                comentario.getCalificacion(),
-                comentario.getFechaCreacion().toString(),
-                comentario.getCliente().getNombre());
     }
 
     public Integer obtenerCalificacion(Integer restauranteId, Boolean esRestaurante) {
