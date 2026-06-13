@@ -136,6 +136,10 @@ public class DTOProducto {
         return subCategoria;
     }
 
+    public boolean isOfertaActiva() {
+        return ofertaActiva;
+    }
+
     public static DTOProducto desde(Producto producto) {
         if (producto == null) {
             return null;
@@ -216,5 +220,5 @@ public class DTOProducto {
             return new DTOCombo(productosIncluidos);
         }
         return null;
-    }
+    }   
 }
