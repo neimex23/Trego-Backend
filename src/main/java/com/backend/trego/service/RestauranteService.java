@@ -317,7 +317,8 @@ public class RestauranteService {
                 restaurante.isHabilitado(),
                 restaurante.getAbierto(),
                 restaurante.getApertura(),
-                restaurante.getCierre());
+                restaurante.getCierre(),
+                restaurante.isCuentaHabilitada());
     }
 
     private DTORestaurante toDTOHabilitar(Restaurante restaurante) {
