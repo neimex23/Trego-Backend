@@ -13,6 +13,7 @@ import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
 import com.backend.trego.entity.DTOs.DTORestaurante;
+import com.backend.trego.entity.Enums.EnumCanal;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.exception.PedidoCanceladoException;
 import com.backend.trego.exception.RestauranteCerradoException;
@@ -164,8 +165,14 @@ public class PedidoService {
     // autenticado, genera la preferencia de pago en MercadoPago y devuelve la
     // preferencia (con la URL de checkout) para que el front redirija a la
     // pasarela.
+    // Compatibilidad: por defecto asume canal WEB.
     @Transactional
     public DTOPreferenciaMP confirmarPedido(DTODireccion direccionDTO) {
+        return confirmarPedido(direccionDTO, EnumCanal.WEB);
+    }
+
+    @Transactional
+    public DTOPreferenciaMP confirmarPedido(DTODireccion direccionDTO, EnumCanal canal) {
         DTOCarrito carritoDTO = carritoService.obtenerCarrito();
 
         DTORestaurante restauranteDTO = restauranteService
@@ -181,7 +188,7 @@ public class PedidoService {
                 pedido.getIdPedido(),
                 (double) pedido.getTotal(),
                 carritoDTO.getProductos());
-        return pagoService.crearPreferencia(pedidoDTO);
+        return pagoService.crearPreferencia(pedidoDTO, canal);
     }
 
     // Construye el pedido a partir del carrito y lo guarda. Antes de crearlo
@@ -470,11 +477,14 @@ public class PedidoService {
                     "El pedido " + pedido.getIdPedido() + " ya estaba reembolsado");
         }
 
-        String idempotencyKey = "reembolso-pedido-" + pedido.getIdPedido();
-        pagoService.reembolsar(pago.getIdTransaccion(), idempotencyKey);
+        //Al estar en un entorno de pruebas ya que el proyecto no cubre el alcance de produccion los rembolsos
+        // por MP solo se pueden realizar si se hace un pago real, para entorno de pruebas se decidio enviar una notificacion al cliente que se conctacte con soporte para hacer el reintegro
+        //String idempotencyKey = "reembolso-pedido-" + pedido.getIdPedido();
+        //pagoService.reembolsar(pago.getIdTransaccion(), idempotencyKey);
 
         pedido.setEstado(EnumEstadoPedido.Reembolsado);
         pedidoRepository.save(pedido);
+        notificacionesService.notificarReembolsoContactarSoporte(pedido);
 
         return DTOPedido.desde(pedido);
     }

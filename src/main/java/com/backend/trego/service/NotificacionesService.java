@@ -59,6 +59,12 @@ public class NotificacionesService {
     @Value("${app.dev.mail-log-only:false}")
     private boolean mailLogOnly;
 
+    @Value("${soporte.contacto.email:soporte@trego.com}")
+    private String soporteEmail;
+
+    @Value("${soporte.contacto.telefono:}")
+    private String soporteTelefono;
+
     public NotificacionesService(JavaMailSender mailSender, ManejadorPDFService generarPDF,
             UsuarioRepository usuarioRepository) {
         this.mailSender = mailSender;
@@ -390,6 +396,103 @@ public class NotificacionesService {
         sb.append("<p style='color: #555;'>Si algo no salió como esperabas, podés dejarnos tu comentario desde la app.</p>");
         sb.append("<hr style='border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;'>");
         sb.append("<p style='color: #555;'>Gracias por elegirnos.</p>");
+        sb.append("<p style='color: #555;'><strong>El equipo de Trego</strong></p>");
+        sb.append("</div>");
+
+        sb.append("<div style='background-color: #f5f5f5; padding: 16px; text-align: center;'>");
+        sb.append("<p style='color: #999; font-size: 12px; margin: 0;'>© 2026 Trego. Todos los derechos reservados.</p>");
+        sb.append("</div>");
+        sb.append("</div>");
+
+        return sb.toString();
+    }
+
+    // Notifica al cliente que su pedido fue reembolsado. En el entorno de pruebas
+    // del proyecto el reintegro no se ejecuta automáticamente contra MercadoPago,
+    // por lo que se le indica al cliente que el reintegro se gestiona contactando
+    // a soporte. Envía email y push; los errores se loguean sin propagar para no
+    // bloquear el cambio de estado del pedido.
+    @Async
+    public void notificarReembolsoContactarSoporte(Pedido pedido) {
+        if (pedido == null) {
+            System.err.println("[Notificacion] Pedido nulo; se omite notificación de reembolso.");
+            return;
+        }
+        Cliente cliente = pedido.getCliente();
+        if (cliente == null) {
+            System.err.println("[Notificacion] Pedido " + pedido.getIdPedido()
+                    + " sin cliente; se omite notificación de reembolso.");
+            return;
+        }
+
+        // Email
+        if (cliente.getEmail() != null && !cliente.getEmail().isBlank()) {
+            try {
+                MimeMessage mail = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mail, false, "UTF-8");
+                helper.setTo(cliente.getEmail());
+                helper.setFrom(mailFrom, mailFromName);
+                helper.setSubject("Reembolso de tu pedido #" + pedido.getIdPedido());
+                helper.setText(construirCuerpoReembolso(pedido), true);
+                mailSender.send(mail);
+                System.out.println("[Notificacion] Mail de reembolso enviado a " + cliente.getEmail()
+                        + " (pedido " + pedido.getIdPedido() + ")");
+            } catch (Exception e) {
+                System.err.println("[Notificacion] Error al enviar mail de reembolso (pedido "
+                        + pedido.getIdPedido() + "): " + e.getMessage());
+            }
+        }
+
+        // Push
+        String token = cliente.getFcmToken();
+        if (token != null && !token.isBlank()) {
+            String titulo = "Tu pedido fue reembolsado";
+            String cuerpo = "El pedido #" + pedido.getIdPedido()
+                    + " fue reembolsado. Contactá a soporte para gestionar el reintegro.";
+            Map<String, String> data = new HashMap<>();
+            data.put("idPedido", String.valueOf(pedido.getIdPedido()));
+            data.put("estado", "Reembolsado");
+            data.put("tipo", "REEMBOLSO");
+            data.put("soporteEmail", textoOGuion(soporteEmail));
+            if (soporteTelefono != null && !soporteTelefono.isBlank()) {
+                data.put("soporteTelefono", soporteTelefono);
+            }
+            enviarPushFCM(token, titulo, cuerpo, data);
+        }
+    }
+
+    // Cuerpo HTML del mail de reembolso: confirma el reembolso del pedido e indica
+    // los datos de contacto de soporte para gestionar el reintegro.
+    private String construirCuerpoReembolso(Pedido pedido) {
+        String nombreCliente = textoOGuion(pedido.getCliente() != null ? pedido.getCliente().getNombre() : null);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
+        sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
+        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("</div>");
+
+        sb.append("<div style='padding: 32px;'>");
+        sb.append("<h2 style='color: #333;'>Hola ").append(nombreCliente).append(",</h2>");
+        sb.append("<p style='color: #555; font-size: 16px;'>")
+                .append("Tu pedido <strong>#").append(pedido.getIdPedido())
+                .append("</strong> fue reembolsado.")
+                .append("</p>");
+
+        sb.append("<div style='background-color: #f9f9f9; border-left: 4px solid #FF6600; padding: 12px 16px; color: #555; margin: 16px 0;'>");
+        if (pedido.getTotal() > 0) {
+            sb.append("<p style='margin: 0;'><strong>Monto:</strong> $").append(pedido.getTotal()).append("</p>");
+        }
+        sb.append("<p style='margin: 8px 0 0 0;'>Para gestionar el reintegro del importe, escribinos a <strong>")
+                .append(textoOGuion(soporteEmail)).append("</strong>");
+        if (soporteTelefono != null && !soporteTelefono.isBlank()) {
+            sb.append(" o comunicate al <strong>").append(soporteTelefono).append("</strong>");
+        }
+        sb.append(".</p>");
+        sb.append("</div>");
+
+        sb.append("<p style='color: #555;'>Indicá el número de pedido para que podamos ayudarte más rápido.</p>");
+        sb.append("<hr style='border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;'>");
         sb.append("<p style='color: #555;'><strong>El equipo de Trego</strong></p>");
         sb.append("</div>");
 

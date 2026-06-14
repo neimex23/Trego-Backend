@@ -31,6 +31,7 @@ public class DTOProducto {
     private List<DTOIngrediente> ingredientes = new ArrayList<>();
     private EnumTipoProducto tipo;
     private DTOOferta oferta;
+    private boolean ofertaActiva;
     private DTOPlato plato;
     private DTOArticulo articulo;
     private DTOCombo combo;
@@ -43,7 +44,7 @@ public class DTOProducto {
     public DTOProducto(Integer idProducto, String nombre, String descripcion, float precio, String urlImagen,
             EnumCategoriaProducto categoria, Boolean disponible, Integer idRestaurante,
             List<DTOIngrediente> ingredientes, EnumTipoProducto tipo, DTOOferta oferta, DTOPlato plato,
-            DTOArticulo articulo, DTOCombo combo, DTOSubCategoria subCategoria) {
+            DTOArticulo articulo, DTOCombo combo, DTOSubCategoria subCategoria, Boolean ofertaActiva) {
         this.idProducto = idProducto;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -63,6 +64,11 @@ public class DTOProducto {
         this.subCategoria = subCategoria;
         if (subCategoria != null) {
             this.idSubCategoria = subCategoria.getIdSubCategoria();
+        }
+        if (this.getOferta() == null){
+            this.ofertaActiva = false;
+        } else{
+            this.ofertaActiva = ofertaActiva;
         }
     }
 
@@ -130,6 +136,10 @@ public class DTOProducto {
         return subCategoria;
     }
 
+    public boolean isOfertaActiva() {
+        return ofertaActiva;
+    }
+
     public static DTOProducto desde(Producto producto) {
         if (producto == null) {
             return null;
@@ -158,7 +168,8 @@ public class DTOProducto {
                 mapearPlato(producto),
                 mapearArticulo(producto),
                 mapearCombo(producto),
-                DTOSubCategoria.desde(producto.getSubCategoria()));
+                DTOSubCategoria.desde(producto.getSubCategoria()),
+                producto.isOfertaActiva());
     }
 
     private static EnumTipoProducto tipoDe(Producto producto) {
@@ -209,5 +220,5 @@ public class DTOProducto {
             return new DTOCombo(productosIncluidos);
         }
         return null;
-    }
+    }   
 }

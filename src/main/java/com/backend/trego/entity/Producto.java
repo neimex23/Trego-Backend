@@ -123,7 +123,7 @@ public abstract class Producto {
     }
 
     public float getPrecioConDescuento() {
-        if (this.oferta != null && this.ofertaActiva) {
+        if (this.oferta != null && this.ofertaActiva && this.oferta.isVigente()) {
             float descuento = this.precio * (this.oferta.getDescuento() / 100);
             return this.precio - descuento;
         }

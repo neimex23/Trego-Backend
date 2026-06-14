@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.trego.entity.MPResponse;
 import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
+import com.backend.trego.entity.Enums.EnumCanal;
 import com.backend.trego.repository.PedidoRepository;
 
 import com.mercadopago.client.payment.PaymentClient;
@@ -51,15 +52,32 @@ public class MercadoPagoService {
     @Value("${mercadopago.back.url.pending:http://localhost:5173/pending}")
     private String backUrlPending;
 
+    // back_urls para clientes mobile (deep links que captura la app Android).
+    @Value("${mercadopago.back.url.mobile.success:trego://pago/success}")
+    private String backUrlMobileSuccess;
+
+    @Value("${mercadopago.back.url.mobile.failure:trego://pago/failure}")
+    private String backUrlMobileFailure;
+
+    @Value("${mercadopago.back.url.mobile.pending:trego://pago/pending}")
+    private String backUrlMobilePending;
+
     public MercadoPagoService(PedidoRepository pedidoRepository) {
         this.pedidoRepository = pedidoRepository;
     }
 
-    // Crea la preferencia de pago en MercadoPago a partir del pedido y devuelve
-    // las URLs de checkout. El externalReference lleva el idPedido para poder
-    // resolver el pedido cuando llegue el webhook.
+    // Compatibilidad: por defecto asume canal WEB.
     @Transactional
     public MPResponse crearOrden(Pedido pedido) {
+        return crearOrden(pedido, EnumCanal.WEB);
+    }
+
+    // Crea la preferencia de pago en MercadoPago a partir del pedido y devuelve
+    // las URLs de checkout. El externalReference lleva el idPedido para poder
+    // resolver el pedido cuando llegue el webhook. El canal (WEB | MOBILE)
+    // determina a qué back_urls redirige MercadoPago tras el checkout.
+    @Transactional
+    public MPResponse crearOrden(Pedido pedido, EnumCanal canal) {
         pedido.setPago(new Pago(LocalDateTime.now(), pedido.calcularTotal(), null, null));
 
         List<PreferenceItemRequest> items = pedido.getProductos().stream()
@@ -72,10 +90,11 @@ public class MercadoPagoService {
                         .build())
                 .toList();
 
+        boolean esMobile = canal == EnumCanal.MOBILE;
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                .success(backUrlSuccess)
-                .failure(backUrlFailure)
-                .pending(backUrlPending)
+                .success(esMobile ? backUrlMobileSuccess : backUrlSuccess)
+                .failure(esMobile ? backUrlMobileFailure : backUrlFailure)
+                .pending(esMobile ? backUrlMobilePending : backUrlPending)
                 .build();
 
         PreferenceRequest.PreferenceRequestBuilder builder = PreferenceRequest.builder()

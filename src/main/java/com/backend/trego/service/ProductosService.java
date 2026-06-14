@@ -293,7 +293,8 @@ public class ProductosService {
                 mapearPlato(producto),
                 mapearArticulo(producto),
                 mapearCombo(producto),
-                DTOSubCategoria.desde(producto.getSubCategoria()));
+                DTOSubCategoria.desde(producto.getSubCategoria()),
+                producto.isOfertaActiva());
     }
 
     private DTOPlato mapearPlato(Producto producto) {
