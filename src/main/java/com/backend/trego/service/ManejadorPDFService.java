@@ -1,5 +1,6 @@
 package com.backend.trego.service;
 
+import com.backend.trego.entity.Ingrediente;
 import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.Producto;
@@ -117,6 +118,20 @@ public class ManejadorPDFService {
                     } else if (p.getDescripcion() != null && !p.getDescripcion().isBlank()) {
                         etiquetaProducto = p.getDescripcion();
                     }
+                }
+
+                // Detalle de ingredientes quitados, para distinguir dos productos
+                // con el mismo nombre pero distinta personalización.
+                java.util.List<String> quitados = new java.util.ArrayList<>();
+                if (pp.getIngredientesAQuitar() != null) {
+                    for (Ingrediente ing : pp.getIngredientesAQuitar()) {
+                        if (ing != null && ing.getNombre() != null && !ing.getNombre().isBlank()) {
+                            quitados.add(ing.getNombre());
+                        }
+                    }
+                }
+                if (!quitados.isEmpty()) {
+                    etiquetaProducto += "\n(sin " + String.join(", ", quitados) + ")";
                 }
 
                 tablaProductos.addCell(celdaNormal(etiquetaProducto));

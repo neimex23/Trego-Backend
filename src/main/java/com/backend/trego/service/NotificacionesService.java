@@ -1,5 +1,6 @@
 package com.backend.trego.service;
 
+import com.backend.trego.entity.Ingrediente;
 import com.backend.trego.entity.Pago;
 import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.Producto;
@@ -9,6 +10,7 @@ import com.backend.trego.entity.Usuario;
 import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.Enums.EnumEstadoReclamo;
 import com.backend.trego.entity.DTOs.DTODireccion;
+import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOProducto;
 import com.backend.trego.entity.DTOs.DTOProductoPedido;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -162,10 +165,19 @@ public class NotificacionesService {
                 DTOProducto prod = linea.getProducto();
                 String nombreProducto = (prod != null) ? textoOGuion(prod.getNombre()) : "—";
                 Integer cantidad = linea.getCantidad();
+                List<String> quitados = new ArrayList<>();
+                if (linea.getIngredientesAQuitar() != null) {
+                    for (DTOIngrediente ing : linea.getIngredientesAQuitar()) {
+                        if (ing != null && ing.getNombre() != null && !ing.getNombre().isBlank()) {
+                            quitados.add(ing.getNombre());
+                        }
+                    }
+                }
                 sb.append("<li>")
                         .append(nombreProducto)
                         .append(" x ")
                         .append(cantidad != null ? cantidad : 1)
+                        .append(formatearIngredientesAQuitar(quitados))
                         .append("</li>");
             }
             sb.append("</ul>");
@@ -685,10 +697,19 @@ public class NotificacionesService {
             String nombreProducto = pp.getProducto() != null
                     ? textoOGuion(pp.getProducto().getNombre())
                     : "—";
+            List<String> quitados = new ArrayList<>();
+            if (pp.getIngredientesAQuitar() != null) {
+                for (Ingrediente ing : pp.getIngredientesAQuitar()) {
+                    if (ing != null && ing.getNombre() != null && !ing.getNombre().isBlank()) {
+                        quitados.add(ing.getNombre());
+                    }
+                }
+            }
             sb.append("<li>")
                     .append(nombreProducto)
                     .append(" x ")
                     .append(pp.getCantidad())
+                    .append(formatearIngredientesAQuitar(quitados))
                     .append("</li>");
         });
         sb.append("</ul>");
@@ -721,6 +742,17 @@ public class NotificacionesService {
 
     private static String textoOGuion(String valor) {
         return (valor == null || valor.isBlank()) ? "—" : valor;
+    }
+
+    // Detalle de ingredientes que el cliente pidió quitar, para distinguir en el
+    // listado dos productos con el mismo nombre pero distinta personalización
+    // (p. ej. una hamburguesa con pepinillos y otra sin).
+    private static String formatearIngredientesAQuitar(List<String> nombres) {
+        if (nombres == null || nombres.isEmpty()) {
+            return "";
+        }
+        return " <span style='color:#888; font-size:13px;'>(sin "
+                + String.join(", ", nombres) + ")</span>";
     }
 
     private static String formatearDireccion(DTODireccion direccion) {
