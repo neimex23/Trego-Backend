@@ -7,6 +7,7 @@ import com.backend.trego.entity.Producto;
 import com.backend.trego.entity.DTOs.DTOEstadoPago;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
+import com.backend.trego.entity.Enums.EnumCanal;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.exception.PagoRechazadoException;
 import com.backend.trego.repository.PedidoRepository;
@@ -51,16 +52,22 @@ public class PagoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
     }
 
-    // Recibe el pedido ya creado (con id), recupera la entidad y genera la
-    // preferencia en MercadoPago. Devuelve la preferencia con la URL de checkout.
+    // Compatibilidad: por defecto asume canal WEB.
     public DTOPreferenciaMP crearPreferencia(DTOPedido pedidoDTO) {
+        return crearPreferencia(pedidoDTO, EnumCanal.WEB);
+    }
+
+    // Recibe el pedido ya creado (con id), recupera la entidad y genera la
+    // preferencia en MercadoPago. El canal (WEB | MOBILE) determina las back_urls
+    // de retorno. Devuelve la preferencia con la URL de checkout.
+    public DTOPreferenciaMP crearPreferencia(DTOPedido pedidoDTO, EnumCanal canal) {
         if (pedidoDTO == null || pedidoDTO.getIdPedido() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pedido inválido para generar la preferencia");
         }
 
         Pedido pedido = obtenerPedidoOFallar(pedidoDTO.getIdPedido());
 
-        MPResponse mpResponse = mercadoPagoService.crearOrden(pedido);
+        MPResponse mpResponse = mercadoPagoService.crearOrden(pedido, canal);
 
         return new DTOPreferenciaMP(
                 mpResponse.getOrderid(),

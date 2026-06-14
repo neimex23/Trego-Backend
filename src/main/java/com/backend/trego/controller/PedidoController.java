@@ -5,6 +5,7 @@ import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
 import com.backend.trego.entity.DTOs.DTORestaurante;
+import com.backend.trego.entity.Enums.EnumCanal;
 import com.backend.trego.entity.Enums.EnumEstadoPedido;
 import com.backend.trego.exception.SinProductoException;
 import com.backend.trego.service.PedidoService;
@@ -71,11 +72,14 @@ public class PedidoController {
 
     @PostMapping("/confirmar")
     @Operation(summary = "Confirmar pedido por parte del cliente",
-            description = "Recibe la dirección de envío (DTODireccion) y genera una preferencia de pago en MercadoPago con el Carrito Actual. Valida que el carrito no esté vacío, que el restaurante seleccionado sea válido.")
+            description = "Recibe la dirección de envío (DTODireccion) y genera una preferencia de pago en MercadoPago con el Carrito Actual. Valida que el carrito no esté vacío, que el restaurante seleccionado sea válido. El parámetro 'canal' (WEB | MOBILE) determina las back_urls de retorno tras el checkout.")
     @ApiResponse(responseCode = "200", description = "Preferencia de pago generada correctamente")
     @ApiResponse(responseCode = "400", description = "Carrito vacío, restaurante inválido o dirección no asociada al cliente")
-    public ResponseEntity<DTOPreferenciaMP> confirmarPedido(@RequestBody DTODireccion dirreccionEnvio) {
-        DTOPreferenciaMP preferencia = pedidoService.confirmarPedido(dirreccionEnvio);
+    public ResponseEntity<DTOPreferenciaMP> confirmarPedido(
+            @RequestBody DTODireccion dirreccionEnvio,
+            @Parameter(description = "Canal del cliente: WEB (front React) o MOBILE (app Android)")
+            @RequestParam(defaultValue = "WEB") EnumCanal canal) {
+        DTOPreferenciaMP preferencia = pedidoService.confirmarPedido(dirreccionEnvio, canal);
         return ResponseEntity.ok(preferencia);
     }
 

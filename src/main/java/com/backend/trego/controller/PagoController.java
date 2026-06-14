@@ -3,6 +3,7 @@ package com.backend.trego.controller;
 import com.backend.trego.entity.DTOs.DTOEstadoPago;
 import com.backend.trego.entity.DTOs.DTOPedido;
 import com.backend.trego.entity.DTOs.DTOPreferenciaMP;
+import com.backend.trego.entity.Enums.EnumCanal;
 import com.backend.trego.service.PagoService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,11 +29,14 @@ public class PagoController {
 
     @PostMapping("/preferencia")
     @Operation(summary = "Crear preferencia de pago",
-            description = "Genera una preferencia en MercadoPago a partir del pedido recibido y devuelve el identificador y la URL de checkout que debe abrir el cliente.")
+            description = "Genera una preferencia en MercadoPago a partir del pedido recibido y devuelve el identificador y la URL de checkout que debe abrir el cliente. El parámetro 'canal' (WEB | MOBILE) determina las back_urls de retorno tras el checkout.")
     @ApiResponse(responseCode = "200", description = "Preferencia creada correctamente")
     @ApiResponse(responseCode = "500", description = "Error al comunicarse con MercadoPago")
-    public ResponseEntity<DTOPreferenciaMP> crearPreferencia(@RequestBody DTOPedido pedidoDTO) {
-        return ResponseEntity.ok(pagoService.crearPreferencia(pedidoDTO));
+    public ResponseEntity<DTOPreferenciaMP> crearPreferencia(
+            @RequestBody DTOPedido pedidoDTO,
+            @Parameter(description = "Canal del cliente: WEB (front React) o MOBILE (app Android)")
+            @RequestParam(defaultValue = "WEB") EnumCanal canal) {
+        return ResponseEntity.ok(pagoService.crearPreferencia(pedidoDTO, canal));
     }
 
     // Webhook que invoca MercadoPago. Debe responder 200 siempre (de lo contrario

@@ -15,29 +15,42 @@ spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 
-# --- Configuración de Correo (Necesaria para NotificacionesService) ---
-mail.from=noreply@trego.com
-mail.from.name=Equipo Trego
-# Esto evita que Spring intente conectar a un servidor real mientras desarrollas
-spring.mail.host=localhost
-spring.mail.port=25
+# --- Servidor ---
+# Respetar X-Forwarded-* (necesario detras de un tunel como ngrok que termina TLS y
+# reenvia HTTP al backend). Sin esto Swagger arma Request URLs http:// y el navegador
+# las bloquea por mixed content.
+server.forward-headers-strategy=framework
 
 # --- MercadoPago ---
-# Obtener desde https://www.mercadopago.com.ar/developers/panel/app
+# Access token desde https://www.mercadopago.com.ar/developers/panel/app
 mercadopago.access.token=
+# URL publica a la que MercadoPago envia las notificaciones de pago.
+# En local debe ser un tunel publico (ej. ngrok): https://xxxx.ngrok-free.app/api/pagos/webhook
+# Si se deja vacia, no se envia notification_url a MP (util mientras no haya tunel).
+mercadopago.webhook.url=
+# URLs de retorno tras el checkout. Se elige el set segun el canal (WEB | MOBILE).
+# WEB: app front React/Vite.
+mercadopago.back.url.success=http://localhost:5173/success
+mercadopago.back.url.failure=http://localhost:5173/failure
+mercadopago.back.url.pending=http://localhost:5173/pending
+# MOBILE: deep link que captura la app Android para volver a la pantalla de resultado.
+mercadopago.back.url.mobile.success=trego://pago/success
+mercadopago.back.url.mobile.failure=trego://pago/failure
+mercadopago.back.url.mobile.pending=trego://pago/pending
 
-# Para pruebas borrar antes de la entrega 
-logging.level.org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor=TRACE
-
-# --- geoapify ---
+# --- Geoapify ---
 # Obtener desde https://myprojects.geoapify.com/api
 geoapify.api.key=
+
+# --- Cloudinary ---
+# Completar con las credenciales del dashboard de Cloudinary (Settings > API Keys).
+cloudinary.cloud-name=
+cloudinary.api-key=
+cloudinary.api-secret=
 
 # --- Firebase Web (mismo projectId y apiKey que firebase.config.js del front) ---
 firebase.web.project-id=
 firebase.client.api-key=
-# Solo desarrollo local si Admin SDK usa otro proyecto o falla SSL
-firebase.dev.trust-jwt-claims=false
 
 # --- JWT ---
 # Clave secreta para firmar los tokens. Debe ser una cadena larga y aleatoria.
@@ -47,12 +60,6 @@ jwt.secret=
 admin.email=
 admin.password=
 
-# ===== Cloudinary =====
-# Completar con las credenciales del dashboard de Cloudinary (Settings > API Keys).
-cloudinary.cloud-name=tu-cloud-name
-cloudinary.api-key=tu-api-key
-cloudinary.api-secret=tu-api-secret
-
 # ===== CORS =====
 # Origenes permitidos para llamadas desde el frontend. Lista separada por comas.
 # En produccion agregar el dominio publico (ej. https://trego.app).
@@ -61,3 +68,26 @@ app.cors.allowed-methods=GET,POST,PUT,PATCH,DELETE,OPTIONS
 app.cors.allowed-headers=Authorization,Content-Type,Accept
 app.cors.allow-credentials=true
 app.cors.max-age=3600
+
+# ===== Configuracion SMTP (Gmail) =====
+# Reemplazar username por la cuenta de Gmail.
+# Reemplazar password por una App Password generada en https://myaccount.google.com/apppasswords
+# (requiere 2FA activado en la cuenta de Google).
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=
+spring.mail.password=
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.starttls.required=true
+spring.mail.properties.mail.smtp.connectiontimeout=5000
+spring.mail.properties.mail.smtp.timeout=5000
+spring.mail.properties.mail.smtp.writetimeout=5000
+
+# ===== Properties usadas por NotificacionesService =====
+mail.from=noreply@trego.com
+mail.from.name=Trego
+
+# Datos de contacto de soporte mostrados en la notificacion de reembolso.
+soporte.contacto.email=soporte@trego.com
+soporte.contacto.telefono=
