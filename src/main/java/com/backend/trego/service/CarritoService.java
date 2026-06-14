@@ -1,12 +1,16 @@
 package com.backend.trego.service;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.trego.entity.Carrito;
+import com.backend.trego.entity.Ingrediente;
 import com.backend.trego.entity.LineaCarrito;
 import com.backend.trego.entity.Plato;
 import com.backend.trego.entity.Producto;
@@ -96,9 +100,16 @@ public class CarritoService {
             carrito.setIdRestaurante(idRestauranteSolicitado);
         }
 
+        // Se resuelven los ingredientes a quitar antes de buscar la línea: dos
+        // pedidos del mismo producto con distinta personalización (p. ej. una burger
+        // con pepinillos y otra sin) deben ser líneas separadas, no fusionarse.
+        List<Ingrediente> ingredientesAQuitar = ingredientePedidoService.resolverIngredientesAQuitar(
+                request.getIngredientesAQuitar(), producto);
+
         Optional<LineaCarrito> existente = carrito.getLineas().stream()
                 .filter(l -> l.getProducto() != null
-                        && l.getProducto().getIdProducto() == producto.getIdProducto())
+                        && l.getProducto().getIdProducto() == producto.getIdProducto()
+                        && mismosIngredientes(l.getIngredientesAQuitar(), ingredientesAQuitar))
                 .findFirst();
 
         if (existente.isPresent()) {
@@ -107,16 +118,9 @@ public class CarritoService {
             if (observaciones != null) {
                 linea.setObservaciones(observaciones);
             }
-            if (request.getIngredientesAQuitar() != null) {
-                linea.setIngredientesAQuitar(
-                        ingredientePedidoService.resolverIngredientesAQuitar(
-                                request.getIngredientesAQuitar(), producto));
-            }
         } else {
             LineaCarrito linea = new LineaCarrito(carrito, producto, cantidad, observaciones, precioUnitario);
-            linea.setIngredientesAQuitar(
-                    ingredientePedidoService.resolverIngredientesAQuitar(
-                            request.getIngredientesAQuitar(), producto));
+            linea.setIngredientesAQuitar(ingredientesAQuitar);
             carrito.addLinea(linea);
         }
 
@@ -171,6 +175,24 @@ public class CarritoService {
         carrito.recalcularTotal();
         carritoRepository.save(carrito);
         return linea.toDTO();
+    }
+
+    // Dos líneas son "el mismo ítem" solo si quitan exactamente el mismo conjunto
+    // de ingredientes. Se compara por conjunto de ids (sin importar el orden).
+    private boolean mismosIngredientes(List<Ingrediente> a, List<Ingrediente> b) {
+        return idsIngredientes(a).equals(idsIngredientes(b));
+    }
+
+    private Set<Integer> idsIngredientes(List<Ingrediente> ingredientes) {
+        Set<Integer> ids = new HashSet<>();
+        if (ingredientes != null) {
+            for (Ingrediente ing : ingredientes) {
+                if (ing != null && ing.getIdIngrediente() != null) {
+                    ids.add(ing.getIdIngrediente());
+                }
+            }
+        }
+        return ids;
     }
 
     private Producto cargarProductoConIngredientes(Producto producto, Integer idProducto) {
