@@ -14,8 +14,10 @@ import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOOferta;
 import com.backend.trego.entity.DTOs.DTOPlato;
 import com.backend.trego.entity.DTOs.DTOCrearProductoRequest;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOModificarProductoRequest;
 import com.backend.trego.entity.DTOs.DTOProducto;
+import com.backend.trego.entity.DTOs.DTOProductoZona;
 import com.backend.trego.entity.DTOs.DTOSubCategoria;
 import com.backend.trego.entity.Enums.EnumCategoriaProducto;
 import com.backend.trego.entity.Enums.EnumTipoProducto;
@@ -433,27 +435,29 @@ public class ProductosService {
     }
 
     @Transactional
-    public List<DTOProducto> listarProductoSubcategoria(DTOSubCategoria subCategoria){
+    public List<DTOProductoZona> listarProductoSubcategoria(DTOSubCategoria subCategoria, DTODireccion direccion){
         List<Producto> todosLosProducto = productoRepository.findByRestauranteHabilitadoTrueAndRestauranteAbiertoTrueAndDisponibleTrueOrderBySubCategoria_IdSubCategoriaAsc();
         var lista = todosLosProducto.stream()
             .filter(p -> p.getSubCategoria().getIdSubCategoria().equals(subCategoria.getIdSubCategoria()))
-            .map(DTOProducto::desde)
+            .filter(p -> restauranteService.estaEnZona(p, direccion))
+            .map(DTOProductoZona::desde)
             .collect(Collectors.toList());
-        
+
         if(lista.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No hay productos para listar");
-        return lista;    
+        return lista;
     }
 
     @Transactional
-    public List<DTOProducto> listarProductoOferta(){
+    public List<DTOProductoZona> listarProductoOferta(DTODireccion direccion){
         var lista = productoRepository.findByRestauranteHabilitadoTrueAndRestauranteAbiertoTrueAndDisponibleTrueAndOfertaActivaTrueOrderByOferta_IdOfertaDesc().stream()
-        .map(DTOProducto::desde)
+        .filter(p -> restauranteService.estaEnZona(p, direccion))
+        .map(DTOProductoZona::desde)
         .collect(Collectors.toList());
 
         if(lista.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No hay productos para listar");
-        return lista;    
+        return lista;
     }
 
 
