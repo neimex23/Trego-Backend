@@ -34,7 +34,6 @@ import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -192,34 +191,9 @@ public class RestauranteService {
                     "No hay restaurantes habilitados");
         }
 
-        double latitud = direccion.getLatitud();
-        double longitud = direccion.getLongitud();
-
-        List<DTORestaurante> restaurantesFiltro = new ArrayList<>();
-
-        for (DTORestaurante dtoRestaurante : restaurantesHabilitados) {
-
-            DTODireccion direccionResto = dtoRestaurante.getDireccion();
-            if (direccionResto == null) {
-                continue;
-            }
-
-            double latitudResto = direccionResto.getLatitud();
-            double longitudResto = direccionResto.getLongitud();
-
-            double radioEntrega = dtoRestaurante.getRadioEntrega(); // en KM
-
-            double distancia = geoapifyService.calcularDistanciaKm(
-                    latitud,
-                    longitud,
-                    latitudResto,
-                    longitudResto);
-
-            // Si Geoapify no pudo calcular la ruta, descartamos el restaurante.
-            if (distancia >= 0 && distancia <= radioEntrega) {
-                restaurantesFiltro.add(dtoRestaurante);
-            }
-        }
+        List<DTORestaurante> restaurantesFiltro = restaurantesHabilitados.stream()
+                .filter(r -> cubreZona(direccion, r.getDireccion(), r.getRadioEntrega()))
+                .collect(Collectors.toList());
 
         if (restaurantesFiltro.isEmpty()) {
             throw new ResponseStatusException(
@@ -784,5 +758,30 @@ public class RestauranteService {
 
         producto.setOfertaActiva(request.getHabilitar());
         productosService.modificarProducto(producto);
+    }
+
+    
+    // Indica si el restaurante del producto cubre la dirección dada, comparando
+    // la distancia por ruta contra su radio de entrega (en KM).
+    public boolean estaEnZona(Producto producto, DTODireccion direccion){
+        Restaurante restaurante = producto.getRestaurante();
+        if (restaurante == null) {
+            return false;
+        }
+        return cubreZona(direccion, restaurante.getDireccion(), restaurante.getRadioEntrega());
+    }
+
+    private boolean cubreZona(DTODireccion direccionBusqueda, DTODireccion direccionResto, Integer radioEntrega){
+        if (direccionResto == null || radioEntrega == null) {
+            return false;
+        }
+
+        double distancia = geoapifyService.calcularDistanciaKm(
+                direccionBusqueda.getLatitud(),
+                direccionBusqueda.getLongitud(),
+                direccionResto.getLatitud(),
+                direccionResto.getLongitud());
+
+        return distancia >= 0 && distancia <= radioEntrega;
     }
 }
