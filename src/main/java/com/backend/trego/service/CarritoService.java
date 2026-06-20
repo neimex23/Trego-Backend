@@ -137,10 +137,7 @@ public class CarritoService {
         Carrito carrito = carritoRepository.findByUidCliente(uidCliente)
                 .orElseThrow(() -> new NoSuchElementException("El usuario no tiene un carrito activo"));
 
-        LineaCarrito linea = carrito.getLineas().stream()
-                .filter(l -> l.getProducto() != null
-                        && l.getProducto().getIdProducto() == request.getIdProducto())
-                .findFirst()
+        LineaCarrito linea = buscarLineaObjetivo(carrito, request)
                 .orElseThrow(() -> new NoSuchElementException(
                         "El producto " + request.getIdProducto() + " no está en el carrito"));
 
@@ -166,15 +163,37 @@ public class CarritoService {
         if (request.getObservaciones() != null) {
             linea.setObservaciones(request.getObservaciones());
         }
-        if (request.getIngredientesAQuitar() != null) {
-            linea.setIngredientesAQuitar(
-                    ingredientePedidoService.resolverIngredientesAQuitar(
-                            request.getIngredientesAQuitar(), producto));
-        }
 
         carrito.recalcularTotal();
         carritoRepository.save(carrito);
         return linea.toDTO();
+    }
+
+    // Ubica la línea a modificar/eliminar. Si hay una sola línea del producto se
+    // usa directamente (compatibilidad: el front no necesita mandar ingredientes).
+    // Si hay varias del mismo producto con distinta personalización, se desambigua
+    // por el conjunto de ingredientes a quitar enviado en el request.
+    private Optional<LineaCarrito> buscarLineaObjetivo(Carrito carrito, DTOProductoPedido request) {
+        List<LineaCarrito> candidatas = carrito.getLineas().stream()
+                .filter(l -> l.getProducto() != null
+                        && l.getProducto().getIdProducto() == request.getIdProducto())
+                .toList();
+
+        if (candidatas.isEmpty()) {
+            return Optional.empty();
+        }
+        if (candidatas.size() == 1) {
+            return Optional.of(candidatas.get(0));
+        }
+
+        Producto producto = cargarProductoConIngredientes(
+                candidatas.get(0).getProducto(), request.getIdProducto());
+        List<Ingrediente> objetivo = ingredientePedidoService.resolverIngredientesAQuitar(
+                request.getIngredientesAQuitar(), producto);
+
+        return candidatas.stream()
+                .filter(l -> mismosIngredientes(l.getIngredientesAQuitar(), objetivo))
+                .findFirst();
     }
 
     // Dos líneas son "el mismo ítem" solo si quitan exactamente el mismo conjunto
@@ -226,10 +245,7 @@ public class CarritoService {
         }
         Carrito carrito = carritoOpt.get();
 
-        Optional<LineaCarrito> lineaOpt = carrito.getLineas().stream()
-                .filter(l -> l.getProducto() != null
-                        && l.getProducto().getIdProducto() == request.getIdProducto())
-                .findFirst();
+        Optional<LineaCarrito> lineaOpt = buscarLineaObjetivo(carrito, request);
 
         if (lineaOpt.isEmpty()) {
             return null;
