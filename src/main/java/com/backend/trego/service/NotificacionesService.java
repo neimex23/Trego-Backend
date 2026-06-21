@@ -128,7 +128,7 @@ public class NotificacionesService {
 
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
         sb.append("<div style='padding: 32px;'>");
         sb.append("<h2 style='color: #333;'>¡").append(nombreCliente)
@@ -262,7 +262,7 @@ public class NotificacionesService {
 
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -360,7 +360,7 @@ public class NotificacionesService {
 
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -459,7 +459,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -494,28 +494,44 @@ public class NotificacionesService {
     @Async
     public void notificarConfirmacionPedidoConPDF(Usuario usuario, List<Producto> productos, Restaurante restaurante,
             Pedido pedido) {
+        System.out.println("Enviando mail en hilo: " + Thread.currentThread().getName());
+
+        if (usuario == null || usuario.getEmail() == null || usuario.getEmail().isBlank()) {
+            System.err.println("[Mail] Usuario sin email, pedido #" + (pedido != null ? pedido.getIdPedido() : "?"));
+            return;
+        }
+
+        byte[] pdf = null;
         try {
-            System.out.println("Enviando mail en hilo: " + Thread.currentThread().getName());
+            pdf = generarPDF.generarComprobante(usuario, productos, restaurante, pedido);
+        } catch (Exception e) {
+            System.err.println("[Mail] No se pudo generar el PDF para pedido #"
+                    + pedido.getIdPedido() + ": " + e.getClass().getName() + " - " + e.getMessage());
+        }
+
+        try {
             MimeMessage mailConPDF = mailSender.createMimeMessage();
-            // multipart = true para poder adjuntar el PDF
             MimeMessageHelper estructuraMail = new MimeMessageHelper(mailConPDF, true, "UTF-8");
 
             estructuraMail.setTo(usuario.getEmail());
             estructuraMail.setFrom(mailFrom, mailFromName);
             estructuraMail.setSubject("Confirmación de tu pedido #" + pedido.getIdPedido());
-
             estructuraMail.setText(construirCuerpoHtml(usuario, productos, restaurante, pedido), true);
 
-            byte[] pdf = generarPDF.generarComprobante(usuario, productos, restaurante, pedido);
-            estructuraMail.addAttachment(
-                    "comprobante-" + pedido.getIdPedido() + ".pdf",
-                    new ByteArrayResource(pdf),
-                    "application/pdf");
+            if (pdf != null) {
+                estructuraMail.addAttachment(
+                        "comprobante-" + pedido.getIdPedido() + ".pdf",
+                        new ByteArrayResource(pdf),
+                        "application/pdf");
+            }
 
             mailSender.send(mailConPDF);
-            System.out.println("Mail enviado con éxito al usuario: " + usuario.getEmail());
+            System.out.println("[Mail] Enviado con éxito a: " + usuario.getEmail()
+                    + " (pedido #" + pedido.getIdPedido() + ", PDF=" + (pdf != null) + ")");
         } catch (Exception e) {
-            System.err.println("Error al enviar mail con PDF: " + e.getMessage());
+            System.err.println("[Mail] Error al enviar, pedido #" + pedido.getIdPedido()
+                    + ": " + e.getClass().getName() + " - " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -543,7 +559,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -593,7 +609,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -660,7 +676,7 @@ public class NotificacionesService {
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
         // OJO: reemplazar por una URL pública real (servidor o Firebase Storage)
-        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -883,7 +899,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
         sb.append("<div style='padding: 32px;'>");
         sb.append("<h2 style='color: #333;'>Hola ").append(nombre).append(",</h2>");
@@ -941,7 +957,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
         sb.append("<div style='padding: 32px;'>");
         sb.append("<h2 style='color: #333;'>").append(titulo).append("</h2>");
@@ -1048,7 +1064,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
