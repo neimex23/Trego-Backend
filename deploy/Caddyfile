@@ -1,0 +1,7 @@
+# Reemplazar por tu dominio gratuito de DuckDNS y tu email.
+# Caddy obtiene y renueva el certificado HTTPS automaticamente.
+trego.duckdns.org {
+	encode gzip
+	reverse_proxy backend:8080
+	tls ezequielmedina23@gmail.com
+}
