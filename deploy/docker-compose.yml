@@ -15,6 +15,12 @@ services:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      # Ruta DENTRO del contenedor donde se monta el service-account.json.
+      FIREBASE_CREDENTIALS_PATH: /app/secrets/firebase-service-account.json
+    volumes:
+      # El JSON de Firebase vive en la EC2 (no en la imagen ni en git).
+      # Copiarlo a ~/Trego-Backend/deploy/firebase-service-account.json
+      - ./firebase-service-account.json:/app/secrets/firebase-service-account.json:ro
     ports:
       # Puerto 80 del host -> 8080 del contenedor (asi la URL no lleva puerto).
       - "80:8080"

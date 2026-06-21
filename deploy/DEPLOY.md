@@ -52,7 +52,13 @@ No se usa dominio externo ni Caddy. El backend queda accesible por HTTP en el DN
    ```
 
 2. Completar `.env` con: endpoint de RDS en `DB_URL`, credenciales, dominio de Vercel en `FRONT_URL`/`CORS_ALLOWED_ORIGINS`, `BACKEND_IMAGE` y todos los secrets.
-3. Bajar la imagen (publicada por GitHub Actions; ver seccion 6) y levantar:
+3. Copiar el JSON de Firebase a la EC2 como `~/Trego-Backend/deploy/firebase-service-account.json`. Este archivo es secreto: NO esta en git ni en la imagen; el compose lo monta en runtime. Sin el, la app igual arranca pero no envia notificaciones push. Desde tu maquina:
+
+   ```
+   scp -i tu-clave.pem src/main/resources/firebase-service-account.json ubuntu@<EC2_HOST>:~/Trego-Backend/deploy/
+   ```
+
+4. Bajar la imagen (publicada por GitHub Actions; ver seccion 6) y levantar:
 
    ```
    docker compose pull
@@ -84,6 +90,8 @@ El workflow `.github/workflows/deploy.yml` se dispara con cada push a `master`. 
 
 1. Compila la imagen Docker en GitHub Actions y la publica en GHCR (`ghcr.io/neimex23/trego-backend`). La imagen se construye en Actions, no en la EC2, porque la t3.micro no tiene RAM para un build de Maven.
 2. Entra por SSH a la EC2 y ejecuta `docker compose pull && docker compose up -d`, levantando la imagen nueva.
+
+Importante antes del primer push: `application-prod.properties` debe estar commiteado para que entre en la imagen. El `.gitignore` ya tiene la excepcion (`!src/main/resources/application-prod.properties`), asi que un `git add` normal lo incluye. No contiene secrets, solo placeholders `${ENV}`. El `application.properties` de desarrollo y el `firebase-service-account.json` siguen ignorados y NO deben commitearse.
 
 Pasos para dejarlo andando:
 
