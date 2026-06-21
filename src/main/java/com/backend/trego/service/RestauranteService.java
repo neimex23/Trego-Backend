@@ -193,6 +193,7 @@ public class RestauranteService {
 
         List<DTORestaurante> restaurantesFiltro = restaurantesHabilitados.stream()
                 .filter(r -> cubreZona(direccion, r.getDireccion(), r.getRadioEntrega()))
+                .filter(r -> r.getAbierto())
                 .collect(Collectors.toList());
 
         if (restaurantesFiltro.isEmpty()) {

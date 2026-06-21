@@ -6,6 +6,7 @@ import java.util.List;
 import com.backend.trego.entity.LineaCarrito;
 
 public class DTOProductoPedido {
+    private Integer idLinea;
     private Integer cantidadDisponible;
     private List<DTOIngrediente> ingredientesAQuitar = new ArrayList<>();
     private String observaciones;
@@ -17,7 +18,7 @@ public class DTOProductoPedido {
     }
 
     public DTOProductoPedido(Integer cantidadDisponible, List<DTOIngrediente> ingredientes, String observaciones,
-            Integer cantidad, Double subtotal, DTOProducto producto) {
+            Integer cantidad, Double subtotal, DTOProducto producto, Integer idLinea) {
         this.cantidadDisponible = cantidadDisponible;
         if (ingredientes != null) {
             this.ingredientesAQuitar = ingredientes;
@@ -26,6 +27,11 @@ public class DTOProductoPedido {
         this.cantidad = cantidad;
         this.subtotal = subtotal;
         this.producto = producto;
+        this.idLinea = idLinea;
+    }
+
+    public Integer getIdLinea() {
+        return idLinea;
     }
 
     public Integer getCantidadDisponible() {
@@ -78,12 +84,14 @@ public class DTOProductoPedido {
                         ing.getIdIngrediente(), ing.getNombre(), idRestaurante));
             }
         }
-        return new DTOProductoPedido(
+        DTOProductoPedido dto = new DTOProductoPedido(
                 null,
                 ingredientesDto,
                 linea.getObservaciones(),
                 linea.getCantidad(),
                 linea.getSubtotal(),
-                DTOProducto.desde(linea.getProducto()));
+                DTOProducto.desde(linea.getProducto()),
+                linea.getIdLinea());
+        return dto;
     }
 }

@@ -123,7 +123,7 @@ public class DTOPedido {
                 pp.getComentarioCliente(),
                 pp.getCantidad(),
                 (double) pp.getPrecioSuma(),
-                simplificado);
+                simplificado, null);
     }
 
     public Integer getIdPedido() {

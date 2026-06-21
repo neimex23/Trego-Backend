@@ -1,5 +1,6 @@
 package com.backend.trego.service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -100,9 +101,8 @@ public class CarritoService {
             carrito.setIdRestaurante(idRestauranteSolicitado);
         }
 
-        // Se resuelven los ingredientes a quitar antes de buscar la línea: dos
-        // pedidos del mismo producto con distinta personalización (p. ej. una burger
-        // con pepinillos y otra sin) deben ser líneas separadas, no fusionarse.
+        // El mismo producto con distinta personalización va en líneas separadas,
+        // así que se resuelven los ingredientes antes de buscar la línea existente.
         List<Ingrediente> ingredientesAQuitar = ingredientePedidoService.resolverIngredientesAQuitar(
                 request.getIngredientesAQuitar(), producto);
 
@@ -124,6 +124,9 @@ public class CarritoService {
             carrito.addLinea(linea);
         }
 
+        // Por si quedaran dos líneas idénticas, se fusionan en una.
+        consolidarLineas(carrito);
+
         carrito.recalcularTotal();
         return carritoRepository.save(carrito).toDTO();
     }
@@ -137,10 +140,7 @@ public class CarritoService {
         Carrito carrito = carritoRepository.findByUidCliente(uidCliente)
                 .orElseThrow(() -> new NoSuchElementException("El usuario no tiene un carrito activo"));
 
-        LineaCarrito linea = carrito.getLineas().stream()
-                .filter(l -> l.getProducto() != null
-                        && l.getProducto().getIdProducto() == request.getIdProducto())
-                .findFirst()
+        LineaCarrito linea = buscarLineaObjetivo(carrito, request)
                 .orElseThrow(() -> new NoSuchElementException(
                         "El producto " + request.getIdProducto() + " no está en el carrito"));
 
@@ -172,13 +172,84 @@ public class CarritoService {
                             request.getIngredientesAQuitar(), producto));
         }
 
+        // Si la línea quedó idéntica a otra, se fusionan sumando la cantidad.
+        final List<Ingrediente> ingredientesFinales = linea.getIngredientesAQuitar();
+        consolidarLineas(carrito);
+
         carrito.recalcularTotal();
         carritoRepository.save(carrito);
-        return linea.toDTO();
+
+        // Se devuelve la línea que quedó viva tras la posible fusión.
+        return carrito.getLineas().stream()
+                .filter(l -> l.getProducto() != null
+                        && l.getProducto().getIdProducto() == producto.getIdProducto()
+                        && mismosIngredientes(l.getIngredientesAQuitar(), ingredientesFinales))
+                .findFirst()
+                .map(LineaCarrito::toDTO)
+                .orElse(null);
     }
 
-    // Dos líneas son "el mismo ítem" solo si quitan exactamente el mismo conjunto
-    // de ingredientes. Se compara por conjunto de ids (sin importar el orden).
+    // Fusiona las líneas del mismo ítem (igual producto e iguales ingredientes a
+    // quitar) sumando sus cantidades en la primera.
+    private void consolidarLineas(Carrito carrito) {
+        List<LineaCarrito> lineas = carrito.getLineas();
+        List<LineaCarrito> aEliminar = new ArrayList<>();
+        for (int i = 0; i < lineas.size(); i++) {
+            LineaCarrito base = lineas.get(i);
+            if (aEliminar.contains(base)) {
+                continue;
+            }
+            for (int j = i + 1; j < lineas.size(); j++) {
+                LineaCarrito otra = lineas.get(j);
+                if (aEliminar.contains(otra)) {
+                    continue;
+                }
+                if (base.getProducto() != null && otra.getProducto() != null
+                        && base.getProducto().getIdProducto() == otra.getProducto().getIdProducto()
+                        && mismosIngredientes(base.getIngredientesAQuitar(), otra.getIngredientesAQuitar())) {
+                    base.setCantidad(base.getCantidad() + otra.getCantidad());
+                    aEliminar.add(otra);
+                }
+            }
+        }
+        for (LineaCarrito l : aEliminar) {
+            carrito.removeLinea(l);
+        }
+    }
+
+    // Ubica la línea a modificar/eliminar. Preferentemente por idLinea (exacto).
+    // Si no viene: una sola línea del producto se usa directa; si hay varias, se
+    // desambigua por el conjunto de ingredientes a quitar del request.
+    private Optional<LineaCarrito> buscarLineaObjetivo(Carrito carrito, DTOProductoPedido request) {
+        if (request.getIdLinea() != null) {
+            return carrito.getLineas().stream()
+                    .filter(l -> request.getIdLinea().equals(l.getIdLinea()))
+                    .findFirst();
+        }
+
+        List<LineaCarrito> candidatas = carrito.getLineas().stream()
+                .filter(l -> l.getProducto() != null
+                        && l.getProducto().getIdProducto() == request.getIdProducto())
+                .toList();
+
+        if (candidatas.isEmpty()) {
+            return Optional.empty();
+        }
+        if (candidatas.size() == 1) {
+            return Optional.of(candidatas.get(0));
+        }
+
+        Producto producto = cargarProductoConIngredientes(
+                candidatas.get(0).getProducto(), request.getIdProducto());
+        List<Ingrediente> objetivo = ingredientePedidoService.resolverIngredientesAQuitar(
+                request.getIngredientesAQuitar(), producto);
+
+        return candidatas.stream()
+                .filter(l -> mismosIngredientes(l.getIngredientesAQuitar(), objetivo))
+                .findFirst();
+    }
+
+    // Mismo ítem = mismo conjunto de ids de ingredientes a quitar (sin orden).
     private boolean mismosIngredientes(List<Ingrediente> a, List<Ingrediente> b) {
         return idsIngredientes(a).equals(idsIngredientes(b));
     }
@@ -205,16 +276,6 @@ public class CarritoService {
     }
 
     @Transactional
-    public DTOCarrito actualizarTotal() {
-        String uidCliente = currentUserService.getCurrentUid();
-        Carrito carrito = carritoRepository.findByUidCliente(uidCliente)
-                .orElseThrow(() -> new NoSuchElementException("El usuario no tiene un carrito activo"));
-        carrito.recalcularTotal();
-        carritoRepository.save(carrito);
-        return carrito.toDTO();
-    }
-
-    @Transactional
     public DTOCarrito eliminarProducto(DTOProductoPedido request) {
         if (request == null || request.getIdProducto() == null) {
             throw new IllegalArgumentException("producto.idProducto es obligatorio");
@@ -226,10 +287,7 @@ public class CarritoService {
         }
         Carrito carrito = carritoOpt.get();
 
-        Optional<LineaCarrito> lineaOpt = carrito.getLineas().stream()
-                .filter(l -> l.getProducto() != null
-                        && l.getProducto().getIdProducto() == request.getIdProducto())
-                .findFirst();
+        Optional<LineaCarrito> lineaOpt = buscarLineaObjetivo(carrito, request);
 
         if (lineaOpt.isEmpty()) {
             return null;
