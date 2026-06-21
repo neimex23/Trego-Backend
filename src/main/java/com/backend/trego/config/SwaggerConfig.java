@@ -21,7 +21,7 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .servers(List.of(
-                        new Server().url("https://brunch-program-occultist.ngrok-free.dev").description("ngrok (público)"),
+                        new Server().url("http://ec2-100-59-203-246.compute-1.amazonaws.com").description("EC2 (público)"),
                         new Server().url("http://localhost:8080").description("local")
                 ))
                 .info(new Info()

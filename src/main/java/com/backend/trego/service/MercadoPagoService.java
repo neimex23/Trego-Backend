@@ -36,8 +36,8 @@ public class MercadoPagoService {
     private final PedidoRepository pedidoRepository;
 
     // URL pública a la que MercadoPago enviará las notificaciones (webhook).
-    // En producción debe apuntar al backend; en local se usa un túnel (ngrok) o
-    // webhook.site para inspeccionar el payload.
+    // En producción apunta al dominio de Vercel (HTTPS); en local se usa un túnel
+    // público con HTTPS o webhook.site para inspeccionar el payload.
     @Value("${mercadopago.webhook.url:}")
     private String notificationUrl;
 
