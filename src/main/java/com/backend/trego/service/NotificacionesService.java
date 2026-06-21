@@ -59,12 +59,6 @@ public class NotificacionesService {
     @Value("${app.dev.mail-log-only:false}")
     private boolean mailLogOnly;
 
-    @Value("${soporte.contacto.email:soporte@trego.com}")
-    private String soporteEmail;
-
-    @Value("${soporte.contacto.telefono:}")
-    private String soporteTelefono;
-
     public NotificacionesService(JavaMailSender mailSender, ManejadorPDFService generarPDF,
             UsuarioRepository usuarioRepository) {
         this.mailSender = mailSender;
@@ -134,7 +128,7 @@ public class NotificacionesService {
 
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
         sb.append("<div style='padding: 32px;'>");
         sb.append("<h2 style='color: #333;'>¡").append(nombreCliente)
@@ -268,7 +262,7 @@ public class NotificacionesService {
 
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -366,7 +360,7 @@ public class NotificacionesService {
 
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -453,10 +447,6 @@ public class NotificacionesService {
             data.put("idPedido", String.valueOf(pedido.getIdPedido()));
             data.put("estado", "Reembolsado");
             data.put("tipo", "REEMBOLSO");
-            data.put("soporteEmail", textoOGuion(soporteEmail));
-            if (soporteTelefono != null && !soporteTelefono.isBlank()) {
-                data.put("soporteTelefono", soporteTelefono);
-            }
             enviarPushFCM(token, titulo, cuerpo, data);
         }
     }
@@ -469,7 +459,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -484,11 +474,7 @@ public class NotificacionesService {
             sb.append("<p style='margin: 0;'><strong>Monto:</strong> $").append(pedido.getTotal()).append("</p>");
         }
         sb.append("<p style='margin: 8px 0 0 0;'>Para gestionar el reintegro del importe, escribinos a <strong>")
-                .append(textoOGuion(soporteEmail)).append("</strong>");
-        if (soporteTelefono != null && !soporteTelefono.isBlank()) {
-            sb.append(" o comunicate al <strong>").append(soporteTelefono).append("</strong>");
-        }
-        sb.append(".</p>");
+                .append(mailFrom).append("</strong>.</p>");
         sb.append("</div>");
 
         sb.append("<p style='color: #555;'>Indicá el número de pedido para que podamos ayudarte más rápido.</p>");
@@ -557,7 +543,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -607,7 +593,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -674,7 +660,7 @@ public class NotificacionesService {
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
         // OJO: reemplazar por una URL pública real (servidor o Firebase Storage)
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -897,7 +883,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
         sb.append("<div style='padding: 32px;'>");
         sb.append("<h2 style='color: #333;'>Hola ").append(nombre).append(",</h2>");
@@ -955,7 +941,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://www.trego.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
         sb.append("<div style='padding: 32px;'>");
         sb.append("<h2 style='color: #333;'>").append(titulo).append("</h2>");
@@ -1062,7 +1048,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.ibb.co/7FhTMtj/Icon-Proy-Final.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
