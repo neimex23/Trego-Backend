@@ -7,6 +7,8 @@ target/
 ### Secrets / credenciales (NO commitear) ###
 src/main/resources/application.properties
 src/main/resources/application-*.properties
+# Excepcion: el perfil prod NO tiene secrets (solo placeholders ${ENV}); si debe commitearse para entrar en la imagen.
+!src/main/resources/application-prod.properties
 src/main/resources/application.yml
 src/main/resources/application-*.yml
 src/main/resources/firebase-service-account.json
