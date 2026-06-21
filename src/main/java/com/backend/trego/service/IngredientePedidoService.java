@@ -63,6 +63,8 @@ public class IngredientePedidoService {
         }
         if (dto.getNombre() != null && !dto.getNombre().isBlank()) {
             String nombre = dto.getNombre().trim();
+            // Se resuelve solo contra los ingredientes del plato: un ingrediente a
+            // quitar válido siempre pertenece a él.
             if (producto instanceof Plato plato) {
                 for (Ingrediente ing : plato.getIngredientes()) {
                     if (ing.getNombre() != null && ing.getNombre().equalsIgnoreCase(nombre)) {
@@ -70,9 +72,8 @@ public class IngredientePedidoService {
                     }
                 }
             }
-            return ingredienteRepository.findByNombre(nombre)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "Ingrediente no encontrado: " + nombre));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El ingrediente '" + nombre + "' no pertenece al producto seleccionado");
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ingrediente inválido en la petición");
     }
@@ -85,16 +86,5 @@ public class IngredientePedidoService {
             }
         }
         return ids;
-    }
-
-    public List<DTOIngrediente> aDtoList(List<Ingrediente> ingredientes, Integer idRestaurante) {
-        if (ingredientes == null || ingredientes.isEmpty()) {
-            return new ArrayList<>();
-        }
-        List<DTOIngrediente> dtos = new ArrayList<>();
-        for (Ingrediente ing : ingredientes) {
-            dtos.add(new DTOIngrediente(ing.getIdIngrediente(), ing.getNombre(), idRestaurante));
-        }
-        return dtos;
     }
 }

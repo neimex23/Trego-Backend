@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -86,20 +85,6 @@ public class CarritoController {
             return ResponseEntity.ok(actualizado);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        } catch (NoSuchElementException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-    }
-
-    @PutMapping("/total")
-    @Operation(summary = "Recalcular el total del carrito a partir de las líneas actuales")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Total recalculado"),
-            @ApiResponse(responseCode = "404", description = "El usuario no tiene carrito activo")
-    })
-    public ResponseEntity<DTOCarrito> actualizarTotal() {
-        try {
-            return ResponseEntity.ok(carritoService.actualizarTotal());
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }

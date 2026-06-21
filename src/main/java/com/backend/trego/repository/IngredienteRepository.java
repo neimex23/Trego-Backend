@@ -1,7 +1,5 @@
 package com.backend.trego.repository;
 
-import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +9,6 @@ import com.backend.trego.entity.Ingrediente;
 
 @Repository
 public interface IngredienteRepository extends JpaRepository<Ingrediente, Integer> {
-    Optional<Ingrediente> findByNombre(String nombre);
 
     @Query(value = "SELECT COUNT(*) FROM ingrediente WHERE id_ingrediente = :ingredienteId AND restaurante_id = :restauranteId", nativeQuery = true)
     long countByIdAndRestauranteId(
