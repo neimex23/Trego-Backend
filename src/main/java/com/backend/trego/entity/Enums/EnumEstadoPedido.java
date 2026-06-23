@@ -7,10 +7,9 @@ public enum EnumEstadoPedido {
     EnPreparacion,
     EnCamino,
     Entregado,
-    Cancelado,
     Reembolsado;
 
     public boolean permiteReclamo() {
-        return this != Pagado && this != Cancelado && this != Reembolsado;
+        return this != Pagado && this != Reembolsado;
     }
 }

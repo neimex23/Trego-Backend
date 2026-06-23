@@ -484,8 +484,14 @@ public class PedidoService {
 
         pedido.setEstado(EnumEstadoPedido.Reembolsado);
         pedidoRepository.save(pedido);
-        notificacionesService.notificarReembolsoContactarSoporte(pedido);
 
-        return DTOPedido.desde(pedido);
+        // Se arma el DTO (detached) dentro de la transacción y se pasa al envío
+        // asíncrono. No se debe pasar la entidad Pedido administrada al hilo @Async:
+        // sus proxies lazy comparten la sesión Hibernate con este hilo, y el acceso
+        // concurrente corrompe el JdbcValuesSourceProcessingState.
+        DTOPedido dto = DTOPedido.desde(pedido);
+        notificacionesService.notificarReembolsoContactarSoporte(dto);
+
+        return dto;
     }
 }

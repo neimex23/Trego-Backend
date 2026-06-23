@@ -407,17 +407,26 @@ public class NotificacionesService {
     // a soporte. Envía email y push; los errores se loguean sin propagar para no
     // bloquear el cambio de estado del pedido.
     @Async
-    public void notificarReembolsoContactarSoporte(Pedido pedido) {
-        if (pedido == null) {
-            System.err.println("[Notificacion] Pedido nulo; se omite notificación de reembolso.");
+    public void notificarReembolsoContactarSoporte(DTOPedido pedidoDTO) {
+        if (pedidoDTO == null) {
+            System.err.println("[Notificacion] pedidoDTO nulo; se omite notificación de reembolso.");
             return;
         }
-        Cliente cliente = pedido.getCliente();
-        if (cliente == null) {
-            System.err.println("[Notificacion] Pedido " + pedido.getIdPedido()
-                    + " sin cliente; se omite notificación de reembolso.");
+
+        Integer idCliente = pedidoDTO.getIdCliente();
+        if (idCliente == null) {
+            System.err.println("[Notificacion] Pedido " + pedidoDTO.getIdPedido()
+                    + " sin idCliente; se omite notificación de reembolso.");
             return;
         }
+
+        Optional<Cliente> clienteOpt = usuarioRepository.findClienteById(idCliente);
+        if (clienteOpt.isEmpty()) {
+            System.err.println("[Notificacion] Cliente " + idCliente
+                    + " no encontrado; pedido " + pedidoDTO.getIdPedido());
+            return;
+        }
+        Cliente cliente = clienteOpt.get();
 
         // Email
         if (cliente.getEmail() != null && !cliente.getEmail().isBlank()) {
@@ -426,14 +435,14 @@ public class NotificacionesService {
                 MimeMessageHelper helper = new MimeMessageHelper(mail, false, "UTF-8");
                 helper.setTo(cliente.getEmail());
                 helper.setFrom(mailFrom, mailFromName);
-                helper.setSubject("Reembolso de tu pedido #" + pedido.getIdPedido());
-                helper.setText(construirCuerpoReembolso(pedido), true);
+                helper.setSubject("Reembolso de tu pedido #" + pedidoDTO.getIdPedido());
+                helper.setText(construirCuerpoReembolso(pedidoDTO), true);
                 mailSender.send(mail);
                 System.out.println("[Notificacion] Mail de reembolso enviado a " + cliente.getEmail()
-                        + " (pedido " + pedido.getIdPedido() + ")");
+                        + " (pedido " + pedidoDTO.getIdPedido() + ")");
             } catch (Exception e) {
                 System.err.println("[Notificacion] Error al enviar mail de reembolso (pedido "
-                        + pedido.getIdPedido() + "): " + e.getMessage());
+                        + pedidoDTO.getIdPedido() + "): " + e.getMessage());
             }
         }
 
@@ -441,10 +450,10 @@ public class NotificacionesService {
         String token = cliente.getFcmToken();
         if (token != null && !token.isBlank()) {
             String titulo = "Tu pedido fue reembolsado";
-            String cuerpo = "El pedido #" + pedido.getIdPedido()
+            String cuerpo = "El pedido #" + pedidoDTO.getIdPedido()
                     + " fue reembolsado. Contactá a soporte para gestionar el reintegro.";
             Map<String, String> data = new HashMap<>();
-            data.put("idPedido", String.valueOf(pedido.getIdPedido()));
+            data.put("idPedido", String.valueOf(pedidoDTO.getIdPedido()));
             data.put("estado", "Reembolsado");
             data.put("tipo", "REEMBOLSO");
             enviarPushFCM(token, titulo, cuerpo, data);
@@ -453,8 +462,8 @@ public class NotificacionesService {
 
     // Cuerpo HTML del mail de reembolso: confirma el reembolso del pedido e indica
     // los datos de contacto de soporte para gestionar el reintegro.
-    private String construirCuerpoReembolso(Pedido pedido) {
-        String nombreCliente = textoOGuion(pedido.getCliente() != null ? pedido.getCliente().getNombre() : null);
+    private String construirCuerpoReembolso(DTOPedido pedido) {
+        String nombreCliente = textoOGuion(pedido.getNombreCliente());
 
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
@@ -470,7 +479,7 @@ public class NotificacionesService {
                 .append("</p>");
 
         sb.append("<div style='background-color: #f9f9f9; border-left: 4px solid #FF6600; padding: 12px 16px; color: #555; margin: 16px 0;'>");
-        if (pedido.getTotal() > 0) {
+        if (pedido.getTotal() != null && pedido.getTotal() > 0) {
             sb.append("<p style='margin: 0;'><strong>Monto:</strong> $").append(pedido.getTotal()).append("</p>");
         }
         sb.append("<p style='margin: 8px 0 0 0;'>Para gestionar el reintegro del importe, escribinos a <strong>")
