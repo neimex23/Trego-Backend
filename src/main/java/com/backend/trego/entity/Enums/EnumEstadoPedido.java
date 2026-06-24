@@ -11,6 +11,6 @@ public enum EnumEstadoPedido {
     Reembolsado;
 
     public boolean permiteReclamo() {
-        return this != Pagado && this != Cancelado && this != Reembolsado;
+        return this != Pagado && this != Reembolsado && this != Cancelado;
     }
 }

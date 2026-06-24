@@ -1,0 +1,26 @@
+# docker-compose para la instancia EC2.
+# La base de datos NO esta aqui: corre en RDS MySQL (free tier).
+# Sin Caddy/HTTPS: se usa el DNS publico de AWS por HTTP. El HTTPS publico
+# lo pone Vercel via rewrites (browser -> Vercel HTTPS -> EC2 HTTP, server-side).
+
+services:
+  backend:
+    # La imagen la construye GitHub Actions y la publica en GHCR.
+    # La EC2 solo hace pull (no compila: la t3.micro no tiene RAM para el build).
+    # Definir BACKEND_IMAGE en el .env (ej. ghcr.io/neimex23/trego-backend:latest).
+    image: ${BACKEND_IMAGE:-ghcr.io/neimex23/trego-backend:latest}
+    container_name: trego-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # Ruta DENTRO del contenedor donde se monta el service-account.json.
+      FIREBASE_CREDENTIALS_PATH: /app/secrets/firebase-service-account.json
+    volumes:
+      # El JSON de Firebase vive en la EC2 (no en la imagen ni en git).
+      # Copiarlo a ~/Trego-Backend/deploy/firebase-service-account.json
+      - ./firebase-service-account.json:/app/secrets/firebase-service-account.json:ro
+    ports:
+      # Puerto 80 del host -> 8080 del contenedor (asi la URL no lleva puerto).
+      - "80:8080"

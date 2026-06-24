@@ -59,12 +59,6 @@ public class NotificacionesService {
     @Value("${app.dev.mail-log-only:false}")
     private boolean mailLogOnly;
 
-    @Value("${soporte.contacto.email:soporte@trego.com}")
-    private String soporteEmail;
-
-    @Value("${soporte.contacto.telefono:}")
-    private String soporteTelefono;
-
     public NotificacionesService(JavaMailSender mailSender, ManejadorPDFService generarPDF,
             UsuarioRepository usuarioRepository) {
         this.mailSender = mailSender;
@@ -134,7 +128,7 @@ public class NotificacionesService {
 
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
         sb.append("<div style='padding: 32px;'>");
         sb.append("<h2 style='color: #333;'>¡").append(nombreCliente)
@@ -268,7 +262,7 @@ public class NotificacionesService {
 
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -366,7 +360,7 @@ public class NotificacionesService {
 
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -413,17 +407,26 @@ public class NotificacionesService {
     // a soporte. Envía email y push; los errores se loguean sin propagar para no
     // bloquear el cambio de estado del pedido.
     @Async
-    public void notificarReembolsoContactarSoporte(Pedido pedido) {
-        if (pedido == null) {
-            System.err.println("[Notificacion] Pedido nulo; se omite notificación de reembolso.");
+    public void notificarReembolsoContactarSoporte(DTOPedido pedidoDTO) {
+        if (pedidoDTO == null) {
+            System.err.println("[Notificacion] pedidoDTO nulo; se omite notificación de reembolso.");
             return;
         }
-        Cliente cliente = pedido.getCliente();
-        if (cliente == null) {
-            System.err.println("[Notificacion] Pedido " + pedido.getIdPedido()
-                    + " sin cliente; se omite notificación de reembolso.");
+
+        Integer idCliente = pedidoDTO.getIdCliente();
+        if (idCliente == null) {
+            System.err.println("[Notificacion] Pedido " + pedidoDTO.getIdPedido()
+                    + " sin idCliente; se omite notificación de reembolso.");
             return;
         }
+
+        Optional<Cliente> clienteOpt = usuarioRepository.findClienteById(idCliente);
+        if (clienteOpt.isEmpty()) {
+            System.err.println("[Notificacion] Cliente " + idCliente
+                    + " no encontrado; pedido " + pedidoDTO.getIdPedido());
+            return;
+        }
+        Cliente cliente = clienteOpt.get();
 
         // Email
         if (cliente.getEmail() != null && !cliente.getEmail().isBlank()) {
@@ -432,14 +435,14 @@ public class NotificacionesService {
                 MimeMessageHelper helper = new MimeMessageHelper(mail, false, "UTF-8");
                 helper.setTo(cliente.getEmail());
                 helper.setFrom(mailFrom, mailFromName);
-                helper.setSubject("Reembolso de tu pedido #" + pedido.getIdPedido());
-                helper.setText(construirCuerpoReembolso(pedido), true);
+                helper.setSubject("Reembolso de tu pedido #" + pedidoDTO.getIdPedido());
+                helper.setText(construirCuerpoReembolso(pedidoDTO), true);
                 mailSender.send(mail);
                 System.out.println("[Notificacion] Mail de reembolso enviado a " + cliente.getEmail()
-                        + " (pedido " + pedido.getIdPedido() + ")");
+                        + " (pedido " + pedidoDTO.getIdPedido() + ")");
             } catch (Exception e) {
                 System.err.println("[Notificacion] Error al enviar mail de reembolso (pedido "
-                        + pedido.getIdPedido() + "): " + e.getMessage());
+                        + pedidoDTO.getIdPedido() + "): " + e.getMessage());
             }
         }
 
@@ -447,29 +450,25 @@ public class NotificacionesService {
         String token = cliente.getFcmToken();
         if (token != null && !token.isBlank()) {
             String titulo = "Tu pedido fue reembolsado";
-            String cuerpo = "El pedido #" + pedido.getIdPedido()
+            String cuerpo = "El pedido #" + pedidoDTO.getIdPedido()
                     + " fue reembolsado. Contactá a soporte para gestionar el reintegro.";
             Map<String, String> data = new HashMap<>();
-            data.put("idPedido", String.valueOf(pedido.getIdPedido()));
+            data.put("idPedido", String.valueOf(pedidoDTO.getIdPedido()));
             data.put("estado", "Reembolsado");
             data.put("tipo", "REEMBOLSO");
-            data.put("soporteEmail", textoOGuion(soporteEmail));
-            if (soporteTelefono != null && !soporteTelefono.isBlank()) {
-                data.put("soporteTelefono", soporteTelefono);
-            }
             enviarPushFCM(token, titulo, cuerpo, data);
         }
     }
 
     // Cuerpo HTML del mail de reembolso: confirma el reembolso del pedido e indica
     // los datos de contacto de soporte para gestionar el reintegro.
-    private String construirCuerpoReembolso(Pedido pedido) {
-        String nombreCliente = textoOGuion(pedido.getCliente() != null ? pedido.getCliente().getNombre() : null);
+    private String construirCuerpoReembolso(DTOPedido pedido) {
+        String nombreCliente = textoOGuion(pedido.getNombreCliente());
 
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -480,15 +479,11 @@ public class NotificacionesService {
                 .append("</p>");
 
         sb.append("<div style='background-color: #f9f9f9; border-left: 4px solid #FF6600; padding: 12px 16px; color: #555; margin: 16px 0;'>");
-        if (pedido.getTotal() > 0) {
+        if (pedido.getTotal() != null && pedido.getTotal() > 0) {
             sb.append("<p style='margin: 0;'><strong>Monto:</strong> $").append(pedido.getTotal()).append("</p>");
         }
         sb.append("<p style='margin: 8px 0 0 0;'>Para gestionar el reintegro del importe, escribinos a <strong>")
-                .append(textoOGuion(soporteEmail)).append("</strong>");
-        if (soporteTelefono != null && !soporteTelefono.isBlank()) {
-            sb.append(" o comunicate al <strong>").append(soporteTelefono).append("</strong>");
-        }
-        sb.append(".</p>");
+                .append(mailFrom).append("</strong>.</p>");
         sb.append("</div>");
 
         sb.append("<p style='color: #555;'>Indicá el número de pedido para que podamos ayudarte más rápido.</p>");
@@ -508,28 +503,44 @@ public class NotificacionesService {
     @Async
     public void notificarConfirmacionPedidoConPDF(Usuario usuario, List<Producto> productos, Restaurante restaurante,
             Pedido pedido) {
+        System.out.println("Enviando mail en hilo: " + Thread.currentThread().getName());
+
+        if (usuario == null || usuario.getEmail() == null || usuario.getEmail().isBlank()) {
+            System.err.println("[Mail] Usuario sin email, pedido #" + (pedido != null ? pedido.getIdPedido() : "?"));
+            return;
+        }
+
+        byte[] pdf = null;
         try {
-            System.out.println("Enviando mail en hilo: " + Thread.currentThread().getName());
+            pdf = generarPDF.generarComprobante(usuario, productos, restaurante, pedido);
+        } catch (Exception e) {
+            System.err.println("[Mail] No se pudo generar el PDF para pedido #"
+                    + pedido.getIdPedido() + ": " + e.getClass().getName() + " - " + e.getMessage());
+        }
+
+        try {
             MimeMessage mailConPDF = mailSender.createMimeMessage();
-            // multipart = true para poder adjuntar el PDF
             MimeMessageHelper estructuraMail = new MimeMessageHelper(mailConPDF, true, "UTF-8");
 
             estructuraMail.setTo(usuario.getEmail());
             estructuraMail.setFrom(mailFrom, mailFromName);
             estructuraMail.setSubject("Confirmación de tu pedido #" + pedido.getIdPedido());
-
             estructuraMail.setText(construirCuerpoHtml(usuario, productos, restaurante, pedido), true);
 
-            byte[] pdf = generarPDF.generarComprobante(usuario, productos, restaurante, pedido);
-            estructuraMail.addAttachment(
-                    "comprobante-" + pedido.getIdPedido() + ".pdf",
-                    new ByteArrayResource(pdf),
-                    "application/pdf");
+            if (pdf != null) {
+                estructuraMail.addAttachment(
+                        "comprobante-" + pedido.getIdPedido() + ".pdf",
+                        new ByteArrayResource(pdf),
+                        "application/pdf");
+            }
 
             mailSender.send(mailConPDF);
-            System.out.println("Mail enviado con éxito al usuario: " + usuario.getEmail());
+            System.out.println("[Mail] Enviado con éxito a: " + usuario.getEmail()
+                    + " (pedido #" + pedido.getIdPedido() + ", PDF=" + (pdf != null) + ")");
         } catch (Exception e) {
-            System.err.println("Error al enviar mail con PDF: " + e.getMessage());
+            System.err.println("[Mail] Error al enviar, pedido #" + pedido.getIdPedido()
+                    + ": " + e.getClass().getName() + " - " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -557,7 +568,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -607,7 +618,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -674,7 +685,7 @@ public class NotificacionesService {
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
         // OJO: reemplazar por una URL pública real (servidor o Firebase Storage)
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
@@ -897,7 +908,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
         sb.append("<div style='padding: 32px;'>");
         sb.append("<h2 style='color: #333;'>Hola ").append(nombre).append(",</h2>");
@@ -955,7 +966,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://www.trego.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
         sb.append("<div style='padding: 32px;'>");
         sb.append("<h2 style='color: #333;'>").append(titulo).append("</h2>");
@@ -1062,7 +1073,7 @@ public class NotificacionesService {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;'>");
         sb.append("<div style='background-color: #FF6600; padding: 12px; text-align: center;'>");
-        sb.append("<img src='https://tu-dominio.com/images/logo.png' alt='Trego' style='height: 50px;'/>");
+        sb.append("<img src='https://i.imgur.com/hYWxkgA.png' alt='Trego' style='height: 50px;'/>");
         sb.append("</div>");
 
         sb.append("<div style='padding: 32px;'>");
