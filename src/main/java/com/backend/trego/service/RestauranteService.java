@@ -87,6 +87,10 @@ public class RestauranteService {
             throw new RestauranteCerradoException("El local ya se encuentra abierto");
         }
 
+        if (restaurante.getProductos().isEmpty()){
+            throw new RestauranteCerradoException("El local no tiene productos disponibles, por lo cual no puede abrir");
+        }
+
         restaurante.setHorario(horaApertura, horaCierre);
         restauranteRepository.save(restaurante);
 
