@@ -1,5 +1,6 @@
 package com.backend.trego.entity;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,7 @@ public class Restaurante extends Usuario {
 
     private LocalTime horaApertura;
     private LocalTime horaCierre;
+    private LocalDateTime cierreProgramado;
 
     private Integer radioEntrega = 10;
 
@@ -125,6 +127,8 @@ public class Restaurante extends Usuario {
     public void setApertura(LocalTime apertura) { this.horaApertura = apertura; };
     public LocalTime getCierre() { return horaCierre; }
     public void setCierre(LocalTime cierre) { this.horaCierre = cierre; };
+    public LocalDateTime getCierreProgramado() { return cierreProgramado; }
+    public void setCierreProgramado(LocalDateTime cierreProgramado) { this.cierreProgramado = cierreProgramado; }
     public List<Comentario> getComentarios() { return comentarios;}
     public void setComentarios(List<Comentario> comentarios) { this.comentarios = comentarios; }
     public void addComentario(Comentario comentario) {

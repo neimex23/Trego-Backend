@@ -15,6 +15,11 @@ spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 
+# --- Zona horaria del negocio ---
+# Usada para calcular el cierre automatico de locales y para los cron diarios.
+# Evita depender de la zona por defecto de la JVM (en EC2 suele ser UTC).
+app.timezone=America/Montevideo
+
 # --- Servidor ---
 # Respetar X-Forwarded-* (necesario detras de un tunel como ngrok que termina TLS y
 # reenvia HTTP al backend). Sin esto Swagger arma Request URLs http:// y el navegador

@@ -24,6 +24,7 @@ import com.backend.trego.repository.ComentarioRepository;
 import com.backend.trego.repository.PedidoRepository;
 import com.backend.trego.repository.UsuarioRepository;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,11 +43,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 // Gestión de restaurantes: alta, apertura/cierre, búsqueda y firma de imágenes.
@@ -61,9 +58,10 @@ public class RestauranteService {
     private final PedidoRepository pedidoRepository;
     private final ComentarioRepository comentarioRepository;
 
-    // Para calcular y cerrar automaticamente el restaurante
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private final Map<Integer, ScheduledFuture<?>> cierresProgramados = new ConcurrentHashMap<>();
+    // Zona horaria del negocio. El cierre automático se calcula y reconcilia contra
+    // esta zona para no depender de la zona por defecto de la JVM (en EC2 suele ser UTC).
+    @Value("${app.timezone:America/Montevideo}")
+    private String zonaHoraria;
 
     public RestauranteService(UsuarioRepository restauranteRepository, CurrentUserService currentUserService,
             @Lazy ProductosService productosService, NotificacionesService notificacionesService,
@@ -102,8 +100,9 @@ public class RestauranteService {
         if (productos == null || productos.isEmpty()) {
             throw new RestauranteCerradoException("Debe tener algun producto para ofrecer");
         }
-        abrirCerrarRestaurante(restaurante, true, horaCierre);
-        programarCierre(restauranteId, horaCierre);
+        restaurante.setAbierto(true);
+        restaurante.setCierreProgramado(calcularCierreProgramado(horaCierre));
+        restauranteRepository.save(restaurante);
     }
 
     public void cerrarLocal() {
@@ -114,19 +113,14 @@ public class RestauranteService {
         // Precondición: el local debe estar abierto
         if (!restaurante.getAbierto()) {
             throw new RestauranteCerradoException("El local ya se encontraba cerrado");
-        }        
-
-        // Cancelar el cronómetro programado si existe
-        ScheduledFuture<?> cierresProgramado = cierresProgramados.get(restauranteId);
-        if (cierresProgramado != null && !cierresProgramado.isDone()) {
-            cierresProgramado.cancel(false);
-            cierresProgramados.remove(restauranteId);
-            System.out.println("DEBUG: Cronómetro cancelado por cierre manual del restaurante " + restauranteId);
         }
 
         // Obtener la hora actual para dejar registro en la bd
-        LocalTime horaActual = LocalTime.now();
-        abrirCerrarRestaurante(restaurante, false, horaActual);
+        LocalTime horaActual = LocalTime.now(ZoneId.of(zonaHoraria));
+        restaurante.setAbierto(false);
+        restaurante.setHorario(restaurante.getApertura(), horaActual);
+        restaurante.setCierreProgramado(null);
+        restauranteRepository.save(restaurante);
     }
 
     // Método para actualizar la hora del cierre automatico
@@ -134,51 +128,58 @@ public class RestauranteService {
         Integer restauranteId = currentUserService.getCurrentId();
         Restaurante restaurante = restauranteRepository.findRestauranteById(restauranteId)
                 .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
-        abrirCerrarRestaurante(restaurante, true, horaCierre);
-        programarCierre(restauranteId, horaCierre);
-    }
-
-    // Método privado para abrir y cerrar el restaurante
-    private void abrirCerrarRestaurante(Restaurante restaurante, boolean estadoAbierto, LocalTime horaCierre) {
-        restaurante.setAbierto(estadoAbierto);
-        if (horaCierre != null) {
-            restaurante.setHorario(restaurante.getApertura(), horaCierre);
-        }
+        restaurante.setAbierto(true);
+        restaurante.setHorario(restaurante.getApertura(), horaCierre);
+        restaurante.setCierreProgramado(calcularCierreProgramado(horaCierre));
         restauranteRepository.save(restaurante);
     }
 
-    // Método privado para programar el cierre
-    private void programarCierre(Integer restauranteId, LocalTime horaCierre) {
-        // Cancelar el cronómetro anterior si existe
-        ScheduledFuture<?> cierreAnterior = cierresProgramados.get(restauranteId);
-        if (cierreAnterior != null && !cierreAnterior.isDone()) {
-            cierreAnterior.cancel(false);
-            System.out.println("DEBUG: Cronómetro anterior cancelado para restaurante " + restauranteId);
+    // Permite al restaurante fijar manualmente el instante exacto de cierre.
+    // Arranca igual a la hora de cierre (lo setea abrirLocal), pero acá el usuario
+    // puede moverlo a otra hora/fecha. Ese valor es el que dispara el cierre real.
+    public void actualizarCierreProgramado(LocalDateTime cierre) {
+        Integer restauranteId = currentUserService.getCurrentId();
+        Restaurante restaurante = restauranteRepository.findRestauranteById(restauranteId)
+                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
+        if (!restaurante.getAbierto()) {
+            throw new RestauranteCerradoException("El local debe estar abierto para programar el cierre");
         }
-
-        // Calcular segundos hasta el cierre
-        LocalTime ahora = LocalTime.now();
-        long segundosHastaCierre = ahora.until(horaCierre, ChronoUnit.SECONDS);
-        if (segundosHastaCierre <= 0) {
-            segundosHastaCierre += 24 * 60 * 60;
+        if (cierre == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Falta el cierre programado");
         }
+        LocalDateTime ahora = LocalDateTime.now(ZoneId.of(zonaHoraria));
+        if (!cierre.isAfter(ahora)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El cierre programado debe ser una fecha/hora futura");
+        }
+        restaurante.setCierreProgramado(cierre);
+        restauranteRepository.save(restaurante);
+    }
 
-        System.out.println("DEBUG: Nuevo cierre programado en " + segundosHastaCierre + " segundos");
+    private LocalDateTime calcularCierreProgramado(LocalTime horaCierre) {
+        ZoneId zona = ZoneId.of(zonaHoraria);
+        LocalDateTime ahora = LocalDateTime.now(zona);
+        LocalDateTime cierre = LocalDateTime.of(ahora.toLocalDate(), horaCierre);
+        if (!cierre.isAfter(ahora)) {
+            cierre = cierre.plusDays(1);
+        }
+        return cierre;
+    }
 
-        // Programar el nuevo cierre y guardarlo en el Map
-        ScheduledFuture<?> nuevoCierre = scheduler.schedule(() -> {
-            try {
-                Restaurante res = restauranteRepository.findRestauranteById(restauranteId)
-                        .orElseThrow(() -> new RuntimeException("Restaurante no encontrado al cerrar"));
-                abrirCerrarRestaurante(res, false, null);
-                cierresProgramados.remove(restauranteId);
-                System.out.println("DEBUG: Restaurante " + restauranteId + " cerrado automáticamente");
-            } catch (Exception e) {
-                System.out.println("ERROR al cerrar restaurante automáticamente: " + e.getMessage());
-            }
-        }, segundosHastaCierre, TimeUnit.SECONDS);
-
-        cierresProgramados.put(restauranteId, nuevoCierre);
+    @Transactional
+    public int cerrarLocalesVencidos() {
+        LocalDateTime ahora = LocalDateTime.now(ZoneId.of(zonaHoraria));
+        List<Restaurante> vencidos = restauranteRepository.findRestaurantesParaCerrar(ahora);
+        for (Restaurante restaurante : vencidos) {
+            restaurante.setAbierto(false);
+            restaurante.setCierreProgramado(null);
+            System.out.println("[Cierre] Local " + restaurante.getIdUsuario()
+                    + " cerrado automáticamente por reconciliación.");
+        }
+        if (!vencidos.isEmpty()) {
+            restauranteRepository.saveAll(vencidos);
+        }
+        return vencidos.size();
     }
 
 
@@ -277,7 +278,7 @@ public class RestauranteService {
     }
 
     private DTORestaurante toDTO(Restaurante restaurante) {
-        return new DTORestaurante(
+        DTORestaurante dto = new DTORestaurante(
                 restaurante.getIdUsuario(),
                 restaurante.getNombre(),
                 restaurante.getEmail(),
@@ -293,7 +294,9 @@ public class RestauranteService {
                 restaurante.getAbierto(),
                 restaurante.getApertura(),
                 restaurante.getCierre(),
+                restaurante.getCierreProgramado(),
                 restaurante.isCuentaHabilitada());
+        return dto;
     }
 
     private DTORestaurante toDTOHabilitar(Restaurante restaurante) {
@@ -312,12 +315,13 @@ public class RestauranteService {
                 null,
                 null,
                 restaurante.isHabilitado(),
-                null,
-                null,
-                null,
-                null,
-            null, 
-            restaurante.isCuentaHabilitada());
+                null, // abierto
+                null, // horaApertura
+                null, // horaCierre
+                null, // cierreProgramado
+                null, // productos
+                null, // ingredientesDisponibles
+                restaurante.isCuentaHabilitada());
     }
 
     public List<DTORestaurante> buscarRestaurantePorNombre(String nombre) {
@@ -383,7 +387,7 @@ public class RestauranteService {
     // Arma el DTO con los datos públicos del restaurante más la lista de productos.
     // No se envía el password al frontend.
     private DTORestaurante toDTOConProductos(Restaurante restaurante, List<DTOProducto> productos) {
-        return new DTORestaurante(
+        DTORestaurante dto = new DTORestaurante(
                 restaurante.getIdUsuario(),
                 restaurante.getNombre(),
                 restaurante.getEmail(),
@@ -401,11 +405,13 @@ public class RestauranteService {
                 restaurante.getAbierto(),
                 restaurante.getApertura(),
                 restaurante.getCierre(),
+                restaurante.getCierreProgramado(),
                 productos,
                 restaurante.getIngredientesDisponibles().stream()
                         .map(i -> new DTOIngrediente(i.getIdIngrediente(), i.getNombre(), restaurante.getIdUsuario()))
                         .collect(Collectors.toList()),
                 restaurante.isCuentaHabilitada());
+        return dto;
     }
 
     public List<DTORestaurante> listarRestaurantesNoHabilitados() {

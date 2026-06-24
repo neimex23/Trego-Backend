@@ -1,5 +1,6 @@
 package com.backend.trego.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,6 +66,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     @Query("SELECT r FROM Restaurante r WHERE r.habilitado = true")
     List<Restaurante> findRestaurantesHabilitados();
+
+    @Query("SELECT r FROM Restaurante r WHERE r.abierto = true AND r.cierreProgramado IS NOT NULL AND r.cierreProgramado <= :ahora")
+    List<Restaurante> findRestaurantesParaCerrar(@Param("ahora") LocalDateTime ahora);
 
     @Query("SELECT r FROM Restaurante r WHERE r.habilitado = false and r.rut IS NOT NULL")
     List<Restaurante> findRestaurantesNoHabilitados();

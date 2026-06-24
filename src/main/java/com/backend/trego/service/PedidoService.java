@@ -148,16 +148,14 @@ public class PedidoService {
         return pedidoRepository.findByRestauranteIdUsuario(idRestaurante);
     }
 
+    // Borra los pedidos en estado Solicitado (impagos) cuyo plazo de pago de 24h
+    // venció. 
     @Transactional
     public Integer cancelarPedidosExpirados() {
         List<Pedido> expirados = pedidoRepository
-                .findByFechaExpiracionNotNullAndFechaExpiracionBefore(LocalDateTime.now());
-        for (Pedido pedido : expirados) {
-            pedido.setEstado(EnumEstadoPedido.Cancelado);
-            pedido.setRazonCancelacion("Expirado: plazo de pago de 24 horas vencido");
-            pedido.setFechaExpiracion(null);
-        }
-        pedidoRepository.saveAll(expirados);
+                .findByEstadoAndFechaExpiracionNotNullAndFechaExpiracionBefore(
+                        EnumEstadoPedido.Solicitado, LocalDateTime.now());
+        pedidoRepository.deleteAll(expirados);
         return expirados.size();
     }
 
