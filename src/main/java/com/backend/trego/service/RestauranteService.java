@@ -87,7 +87,7 @@ public class RestauranteService {
             throw new RestauranteCerradoException("El local ya se encuentra abierto");
         }
 
-        if (restaurante.getProductos().isEmpty() || restaurante.getProductos().stream().allMatch(p -> p.getDisponible())){
+        if (restaurante.getProductos().isEmpty() || restaurante.getProductos().stream().allMatch(p -> !p.getDisponible())){
             throw new RestauranteCerradoException("El local no tiene productos disponibles, por lo cual no puede abrir");
         }
 
@@ -478,19 +478,6 @@ public class RestauranteService {
         }
         if (dto.getRadioEntrega() != null && !dto.getRadioEntrega().equals(restaurante.getRadioEntrega())) {
             restaurante.setRadioEntrega(dto.getRadioEntrega());
-        }
-
-        boolean cambioApertura = dto.getHoraApertura() != null
-                && !dto.getHoraApertura().equals(restaurante.getApertura());
-        boolean cambioCierre = dto.getHoraCierre() != null
-                && !dto.getHoraCierre().equals(restaurante.getCierre());
-        if (cambioApertura || cambioCierre) {
-            LocalTime nuevaApertura = cambioApertura ? dto.getHoraApertura() : restaurante.getApertura();
-            LocalTime nuevoCierre = cambioCierre ? dto.getHoraCierre() : restaurante.getCierre();
-            restaurante.setHorario(nuevaApertura, nuevoCierre);
-            if (cambioCierre && restaurante.getAbierto()) {
-                restaurante.setCierreProgramado(calcularCierreProgramado(nuevoCierre));
-            }
         }
 
         Restaurante actualizado = restauranteRepository.save(restaurante);
