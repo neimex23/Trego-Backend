@@ -14,21 +14,36 @@ public class TregoSchedulers {
 
     private final PedidoService pedidoService;
     private final ProductoRepository productoRepository;
+    private final RestauranteService restauranteService;
 
-    public TregoSchedulers(PedidoService pedidoService, ProductoRepository productoRepository) {
+    public TregoSchedulers(PedidoService pedidoService, ProductoRepository productoRepository,
+            RestauranteService restauranteService) {
         this.pedidoService = pedidoService;
         this.productoRepository = productoRepository;
+        this.restauranteService = restauranteService;
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
-    public void cancelarPedidosExpirados() {
-        Integer cancelados = pedidoService.cancelarPedidosExpirados();
-        if (cancelados > 0) {
-            System.out.println("[Pedidos] Se cancelaron " + cancelados + " pedido(s) por expiración.");
+    // Reconciliación de cierre de locales. Corre cada minuto y cierra los restaurantes
+    // cuyo cierreProgramado ya venció.
+    @Scheduled(fixedRate = 60_000)
+    public void cerrarLocalesVencidos() {
+        int cerrados = restauranteService.cerrarLocalesVencidos();
+        if (cerrados > 0) {
+            System.out.println("[Locales] Se cerraron " + cerrados + " local(es) automáticamente.");
         }
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
+    //Elimina Pedidos en estado Solicitado
+    @Scheduled(cron = "0 0 0 * * *", zone = "${app.timezone:America/Montevideo}")
+    public void cancelarPedidosExpirados() {
+        Integer eliminados = pedidoService.cancelarPedidosExpirados();
+        if (eliminados > 0) {
+            System.out.println("[Pedidos] Se eliminaron " + eliminados + " pedido(s) solicitados por expiración.");
+        }
+    }
+
+    //Cancela todas las ofertas vencidas
+    @Scheduled(cron = "0 0 0 * * *", zone = "${app.timezone:America/Montevideo}")
     public void desactivarOfertasExpiradas() {
         List<Producto> productos = productoRepository.findProductosConOfertaInvalida(LocalDateTime.now());
         if (!productos.isEmpty()) {

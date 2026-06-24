@@ -2,6 +2,7 @@ package com.backend.trego.entity.DTOs;
 
 import com.backend.trego.entity.Enums.EnumCategoriaRestaurante;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ public class DTORestaurante {
     private Boolean abierto = false;
     private LocalTime horaApertura;
     private LocalTime horaCierre;
+    private LocalDateTime cierreProgramado;
     private List<DTOProducto> productos = new ArrayList<>();
     private List<DTOIngrediente> ingredientesDisponibles = new ArrayList<>();
 
@@ -37,7 +39,7 @@ public class DTORestaurante {
     public DTORestaurante(Integer idRestaurante, String nombre, String email, String password, String rut,
             String telefono, String fotoPortada, String fotoPerfil, DTODireccion direccion, String descripcion,
             EnumCategoriaRestaurante categoria, Float calificacionProm, Integer radioEntrega, Boolean habilitado,
-            Boolean abierto, LocalTime horaApertura, LocalTime horaCierre, List<DTOProducto> productos, List<DTOIngrediente> ingredientesDisponibles, Boolean cuentahabilitada) {
+            Boolean abierto, LocalTime horaApertura, LocalTime horaCierre, LocalDateTime cierreProgramado, List<DTOProducto> productos, List<DTOIngrediente> ingredientesDisponibles, Boolean cuentahabilitada) {
         this.idRestaurante = idRestaurante;
         this.nombre = nombre;
         this.email = email;
@@ -55,6 +57,7 @@ public class DTORestaurante {
         this.abierto = abierto;
         this.horaApertura = horaApertura;
         this.horaCierre = horaCierre;
+        this.cierreProgramado = cierreProgramado;
         this.productos = productos != null ? productos : new ArrayList<>();
         this.ingredientesDisponibles = ingredientesDisponibles != null ? ingredientesDisponibles : new ArrayList<>();
         this.cuentahabilitada = cuentahabilitada != null ? cuentahabilitada : true;
@@ -63,7 +66,7 @@ public class DTORestaurante {
     public DTORestaurante(Integer idRestaurante, String nombre, String email, String telefono,
             String fotoPortada, String fotoPerfil, DTODireccion direccion, String descripcion,
             EnumCategoriaRestaurante categoria, Float calificacionProm,
-            Integer radioEntrega, Boolean habilitado, Boolean abierto, LocalTime horaApertura, LocalTime horaCierre, Boolean cuentahabilitada) {
+            Integer radioEntrega, Boolean habilitado, Boolean abierto, LocalTime horaApertura, LocalTime horaCierre, LocalDateTime cierreProgramado, Boolean cuentahabilitada) {
         this.idRestaurante = idRestaurante;
         this.nombre = nombre;
         this.email = email;
@@ -79,6 +82,7 @@ public class DTORestaurante {
         this.abierto = abierto;
         this.horaApertura = horaApertura;
         this.horaCierre = horaCierre;
+        this.cierreProgramado = cierreProgramado;
         this.cuentahabilitada = cuentahabilitada;
     }
 
@@ -98,6 +102,7 @@ public class DTORestaurante {
     public Boolean getAbierto() { return abierto; }
     public LocalTime getHoraApertura() { return horaApertura; }
     public LocalTime getHoraCierre() { return horaCierre; }
+    public LocalDateTime getCierreProgramado() { return cierreProgramado; }
     public List<DTOProducto> getProductos() { return productos; }
     public String getFotoPerfil() { return fotoPerfil; }
     public List<DTOIngrediente> getIngredientesDisponibles() { return ingredientesDisponibles; }

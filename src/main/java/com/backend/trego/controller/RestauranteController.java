@@ -1,6 +1,7 @@
 package com.backend.trego.controller;
 
 import com.backend.trego.entity.DTOs.DTOAbrirCerrarLocalRequest;
+import com.backend.trego.entity.DTOs.DTOActualizarCierreProgramadoRequest;
 import com.backend.trego.entity.DTOs.DTOComentario;
 import com.backend.trego.entity.DTOs.DTOCrearComentarioRequest;
 import com.backend.trego.entity.DTOs.DTODireccion;
@@ -122,6 +123,19 @@ public class RestauranteController {
     @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
     public ResponseEntity<Void> actualizarCierre(@RequestBody DTOAbrirCerrarLocalRequest request) {
         restauranteService.actualizarHoraCierre(request.getHoraCierre());
+        return ResponseEntity.ok().build();
+    }
+
+    // Permite fijar manualmente el instante exacto de cierre (cierre programado).
+    @PatchMapping("/actualizarCierreProgramado")
+    @Operation(summary = "Actualizar cierre programado", description = "Fija el instante exacto en que el local se cerrará automáticamente.")
+    @ApiResponse(responseCode = "200", description = "Cierre programado actualizado")
+    @ApiResponse(responseCode = "400", description = "Cierre programado ausente o no futuro")
+    @ApiResponse(responseCode = "404", description = "Restaurante no encontrado")
+    @ApiResponse(responseCode = "409", description = "El local no está abierto")
+    public ResponseEntity<Void> actualizarCierreProgramado(
+            @RequestBody DTOActualizarCierreProgramadoRequest request) {
+        restauranteService.actualizarCierreProgramado(request.getCierreProgramado());
         return ResponseEntity.ok().build();
     }
 

@@ -44,6 +44,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
 
     List<Pedido> findByFechaExpiracionNotNullAndFechaExpiracionBefore(LocalDateTime instante);
 
+    List<Pedido> findByEstadoAndFechaExpiracionNotNullAndFechaExpiracionBefore(
+            EnumEstadoPedido estado, LocalDateTime instante);
+
     List<Pedido> findByRestauranteIdUsuarioAndEstado(Integer idRestaurante, EnumEstadoPedido estado);
 
     @Query("""
