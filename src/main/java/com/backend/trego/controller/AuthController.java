@@ -106,6 +106,38 @@ public class AuthController {
     }
     
     
+    // Vinculación de proveedores (SMS <-> Google) para un cliente ya autenticado
+    @PostMapping("/vincular")
+    @Operation(summary = "Vincular un segundo método de acceso (SMS o Google)",
+            description = "Para un cliente ya autenticado (header 'Authorization: Bearer <token>'). Recibe el token Firebase del segundo proveedor en la clave 'firebaseToken' y completa en la cuenta los datos que falten (email o teléfono), de modo que pueda ingresar por ambos medios. Requiere que la app haya vinculado ambos proveedores en Firebase (mismo UID).")
+    @ApiResponse(responseCode = "200", description = "Proveedor vinculado correctamente")
+    @ApiResponse(responseCode = "400", description = "Token no proporcionado")
+    @ApiResponse(responseCode = "401", description = "No autenticado o token Firebase inválido")
+    @ApiResponse(responseCode = "403", description = "Usuario deshabilitado")
+    @ApiResponse(responseCode = "409", description = "El proveedor ya pertenece a otra cuenta")
+    public ResponseEntity<?> vincularProveedor(@AuthenticationPrincipal AuthenticatedUser user,
+                                               @RequestBody Map<String, String> body) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No hay un cliente autenticado \n");
+        }
+        String firebaseToken = body.get("firebaseToken");
+        if (firebaseToken == null || firebaseToken.isBlank()) {
+            return ResponseEntity.badRequest().body("El campo 'firebaseToken' es requerido");
+        }
+        try {
+            DTOUsuario actualizado = authService.vincularProveedor(user.getIdUsuario(), firebaseToken);
+            return ResponseEntity.ok(actualizado);
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token de Firebase inválido \n");
+        } catch (DisabledException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Usuario Deshabilitado \n");
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al vincular el proveedor");
+        }
+    }
+
     @GetMapping("/test-auth")
     @Operation(summary = "Prueba de seguridad", description = "Endpoint para verificar que el JWT funciona. Devuelve el principal autenticado.")
     public ResponseEntity<?> testAuth(@AuthenticationPrincipal AuthenticatedUser user) {

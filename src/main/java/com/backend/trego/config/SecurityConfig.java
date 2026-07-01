@@ -68,6 +68,8 @@ public class SecurityConfig {
                 // Auth: test-auth debe estar autenticado (va ANTES del permitAll)
                 .requestMatchers("/api/auth/test-auth").authenticated()
                 .requestMatchers("/api/auth/cerrarSesion").authenticated()
+                // Vinculacion de proveedor (SMS <-> Google): requiere sesion activa
+                .requestMatchers("/api/auth/vincular").authenticated()
                 .requestMatchers("/api/auth/**").permitAll()
                 // Registro de restaurante (flujo por código de verificación)
                 .requestMatchers("/api/usuarios/registrar-restaurante/**").permitAll()
