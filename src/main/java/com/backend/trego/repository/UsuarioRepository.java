@@ -54,6 +54,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     @Query("Select c FROM Cliente c WHERE c.uidCliente = :uidCliente")
     Optional<Cliente> findByUidCliente(@Param("uidCliente") String uidCliente);
 
+    @Query("SELECT c FROM Cliente c WHERE c.telefono = :telefono")
+    Optional<Cliente> findClienteByTelefono(@Param("telefono") String telefono);
+
     // ---- Restaurante ----
     @Query("SELECT r FROM Restaurante r WHERE r.email = :email")
     Optional<Restaurante> findRestauranteByEmail(@Param("email") String email);

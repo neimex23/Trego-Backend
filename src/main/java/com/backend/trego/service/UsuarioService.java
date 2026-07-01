@@ -52,7 +52,7 @@ public class UsuarioService {
     public Usuario altaUsuario(DTOUsuario usuarioDTO) {
         Cliente nuevoCliente = new Cliente();
 
-        if (!usuarioDTO.getUid().isBlank()) {
+        if (usuarioDTO.getUid() != null && !usuarioDTO.getUid().isBlank()) {
             ((Cliente) nuevoCliente).setUidCliente(usuarioDTO.getUid());
         }
         nuevoCliente.setEmail(usuarioDTO.getEmail());

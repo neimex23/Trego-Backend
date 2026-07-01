@@ -84,20 +84,15 @@ public class AuthService {
     // Login de cliente con Google: valida el token de Firebase y crea el cliente si no existe.
     public DTOLoginResponse loginConGoogle(String idToken) {
         try {
-            
-            String uid;
-            String email;
-            String nombre;
-            String fotoPerfil = "http://imagen_de_prueba.com/foto.jpg";
-
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
-            uid = decodedToken.getUid();
-            email = decodedToken.getEmail();
-            nombre = decodedToken.getName();
-            fotoPerfil = decodedToken.getPicture();
+            String uid = decodedToken.getUid();
+            String email = decodedToken.getEmail();
+            String nombre = decodedToken.getName();
+            String fotoPerfil = decodedToken.getPicture();
+            String telefono = (String) decodedToken.getClaims().get("phone_number");
 
             Optional<Cliente> usuarioOpt = usuarioRepository.findByUidCliente(uid);
-            Usuario usuario;
+            Cliente cliente;
 
             if (usuarioOpt.isEmpty()) {
                 System.out.println("El usuario no existe en la BD local. Registrando cliente nuevo...");
@@ -108,23 +103,24 @@ public class AuthService {
                         email,
                         null,
                         fotoPerfil,
-                        null,
+                        telefono,
                         EnumRoles.Cliente);
 
-                usuario = usuarioService.altaUsuario(nuevoUsuarioDTO);
+                cliente = (Cliente) usuarioService.altaUsuario(nuevoUsuarioDTO);
             } else {
-                usuario = usuarioOpt.get();
+                cliente = usuarioOpt.get();
+                sincronizarCamposCliente(cliente, uid, email, nombre, fotoPerfil, telefono);
             }
 
-            Cliente cliente = (Cliente) usuario; 
             if (!cliente.isHabilitado()) {
                 throw new DisabledException("Usuario deshabilitado");
             }
 
-            Integer idUsuario = usuario.getIdUsuario();
-            String jwt = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().name(), uid, idUsuario);
-            
-            return new DTOLoginResponse(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
+            Integer idUsuario = cliente.getIdUsuario();
+            String identificador = cliente.getEmail() != null ? cliente.getEmail() : uid;
+            String jwt = jwtUtil.generateToken(identificador, cliente.getRol().name(), uid, idUsuario);
+
+            return new DTOLoginResponse(jwt, cliente.getRol().name(), cliente.getNombre(), cliente.getEmail());
 
         } catch (FirebaseAuthException e) {
             throw new BadCredentialsException("Token de Google inválido");
@@ -137,43 +133,162 @@ public class AuthService {
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(firebaseToken);
             String uid = decodedToken.getUid();
             String telefono = (String) decodedToken.getClaims().get("phone_number");
+            String email = decodedToken.getEmail();
+            String nombre = decodedToken.getName();
+            String fotoPerfil = decodedToken.getPicture();
 
             Optional<Cliente> usuarioOpt = usuarioRepository.findByUidCliente(uid);
-            Usuario usuario;
+            Cliente cliente;
 
             if (usuarioOpt.isEmpty()) {
                 DTOUsuario nuevoUsuarioDTO = new DTOUsuario(
                         null,
                         uid,
-                        "Nuevo Cliente SMS",
+                        nombre != null ? nombre : "Nuevo Cliente SMS",
+                        email,
                         null,
-                        null,
-                        null,
+                        fotoPerfil,
                         telefono,
                         EnumRoles.Cliente);
 
-                usuario = usuarioService.altaUsuario(nuevoUsuarioDTO);
+                cliente = (Cliente) usuarioService.altaUsuario(nuevoUsuarioDTO);
             } else {
-                usuario = usuarioOpt.get();
+                cliente = usuarioOpt.get();
+                sincronizarCamposCliente(cliente, uid, email, nombre, fotoPerfil, telefono);
             }
 
-            Cliente cliente = (Cliente) usuario;
             if (!cliente.isHabilitado()) {
                 throw new DisabledException("Usuario deshabilitado");
             }
 
-            String identificador = usuario.getEmail() != null ? usuario.getEmail() : uid;
-            Integer idUsuario = usuario.getIdUsuario();
+            String identificador = cliente.getEmail() != null ? cliente.getEmail() : uid;
+            Integer idUsuario = cliente.getIdUsuario();
 
-            String jwt = jwtUtil.generateToken(identificador, usuario.getRol().name(), uid, idUsuario);
-            
-            return new DTOLoginResponse(jwt, usuario.getRol().name(), usuario.getNombre(), usuario.getEmail());
+            String jwt = jwtUtil.generateToken(identificador, cliente.getRol().name(), uid, idUsuario);
+
+            return new DTOLoginResponse(jwt, cliente.getRol().name(), cliente.getNombre(), cliente.getEmail());
 
         } catch (FirebaseAuthException e) {
             throw new BadCredentialsException("Token de SMS inválido");
         }
     }
+
+    // Rellena en el Cliente solo los campos que esten vacios con lo que traiga el token de Firebase. 
+    private void sincronizarCamposCliente(Cliente cliente, String uid, String email,
+                                          String nombre, String fotoPerfil, String telefono) {
+        boolean cambio = false;
+
+        if (esVacio(cliente.getUidCliente()) && !esVacio(uid)) {
+            cliente.setUidCliente(uid);
+            cambio = true;
+        }
+        if (esVacio(cliente.getEmail()) && !esVacio(email)) {
+            cliente.setEmail(email);
+            cambio = true;
+        }
+        if (esVacio(cliente.getTelefono()) && !esVacio(telefono)) {
+            cliente.setTelefono(telefono);
+            cambio = true;
+        }
+        if (esVacio(cliente.getFotoPerfil()) && !esVacio(fotoPerfil)) {
+            cliente.setFotoPerfil(fotoPerfil);
+            cambio = true;
+        }
+        if ((esVacio(cliente.getNombre()) || "Nuevo Cliente SMS".equals(cliente.getNombre()))
+                && !esVacio(nombre)) {
+            cliente.setNombre(nombre);
+            cambio = true;
+        }
+
+        if (cambio) {
+            usuarioRepository.save(cliente);
+        }
+    }
+
+    private boolean esVacio(String valor) {
+        return valor == null || valor.isBlank();
+    }
     
+    // Vincula un segundo proveedor (SMS <-> Google) a la cuenta del cliente autenticado.n.
+    @Transactional
+    public DTOUsuario vincularProveedor(Integer idUsuario, String firebaseToken) {
+        if (idUsuario == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No hay un cliente autenticado");
+        }
+
+        Cliente cliente = usuarioRepository.findClienteById(idUsuario)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Solo los clientes pueden vincular proveedores"));
+
+        if (!cliente.isHabilitado()) {
+            throw new DisabledException("Usuario deshabilitado");
+        }
+
+        FirebaseToken decodedToken;
+        try {
+            decodedToken = FirebaseAuth.getInstance().verifyIdToken(firebaseToken);
+        } catch (FirebaseAuthException e) {
+            throw new BadCredentialsException("Token de Firebase inválido");
+        }
+
+        String uid = decodedToken.getUid();
+        String email = decodedToken.getEmail();
+        String nombre = decodedToken.getName();
+        String fotoPerfil = decodedToken.getPicture();
+        String telefono = (String) decodedToken.getClaims().get("phone_number");
+
+        // El token debe pertenecer a la misma cuenta Firebase (linkWithCredential mantiene el UID).
+        if (!esVacio(cliente.getUidCliente()) && !esVacio(uid)
+                && !cliente.getUidCliente().equals(uid)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "El token pertenece a otra cuenta de Firebase. Vinculá los proveedores en la app antes de sincronizar.");
+        }
+
+        // Evitar colisiones con otra cuenta distinta que ya use ese uid/telefono/email.
+        verificarNoPerteneceAOtroCliente(idUsuario, uid, email, telefono);
+
+        sincronizarCamposCliente(cliente, uid, email, nombre, fotoPerfil, telefono);
+
+        return new DTOUsuario(
+                cliente.getIdUsuario(),
+                cliente.getUidCliente(),
+                cliente.getNombre(),
+                cliente.getEmail(),
+                null,
+                cliente.getFotoPerfil(),
+                cliente.getTelefono(),
+                cliente.getRol());
+    }
+
+    // Si el uid/telefono/email entrante ya pertenece a OTRO cliente, se aborta para no
+    // duplicar identidades entre cuentas distintas.
+    private void verificarNoPerteneceAOtroCliente(Integer idActual, String uid, String email, String telefono) {
+        if (!esVacio(uid)) {
+            usuarioRepository.findByUidCliente(uid)
+                    .filter(c -> !c.getIdUsuario().equals(idActual))
+                    .ifPresent(c -> {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                                "Ese proveedor ya está vinculado a otra cuenta");
+                    });
+        }
+        if (!esVacio(telefono)) {
+            usuarioRepository.findClienteByTelefono(telefono)
+                    .filter(c -> !c.getIdUsuario().equals(idActual))
+                    .ifPresent(c -> {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                                "Ese teléfono ya está vinculado a otra cuenta");
+                    });
+        }
+        if (!esVacio(email)) {
+            usuarioRepository.findClienteByEmail(email)
+                    .filter(c -> !c.getIdUsuario().equals(idActual))
+                    .ifPresent(c -> {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                                "Ese email ya está vinculado a otra cuenta");
+                    });
+        }
+    }
+
     // Sesión JWT tras confirmar el registro de un restaurante (sin volver a loguearse).
     public DTOLoginResponse crearSesionRestauranteRegistrado(DTOUsuario usuario) {
         String token = jwtUtil.generateToken(
@@ -207,7 +322,6 @@ public class AuthService {
     // FLUJO CU-CLI-01: Registro de Cliente (Google/SMS)
     @Transactional
     public Usuario altaUsuario(DTOUsuario dto) {
-        // Verificar si el cliente ya existe por UID
         if (dto.getUid() == null || dto.getUid().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El UID de Firebase es obligatorio");
         }
@@ -231,7 +345,6 @@ public class AuthService {
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            // El diagrama indica que las excepciones se propagan hacia AuthController
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al guardar el cliente");
         }
     }
