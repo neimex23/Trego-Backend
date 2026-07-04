@@ -94,11 +94,12 @@ public class Carrito {
     public void vaciar() {
         this.lineas.clear();
         this.total = 0.0;
+        this.idRestaurante = null;
     }
 
     public double recalcularTotal() {
         this.total = this.lineas.stream()
-                .mapToDouble(LineaCarrito::getSubtotal)
+                .mapToDouble(linea -> linea.getSubtotal())
                 .sum();
         return this.total;
     }

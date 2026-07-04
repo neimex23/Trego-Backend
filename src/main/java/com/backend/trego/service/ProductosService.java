@@ -9,7 +9,6 @@ import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.SubCategoria;
 import com.backend.trego.entity.DTOs.DTOArticulo;
 import com.backend.trego.entity.DTOs.DTOCombo;
-import com.backend.trego.entity.DTOs.DTOFirma;
 import com.backend.trego.entity.DTOs.DTOIngrediente;
 import com.backend.trego.entity.DTOs.DTOOferta;
 import com.backend.trego.entity.DTOs.DTOPlato;
@@ -42,17 +41,15 @@ public class ProductosService {
     private final ProductoRepository productoRepository;
     private final IngredienteRepository ingredienteRepository;
     private final RestauranteService restauranteService;
-    private final CloudinaryService cloudinaryService;
     private final CurrentUserService currentUserService;
     private final SubCategoriaService subCategoriaService;
 
     public ProductosService(ProductoRepository productoRepository, IngredienteRepository ingredienteRepository,
-            RestauranteService restauranteService, CloudinaryService cloudinaryService,
+            RestauranteService restauranteService,
             CurrentUserService currentUserService, SubCategoriaService subCategoriaService) {
         this.productoRepository = productoRepository;
         this.ingredienteRepository = ingredienteRepository;
         this.restauranteService = restauranteService;
-        this.cloudinaryService = cloudinaryService;
         this.currentUserService = currentUserService;
         this.subCategoriaService = subCategoriaService;
     }
@@ -257,14 +254,6 @@ public class ProductosService {
 
         productoRepository.save(producto);
         return toDTO(producto);
-    }
-
-    public DTOFirma generarFirma(String nombreArchivo, String tipoArchivo) {
-        return cloudinaryService.firmar(nombreArchivo, tipoArchivo);
-    }
-
-    public DTOFirma firmarImagen(String nombreArchivo, String tipoArchivo) {
-        return cloudinaryService.firmar(nombreArchivo, tipoArchivo);
     }
 
     // Convierte una entidad Producto (Plato, Articulo o Combo) a su DTO de
