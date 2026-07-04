@@ -25,6 +25,7 @@ public class DTOPedido {
     private LocalDateTime fechaExpiracion;
     private LocalDateTime horaEntregaEstimada;
     private Integer tiempoPreparacion;
+    private Boolean tieneReclamo;
 
     public DTOPedido() {
     }
@@ -35,9 +36,11 @@ public class DTOPedido {
         this.productos = productos;
     }
 
-    public DTOPedido(Integer idPedido, Integer idCliente, String nombreCliente, Integer idRestaurante, List<DTOProductoPedido> productos,
+    public DTOPedido(Integer idPedido, Integer idCliente, String nombreCliente, Integer idRestaurante,
+            List<DTOProductoPedido> productos,
             DTODireccion direccionEntrega, Double total, EnumEstadoPedido estado, LocalDateTime fechaCreacion,
-            LocalDateTime fechaExpiracion, LocalDateTime horaEntregaEstimada, Integer tiempoPreparacion) {
+            LocalDateTime fechaExpiracion, LocalDateTime horaEntregaEstimada, Integer tiempoPreparacion,
+            Boolean tieneReclamo) {
         this.idPedido = idPedido;
         this.idCliente = idCliente;
         this.nombreCliente = nombreCliente;
@@ -50,6 +53,7 @@ public class DTOPedido {
         this.fechaExpiracion = fechaExpiracion;
         this.horaEntregaEstimada = horaEntregaEstimada;
         this.tiempoPreparacion = tiempoPreparacion;
+        this.tieneReclamo = tieneReclamo;
     }
 
     public static DTOPedido desde(Pedido pedido) {
@@ -62,6 +66,7 @@ public class DTOPedido {
         Integer idCliente = pedido.getCliente() != null ? pedido.getCliente().getIdUsuario() : null;
         Integer idRestaurante = pedido.getRestaurante() != null ? pedido.getRestaurante().getIdUsuario() : null;
         String nombreCliente = pedido.getCliente() != null ? pedido.getCliente().getNombre() : null;
+        Boolean existeReclamo = pedido.getReclamo() != null;
         return new DTOPedido(
                 pedido.getIdPedido(),
                 idCliente,
@@ -74,11 +79,13 @@ public class DTOPedido {
                 pedido.getFechaCreacion(),
                 pedido.getFechaExpiracion(),
                 pedido.getHorarioEntrega(),
-                pedido.getTiempoPreparacion());
+                pedido.getTiempoPreparacion(),
+                existeReclamo);
     }
 
     /**
-     * Mapeo liviano para historial del cliente: no carga productos ni relaciones lazy extra.
+     * Mapeo liviano para historial del cliente: no carga productos ni relaciones
+     * lazy extra.
      */
     public static DTOPedido desdeHistorial(Pedido pedido) {
         if (pedido == null) {
@@ -87,6 +94,8 @@ public class DTOPedido {
         Integer idRestaurante = pedido.getRestaurante() != null
                 ? pedido.getRestaurante().getIdUsuario()
                 : null;
+
+        Boolean existeReclamo = pedido.getReclamo() != null;
         return new DTOPedido(
                 pedido.getIdPedido(),
                 null,
@@ -99,7 +108,8 @@ public class DTOPedido {
                 pedido.getFechaCreacion(),
                 pedido.getFechaExpiracion(),
                 pedido.getHorarioEntrega(),
-                pedido.getTiempoPreparacion());
+                pedido.getTiempoPreparacion(),
+                existeReclamo);
     }
 
     private static DTOProductoPedido mapearLinea(ProductoPedido pp) {
@@ -172,5 +182,9 @@ public class DTOPedido {
 
     public String getNombreCliente() {
         return nombreCliente;
+    }
+
+    public Boolean getTieneReclamo() {
+        return tieneReclamo;
     }
 }
