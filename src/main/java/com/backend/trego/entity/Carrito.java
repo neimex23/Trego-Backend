@@ -94,6 +94,7 @@ public class Carrito {
     public void vaciar() {
         this.lineas.clear();
         this.total = 0.0;
+        this.idRestaurante = null;
     }
 
     public double recalcularTotal() {

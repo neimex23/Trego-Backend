@@ -90,15 +90,13 @@ public class CarritoService {
         Carrito carrito = carritoRepository.findByUidCliente(uidCliente)
                 .orElseGet(() -> new Carrito(uidCliente, idRestauranteSolicitado));
 
-        if (!carrito.getLineas().isEmpty()
-                && carrito.getIdRestaurante() != null
+
+        if (carrito.getLineas().isEmpty()) {
+            carrito.setIdRestaurante(idRestauranteSolicitado);
+        } else if (carrito.getIdRestaurante() != null
                 && !carrito.getIdRestaurante().equals(idRestauranteSolicitado)) {
             throw new IllegalArgumentException(
                     "No se pueden agregar productos de distintos restaurantes al carrito");
-        }
-
-        if (carrito.getIdRestaurante() == null) {
-            carrito.setIdRestaurante(idRestauranteSolicitado);
         }
 
         // El mismo producto con distinta personalización va en líneas separadas,
@@ -294,6 +292,9 @@ public class CarritoService {
         }
 
         carrito.removeLinea(lineaOpt.get());
+        if (carrito.getLineas().isEmpty()) {
+            limpiarItemsCarrito();
+        }
         return carritoRepository.save(carrito).toDTO();
     }
 
