@@ -6,7 +6,6 @@ import com.backend.trego.entity.Ingrediente;
 import com.backend.trego.entity.Oferta;
 import com.backend.trego.entity.Pedido;
 import com.backend.trego.entity.Producto;
-import com.backend.trego.entity.ProductoPedido;
 import com.backend.trego.entity.Restaurante;
 import com.backend.trego.entity.DTOs.DTOComentario;
 import com.backend.trego.entity.DTOs.DTOCrearComentarioRequest;
@@ -220,7 +219,7 @@ public class RestauranteService {
 
     public List<DTORestaurante> listarRestaurantesHabilitadosNoCerrados() {
         return restauranteRepository.findRestaurantesHabilitados().stream()
-                .filter(Restaurante::estaAbierto)
+                .filter(restaurante -> restaurante.estaAbierto())
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -381,9 +380,9 @@ public class RestauranteService {
 
     private List<DTOProducto> aplicarOrden(List<DTOProducto> productos, String orden) {
         if (orden.equalsIgnoreCase("precio_asc")) {
-            productos.sort(Comparator.comparing(DTOProducto::getPrecio));
+            productos.sort(Comparator.comparing((DTOProducto producto) -> producto.getPrecio()));
         } else if (orden.equalsIgnoreCase("precio_desc")) {
-            productos.sort(Comparator.comparing(DTOProducto::getPrecio).reversed());
+            productos.sort(Comparator.comparing((DTOProducto producto) -> producto.getPrecio()).reversed());
         }
         return productos;
     }
@@ -656,11 +655,11 @@ public class RestauranteService {
                 .flatMap(p -> p.getProductos().stream())
                 .collect(Collectors.groupingBy(pp -> pp.getProducto().getIdProducto()))
                 .entrySet().stream()
-                .sorted((a, b) -> b.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum()
-                                - a.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum())
+                .sorted((a, b) -> b.getValue().stream().mapToInt(pp -> pp.getCantidad()).sum()
+                                - a.getValue().stream().mapToInt(pp -> pp.getCantidad()).sum())
                 .map(e -> DTOProductoSimplificado.desdeConCantidadVendida(
                         e.getValue().get(0).getProducto(),
-                        e.getValue().stream().mapToInt(ProductoPedido::getCantidad).sum()))
+                        e.getValue().stream().mapToInt(pp -> pp.getCantidad()).sum()))
                 .collect(Collectors.toList());
 
         // Cantidad de pedidos por fecha (agrupados por día)
@@ -675,7 +674,7 @@ public class RestauranteService {
                         p -> p.getFechaCreacion().truncatedTo(ChronoUnit.DAYS),
                         Collectors.averagingDouble(p -> (double) p.getTotal())))
                 .entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().floatValue()));
+                .collect(Collectors.toMap(entry -> entry.getKey(), e -> e.getValue().floatValue()));
 
         return new DTOEstadisticas(fechaInicio, fechaFin, productosMasVendidos, ventasPorFecha, ingresosPorFecha);
     }

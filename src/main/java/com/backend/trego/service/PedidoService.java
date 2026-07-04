@@ -436,7 +436,7 @@ public class PedidoService {
                     }
                     return 0;
                 })
-                .max(Integer::compareTo)
+                .max((a, b) -> a.compareTo(b))
                 .orElse(0);
     }
 

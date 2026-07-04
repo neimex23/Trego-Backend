@@ -69,7 +69,7 @@ public class DTOCombo {
 
     public List<Integer> getProductosIncluidosIds() {
         return productosIncluidos.stream()
-                .map(ProductoIncluido::getId)
+                .map(productoIncluido -> productoIncluido.getId())
                 .collect(Collectors.toList());
     }
 }

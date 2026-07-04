@@ -48,7 +48,7 @@ public class CarritoService {
     public DTOCarrito obtenerCarrito() {
         String uidCliente = currentUserService.getCurrentUid();
         return carritoRepository.findByUidCliente(uidCliente)
-                .map(Carrito::toDTO)
+                .map(carrito -> carrito.toDTO())
                 .orElse(null);
     }
 
@@ -183,7 +183,7 @@ public class CarritoService {
                         && l.getProducto().getIdProducto() == producto.getIdProducto()
                         && mismosIngredientes(l.getIngredientesAQuitar(), ingredientesFinales))
                 .findFirst()
-                .map(LineaCarrito::toDTO)
+                .map(lineac -> lineac.toDTO())
                 .orElse(null);
     }
 

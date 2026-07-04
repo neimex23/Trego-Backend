@@ -41,17 +41,15 @@ public class ProductosService {
     private final ProductoRepository productoRepository;
     private final IngredienteRepository ingredienteRepository;
     private final RestauranteService restauranteService;
-    private final CloudinaryService cloudinaryService;
     private final CurrentUserService currentUserService;
     private final SubCategoriaService subCategoriaService;
 
     public ProductosService(ProductoRepository productoRepository, IngredienteRepository ingredienteRepository,
-            RestauranteService restauranteService, CloudinaryService cloudinaryService,
+            RestauranteService restauranteService,
             CurrentUserService currentUserService, SubCategoriaService subCategoriaService) {
         this.productoRepository = productoRepository;
         this.ingredienteRepository = ingredienteRepository;
         this.restauranteService = restauranteService;
-        this.cloudinaryService = cloudinaryService;
         this.currentUserService = currentUserService;
         this.subCategoriaService = subCategoriaService;
     }

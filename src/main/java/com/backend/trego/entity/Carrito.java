@@ -99,7 +99,7 @@ public class Carrito {
 
     public double recalcularTotal() {
         this.total = this.lineas.stream()
-                .mapToDouble(LineaCarrito::getSubtotal)
+                .mapToDouble(linea -> linea.getSubtotal())
                 .sum();
         return this.total;
     }
