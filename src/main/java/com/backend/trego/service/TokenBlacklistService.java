@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+// Blacklist en memoria de JWT invalidados por logout: se pierde al reiniciar la
+// app y no purga entradas (aceptable porque los tokens expiran a las 8 horas).
 @Service
 public class TokenBlacklistService {
     

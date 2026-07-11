@@ -50,6 +50,7 @@ public class ManejadorPDFService {
             celdaIzquierda.setBorder(Rectangle.NO_BORDER);
             celdaIzquierda.setPadding(4);
 
+            // Si el logo no está en el classpath se cae al nombre en texto.
             try {
                 ClassPathResource logoResource = new ClassPathResource("static/images/logo.png");
                 Image logo = Image.getInstance(logoResource.getURL());

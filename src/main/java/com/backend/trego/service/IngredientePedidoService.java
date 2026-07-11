@@ -37,6 +37,7 @@ public class IngredientePedidoService {
             return new ArrayList<>();
         }
         List<Ingrediente> resultado = new ArrayList<>();
+        // Descarta ingredientes repetidos en la petición.
         Set<Integer> yaAgregados = new HashSet<>();
 
         for (DTOIngrediente dto : dtos) {

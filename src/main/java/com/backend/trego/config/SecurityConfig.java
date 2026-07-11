@@ -120,18 +120,6 @@ public class SecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        //PrintCorsConfig(configuration);
         return source;
-    }
-
-
-    @SuppressWarnings("unused")
-    private void PrintCorsConfig(CorsConfiguration config) {
-        System.out.println("CORS Configuration:");
-        System.out.println("Allowed Origins: " + config.getAllowedOrigins());
-        System.out.println("Allowed Methods: " + config.getAllowedMethods());
-        System.out.println("Allowed Headers: " + config.getAllowedHeaders());
-        System.out.println("Allow Credentials: " + config.getAllowCredentials());
-        System.out.println("Max Age: " + config.getMaxAge());
     }
 }

@@ -118,6 +118,7 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Dirección actualizada exitosamente")
     @ApiResponse(responseCode = "400", description = "Datos de dirección inválidos")
     @ApiResponse(responseCode = "401", description = "No autenticado")
+    // client=true: reemplaza la dirección del cliente identificada por tag; false: actualiza la del restaurante.
     public ResponseEntity<Void> actualizarDireccion(@RequestParam String tagModificar, @RequestBody DTODireccion dto, @RequestParam(defaultValue = "false") Boolean client) {
         usuarioService.actualizarDireccion(tagModificar, dto, client);
         return ResponseEntity.ok().build();

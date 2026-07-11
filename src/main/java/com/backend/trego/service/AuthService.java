@@ -209,7 +209,7 @@ public class AuthService {
         return valor == null || valor.isBlank();
     }
     
-    // Vincula un segundo proveedor (SMS <-> Google) a la cuenta del cliente autenticado.n.
+    // Vincula un segundo proveedor (SMS <-> Google) a la cuenta del cliente autenticado.
     @Transactional
     public DTOUsuario vincularProveedor(Integer idUsuario, String firebaseToken) {
         if (idUsuario == null) {

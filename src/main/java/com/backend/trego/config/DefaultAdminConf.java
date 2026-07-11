@@ -7,6 +7,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
+// Al arrancar crea el administrador por defecto (admin.email / admin.password) si no existe.
 @Configuration
 public class DefaultAdminConf {
 

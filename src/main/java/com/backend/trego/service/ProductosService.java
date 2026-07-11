@@ -312,6 +312,8 @@ public class ProductosService {
         return null;
     }
 
+    // Reemplaza la lista completa de ingredientes del plato, validando que cada
+    // uno pertenezca al restaurante autenticado.
     private void vincularIngredientesPlato(Plato plato, List<DTOIngrediente> ingredientesDTO,
             Integer idRestaurante) {
         plato.getIngredientes().clear();
@@ -423,6 +425,8 @@ public class ProductosService {
         productoRepository.save(producto);
     }
 
+    // Catálogo por subcategoría para el cliente: solo productos de locales
+    // habilitados y abiertos que además cubran la zona de la dirección dada.
     @Transactional
     public List<DTOProductoZona> listarProductoSubcategoria(DTOSubCategoria subCategoria, DTODireccion direccion){
         List<Producto> todosLosProducto = productoRepository.findByRestauranteHabilitadoTrueAndRestauranteAbiertoTrueAndDisponibleTrueOrderBySubCategoria_IdSubCategoriaAsc();

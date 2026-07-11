@@ -388,6 +388,8 @@ public class UsuarioService {
         notificacionesService.notificarRecuperacionContraseña(correo, passwordPlana);
     }
 
+    // Cliente y Restaurante guardan el flag en campos distintos (habilitado /
+    // cuentaHabilitada); al deshabilitar se notifica por email con el motivo.
     @Transactional
     public void habilitarDeshabilitarUsuario(Integer idUsuario, Boolean habilitar, String motivoNoHabilitacion) {
         if (!"Administrador".equals(currentUserService.getCurrentUser().getRol()))

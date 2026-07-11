@@ -1008,6 +1008,8 @@ public class NotificacionesService {
         }
     }
 
+    // Notifica al cliente el resultado del reclamo (aceptado o rechazado) por email
+    // y push; los errores se loguean sin propagar.
     public void notificarResolucionReclamo(Pedido pedido) {
         if (pedido == null || pedido.getReclamo() == null || pedido.getCliente() == null) {
             System.err.println("[Notificacion] Pedido, reclamo o cliente nulo; se omite notificación de reclamo.");

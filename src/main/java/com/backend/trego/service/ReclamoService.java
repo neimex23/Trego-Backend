@@ -75,6 +75,7 @@ public class ReclamoService {
 
         Integer idRestaurante = currentUserService.getCurrentId();
 
+        // fechaHasta se lleva al fin del día para que el filtro incluya la fecha completa.
         LocalDateTime desde = fechaDesde != null ? fechaDesde.atStartOfDay() : null;
         LocalDateTime hasta = fechaHasta != null ? fechaHasta.atTime(23, 59, 59) : null;
 
@@ -131,6 +132,8 @@ public class ReclamoService {
         return toDTOReclamo(pedido);
     }
 
+    // Con pago por pasarela delega en reembolsarPedido; sin idTransaccion solo
+    // marca el pedido como Reembolsado (no hay nada que devolver por MP).
     private void procesarReintegro(Pedido pedido) {
         Pago pago = pedido.getPago();
         boolean tienePasarela = pago != null

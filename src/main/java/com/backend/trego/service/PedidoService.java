@@ -320,6 +320,7 @@ public class PedidoService {
                 .collect(Collectors.toList());
     }
 
+    // Intenta primero por uid de Firebase; si el token no lo trae, cae al idUsuario.
     private Cliente resolverClienteAutenticado() {
         String uid = currentUserService.getCurrentUid();
         if (uid != null && !uid.isBlank()) {
@@ -376,6 +377,8 @@ public class PedidoService {
         return dtoActualizado;
     }
 
+    // Solo se permite avanzar EnPreparacion -> EnCamino -> Entregado; el paso
+    // Pagado -> EnPreparacion va por confirmarPedidoPendiente.
     private boolean verificarSaltoEstado(EnumEstadoPedido actual, EnumEstadoPedido nuevo) {
         if (actual == EnumEstadoPedido.EnPreparacion && nuevo == EnumEstadoPedido.EnCamino)
             return true;
@@ -384,6 +387,8 @@ public class PedidoService {
         return false;
     }
 
+    // El restaurante acepta un pedido pagado: valida que le pertenezca, lo pasa a
+    // EnPreparacion y notifica al cliente con el tiempo estimado.
     @Transactional
     public DTOPedido confirmarPedidoPendiente(Integer pedidoId) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
@@ -475,11 +480,8 @@ public class PedidoService {
                     "El pedido " + pedido.getIdPedido() + " ya estaba reembolsado");
         }
 
-        //Al estar en un entorno de pruebas ya que el proyecto no cubre el alcance de produccion los rembolsos
-        // por MP solo se pueden realizar si se hace un pago real, para entorno de pruebas se decidio enviar una notificacion al cliente que se conctacte con soporte para hacer el reintegro
-        //String idempotencyKey = "reembolso-pedido-" + pedido.getIdPedido();
-        //pagoService.reembolsar(pago.getIdTransaccion(), idempotencyKey);
-
+        // Entorno de pruebas: no se ejecuta el reembolso automático contra MP (pagoService.reembolsar,
+        // que requiere pagos reales); se notifica al cliente que gestione el reintegro con soporte.
         pedido.setEstado(EnumEstadoPedido.Reembolsado);
         pedidoRepository.save(pedido);
 

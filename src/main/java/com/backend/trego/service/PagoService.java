@@ -230,6 +230,7 @@ public class PagoService {
         }
     }
 
+    // El idPedido viaja en el externalReference que se seteó al crear la orden en MP.
     private Integer resolverIdPedido(Payment pago) {
         String extRef = pago.getExternalReference();
         if (extRef == null || !extRef.matches("\\d+")) {

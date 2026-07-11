@@ -20,6 +20,7 @@ public class GeoapifyService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public DTODireccion obtenerDireccion(double latitud, double longitud) {
+        // Sin API key real (perfil dev) no se consulta el servicio.
         if (apiKey == null || apiKey.isBlank() || "dev".equalsIgnoreCase(apiKey.trim())) {
             return null;
         }

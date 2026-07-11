@@ -76,6 +76,7 @@ public class ProductosController {
     @Operation(summary = "Listar Productos Habilitados por Subcategoria", description = "Obtiene los productos disponibles (habilitados) filtrados por subcategoria, limitados a los restaurantes con cobertura segun la direccion provista")
     @ApiResponse(responseCode = "200", description = "Productos listados")
     @ApiResponse(responseCode = "404", description = "No hay productos listados para esta subcategoria en la zona")
+    // subCategoria se bindea desde query params (sin @RequestBody); en el body va solo la dirección.
     public ResponseEntity<List<DTOProductoZona>> listarProductoSubcategoria(DTOSubCategoria subCategoria, @RequestBody DTODireccion direccion){
         return ResponseEntity.ok(productosService.listarProductoSubcategoria(subCategoria, direccion));
     }

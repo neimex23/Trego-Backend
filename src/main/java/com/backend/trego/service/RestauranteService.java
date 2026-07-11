@@ -159,6 +159,8 @@ public class RestauranteService {
         restauranteRepository.save(restaurante);
     }
 
+    // Si la hora de cierre ya pasó hoy, el cierre cae al día siguiente
+    // (locales que cierran de madrugada).
     private LocalDateTime calcularCierreProgramado(LocalTime horaCierre) {
         ZoneId zona = ZoneId.of(zonaHoraria);
         LocalDateTime ahora = LocalDateTime.now(zona);
@@ -597,6 +599,7 @@ public class RestauranteService {
             restauranteId = idRestaurante;
         }
 
+        // Un comentario por cliente: como vienen ordenados por fecha desc, se conserva el más reciente.
         Set<Integer> clientesVistos = new HashSet<>();
         return comentarioRepository.findByRestauranteWithClienteOrderByFechaCreacionDesc(restauranteId)
             .stream()

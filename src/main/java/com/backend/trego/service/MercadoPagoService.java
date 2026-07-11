@@ -130,9 +130,6 @@ public class MercadoPagoService {
         }
     }
 
-    // Consulta el pago en MercadoPago por su id (el que llega en el webhook).
-    // Devuelve el objeto Payment con el estado (approved/rejected/pending), el
-    // externalReference (idPedido), el monto y los datos de la tarjeta.
     // Realiza el reembolso total de un pago en MercadoPago a partir del id de
     // pago (el que quedó guardado en Pago.idTransaccion). Se envía un header
     // x-idempotency-key para que MercadoPago descarte reintentos del mismo
@@ -160,6 +157,9 @@ public class MercadoPagoService {
         }
     }
 
+    // Consulta el pago en MercadoPago por su id (el que llega en el webhook).
+    // Devuelve el objeto Payment con el estado (approved/rejected/pending), el
+    // externalReference (idPedido), el monto y los datos de la tarjeta.
     public Payment consultarPago(Long paymentId) {
         try {
             PaymentClient client = new PaymentClient();

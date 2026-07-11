@@ -67,6 +67,7 @@ public class CarritoService {
             throw new IllegalArgumentException("El producto no está disponible");
         }
         
+        // Si la oferta ya venció se desactiva antes de tomar el precio.
         if (producto.isOfertaActiva() && (producto.getOferta() == null || !producto.getOferta().isVigente())) {
             producto.setOfertaActiva(false);
             productoRepository.save(producto);
@@ -91,6 +92,7 @@ public class CarritoService {
                 .orElseGet(() -> new Carrito(uidCliente, idRestauranteSolicitado));
 
 
+        // Carrito vacío: adopta el restaurante del producto; si no, debe coincidir.
         if (carrito.getLineas().isEmpty()) {
             carrito.setIdRestaurante(idRestauranteSolicitado);
         } else if (carrito.getIdRestaurante() != null
@@ -152,6 +154,7 @@ public class CarritoService {
         Producto producto = cargarProductoConIngredientes(
                 linea.getProducto(), linea.getProducto().getIdProducto());
 
+        // Se refresca el precio de la línea por si la oferta venció desde que se agregó.
         if (producto.isOfertaActiva() && (producto.getOferta() == null || !producto.getOferta().isVigente())) {
             producto.setOfertaActiva(false);
             productoRepository.save(producto);
@@ -264,6 +267,7 @@ public class CarritoService {
         return ids;
     }
 
+    // Los platos se recargan desde su repositorio para traer los ingredientes (carga lazy).
     private Producto cargarProductoConIngredientes(Producto producto, Integer idProducto) {
         if (producto instanceof Plato) {
             return platoRepository.findById(idProducto)

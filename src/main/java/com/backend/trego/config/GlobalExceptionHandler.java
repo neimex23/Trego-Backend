@@ -33,8 +33,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errores, HttpStatus.BAD_REQUEST);
     }
 
-    // Pago rechazado por la pasarela: 402 Payment Required con el idPedido para
-    // que el front pueda ofrecer reintentar el pago.
+    // Normaliza las ResponseStatusException a un JSON {message} conservando el código original.
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, String>> handleResponseStatus(ResponseStatusException ex) {
         Map<String, String> body = new HashMap<>();
@@ -50,6 +49,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
+    // Pago rechazado por la pasarela: 402 Payment Required con el idPedido para
+    // que el front pueda ofrecer reintentar el pago.
     @ExceptionHandler(PagoRechazadoException.class)
     public ResponseEntity<Map<String, Object>> handlePagoRechazado(PagoRechazadoException ex) {
         Map<String, Object> body = new HashMap<>();

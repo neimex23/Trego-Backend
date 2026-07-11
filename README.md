@@ -1,102 +1,115 @@
-# Trego - Backend
+# Trego — Backend
 
-API REST del sistema Trego, una plataforma de compras a locales de comida con reparto a domicilio. Este repositorio contiene únicamente el backend de la aplicación; el frontend web y la aplicación mobile se desarrollan por separado.
+API REST de Trego, una plataforma de pedidos a locales de comida con reparto a domicilio. Este repositorio contiene únicamente el backend; el frontend web (Trego-Web) y la aplicación Android (Trego-android) se desarrollan en repositorios separados.
 
-El proyecto se enmarca en la asignatura Proyecto de la carrera Tecnólogo en Informática (C.E.T.P - UdelaR / ANEP-UTU).
+Proyecto final de la asignatura Proyecto, carrera Tecnólogo en Informática (CETP-UTU / UdelaR).
+
+## Índice
+
+- [Descripción](#descripción)
+- [Stack tecnológico](#stack-tecnológico)
+- [Requisitos previos](#requisitos-previos)
+- [Configuración](#configuración)
+- [Compilación y ejecución](#compilación-y-ejecución)
+- [Documentación de la API](#documentación-de-la-api)
+- [Autenticación](#autenticación)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Despliegue](#despliegue)
 
 ## Descripción
 
-El backend expone una API REST que da soporte a tres perfiles de usuario: administrador, local (restaurante) y cliente. Centraliza la gestión de usuarios, locales, platos y promociones, el ciclo de vida de los pedidos, los pagos, las notificaciones, la facturación y las calificaciones.
+El backend expone una API REST que da soporte a tres perfiles de usuario: cliente, local (restaurante) y administrador. Centraliza la gestión de usuarios y locales, el catálogo de productos y ofertas, el ciclo de vida de los pedidos, los pagos, los reclamos y las notificaciones.
 
-Las responsabilidades principales son:
+Responsabilidades principales:
 
-- Autenticación y autorización mediante JWT, con contraseñas cifradas (BCrypt).
-- Registro de locales y aprobación por parte del administrador.
-- Gestión de productos, platos y promociones.
-- Carrito de compras y creación de pedidos.
-- Procesamiento de pagos a través de MercadoPago.
-- Generación de facturas en PDF.
-- Envío de notificaciones por correo electrónico y notificaciones push (Firebase).
-- Resolución de direcciones y geolocalización mediante Geoapify.
+- Autenticación con Firebase (Google y SMS) y JWT propio para la sesión; login con email y contraseña (BCrypt) para administradores.
+- Registro de locales con verificación por código y aprobación del administrador.
+- Catálogo de productos: platos, artículos, combos, ingredientes, subcategorías y ofertas.
+- Carrito de compras y ciclo de vida completo del pedido (confirmación, preparación, entrega, cancelación, reembolso).
+- Pagos con MercadoPago (checkout web y mobile, webhook de notificaciones).
+- Reclamos de clientes y resolución con reintegro.
+- Notificaciones por correo (SMTP) y push (Firebase Cloud Messaging).
+- Facturas de pedidos en PDF.
+- Geolocalización y cálculo de zonas de entrega con Geoapify.
+- Imágenes de productos y locales en Cloudinary.
+- Apertura y cierre programado de locales mediante schedulers.
 
 ## Stack tecnológico
 
-- Java 21
-- Spring Boot (Web, Data JPA, Security, Validation, Mail)
-- Maven (con wrapper incluido, `mvnw`)
-- MySQL como base de datos principal (H2 disponible como dependencia de runtime)
-- JWT (jjwt) para la gestión de tokens
-- Firebase Admin SDK para notificaciones push
-- MercadoPago SDK para pagos
-- Geoapify para geolocalización
-- OpenPDF para la generación de facturas
-- springdoc-openapi (Swagger UI) para la documentación de la API
+| Componente | Tecnología |
+|---|---|
+| Lenguaje | Java 21 |
+| Framework | Spring Boot (Web, Data JPA, Security, Validation, Mail) |
+| Build | Maven (wrapper incluido: `mvnw` / `mvnw.cmd`) |
+| Base de datos | MySQL 8 (H2 disponible como dependencia de runtime) |
+| Autenticación | Firebase Admin SDK + JWT (jjwt) |
+| Pagos | MercadoPago SDK |
+| Geolocalización | Geoapify |
+| Imágenes | Cloudinary |
+| PDF | OpenPDF |
+| Documentación | springdoc-openapi (Swagger UI) |
 
 ## Requisitos previos
 
-- JDK 21 instalado y configurado en el `PATH`.
+- JDK 21 en el `PATH`.
 - MySQL 8 en ejecución (local o remoto).
-- Una cuenta de MercadoPago para obtener el access token (modo de pruebas).
-- Una API key de Geoapify.
-- Un archivo de credenciales de servicio de Firebase.
+- Cuenta de MercadoPago con access token de pruebas.
+- API key de Geoapify.
+- Credenciales de Cloudinary.
+- Archivo de credenciales de servicio de Firebase.
 
-No es necesario instalar Maven de forma global: el repositorio incluye el wrapper (`mvnw` / `mvnw.cmd`).
+No es necesario instalar Maven: el repositorio incluye el wrapper.
 
 ## Configuración
 
-La configuración sensible se mantiene fuera del control de versiones. El repositorio incluye una plantilla en `src/main/resources/application.properties.example`.
+La configuración sensible queda fuera del control de versiones. El repositorio incluye la plantilla `src/main/resources/application.properties.example`.
 
-1. Copiar la plantilla al archivo real de configuración:
+1. Copiar la plantilla:
 
    ```bash
    cp src/main/resources/application.properties.example src/main/resources/application.properties
    ```
 
-2. Completar los valores en `application.properties`:
+2. Completar los valores:
 
-   - `spring.datasource.url`, `spring.datasource.username` y `spring.datasource.password`: conexión a MySQL. La URL incluye `createDatabaseIfNotExist=true`, por lo que la base se crea automáticamente si no existe.
-   - `mercadopago.access.token`: token obtenido desde el panel de desarrolladores de MercadoPago.
-   - `geoapify.api.key`: clave obtenida desde el panel de Geoapify.
-   - `jwt.secret`: cadena larga y aleatoria utilizada para firmar los tokens.
-   - Parámetros de correo (`mail.from`, `spring.mail.host`, `spring.mail.port`) según el entorno de envío de correo que se utilice.
+   | Propiedad | Descripción |
+   |---|---|
+   | `spring.datasource.*` | Conexión a MySQL. La URL incluye `createDatabaseIfNotExist=true`, la base se crea sola. |
+   | `mercadopago.access.token` | Token del panel de desarrolladores de MercadoPago. |
+   | `mercadopago.webhook.url` | URL pública del webhook. En local, un túnel (ngrok); vacía si no hay túnel. |
+   | `geoapify.api.key` | Clave del panel de Geoapify. |
+   | `cloudinary.*` | Credenciales del dashboard de Cloudinary. |
+   | `firebase.web.*` | Project ID y API key del proyecto Firebase (los mismos que usa el front). |
+   | `jwt.secret` | Cadena larga y aleatoria para firmar los tokens. |
+   | `admin.email` / `admin.password` | Administrador por defecto, se crea al arrancar si no existe. |
+   | `app.cors.*` | Orígenes y métodos permitidos para el frontend. |
+   | `spring.mail.*` / `mail.from` | Cuenta SMTP para el envío de correos (Gmail con App Password). |
+   | `app.timezone` | Zona horaria del negocio, usada por los schedulers de cierre de locales. |
 
-3. Colocar el archivo de credenciales de Firebase en `src/main/resources/firebase-service-account.json`.
+3. Colocar las credenciales de Firebase en `src/main/resources/firebase-service-account.json`.
 
-`application.properties` y el archivo de credenciales de Firebase no deben commitearse, ya que contienen información sensible.
+`application.properties` y `firebase-service-account.json` contienen información sensible y no deben commitearse (ya están en `.gitignore`).
 
 ## Compilación y ejecución
 
-Desde la raíz del repositorio.
-
-Compilar el proyecto y empaquetar el artefacto:
+Desde la raíz del repositorio:
 
 ```bash
+# compilar y empaquetar
 ./mvnw clean package
-```
 
-En Windows:
-
-```cmd
-mvnw.cmd clean package
-```
-
-Ejecutar la aplicación en modo desarrollo:
-
-```bash
+# ejecutar en modo desarrollo
 ./mvnw spring-boot:run
-```
 
-Ejecutar el artefacto generado directamente:
-
-```bash
+# o ejecutar el artefacto generado
 java -jar target/trego-0.0.1-SNAPSHOT.jar
 ```
 
-Por defecto la aplicación queda disponible en `http://localhost:8080`.
+En Windows usar `mvnw.cmd` en lugar de `./mvnw`.
 
-## Pruebas
+La aplicación queda disponible en `http://localhost:8080`.
 
-Ejecutar la suite de tests:
+Para ejecutar los tests:
 
 ```bash
 ./mvnw test
@@ -104,38 +117,56 @@ Ejecutar la suite de tests:
 
 ## Documentación de la API
 
-Con la aplicación en ejecución, la documentación interactiva (Swagger UI) está disponible en:
+Con la aplicación en ejecución:
 
-```
-http://localhost:8080/swagger-ui.html
-```
+| Recurso | URL |
+|---|---|
+| Swagger UI | `http://localhost:8080/swagger-ui.html` |
+| Especificación OpenAPI (JSON) | `http://localhost:8080/v3/api-docs` |
 
-La especificación OpenAPI en formato JSON se expone en:
+## Autenticación
 
-```
-http://localhost:8080/v3/api-docs
-```
+La API es stateless. El flujo general:
 
-## Seguridad y autenticación
+1. El cliente se autentica contra Firebase (Google o SMS) y envía el ID token a `POST /api/auth/google` o `POST /api/auth/sms`. Los administradores usan `POST /api/auth/login/admin` con email y contraseña.
+2. El backend valida el token, resuelve o crea el usuario y devuelve un JWT propio.
+3. Cada petición posterior envía ese JWT en el encabezado:
 
-La API es stateless y utiliza tokens JWT. Las rutas bajo `/api/auth/**` y las de la documentación (`/swagger-ui/**`, `/v3/api-docs/**`) son públicas; el resto de los endpoints requieren un token válido.
+   ```
+   Authorization: Bearer <token>
+   ```
 
-Para autenticarse, se obtiene un token a través de los endpoints de autenticación y luego se envía en cada petición mediante el encabezado:
+Un mismo usuario puede vincular sus proveedores de Firebase (SMS y Google) bajo la misma cuenta mediante `POST /api/auth/vincular`. El cierre de sesión (`POST /api/auth/cerrarSesion`) invalida el token en una blacklist.
 
-```
-Authorization: Bearer <token>
-```
+Son públicas las rutas de autenticación, el registro de restaurantes, el menú público de cada local, la geolocalización, el webhook de MercadoPago y la documentación de Swagger. El resto de los endpoints requiere token.
 
 ## Estructura del proyecto
 
-El código fuente sigue la organización habitual de una aplicación Spring Boot, bajo el paquete `com.backend.trego`:
+Código fuente bajo el paquete `com.backend.trego`:
 
-- `config` — configuración de seguridad, JWT, Firebase, correo, Swagger y manejo global de excepciones.
-- `controller` — controladores REST que exponen los endpoints (autenticación, usuarios, restaurantes, productos, carrito, pedidos, pagos, notificaciones).
-- `service` — lógica de negocio y servicios de integración (MercadoPago, Geoapify, generación de PDF, autenticación).
-- `entity` — entidades JPA, DTOs y enumeraciones del dominio.
-- `repository` — repositorios Spring Data JPA para el acceso a datos.
+```
+src/main/java/com/backend/trego
+├── config       Seguridad, JWT, Firebase, MercadoPago, Cloudinary, Swagger,
+│                manejo global de excepciones
+├── controller   Controladores REST (auth, usuarios, clientes, restaurantes,
+│                productos, subcategorías, carrito, pedidos, pagos, reclamos, geo)
+├── service      Lógica de negocio e integraciones (MercadoPago, Geoapify,
+│                Cloudinary, notificaciones, PDF, schedulers)
+├── entity       Entidades JPA, DTOs y enumeraciones del dominio
+└── repository   Repositorios Spring Data JPA
+```
+
+## Despliegue
+
+El despliegue de referencia usa el free tier de AWS: la base en RDS MySQL, el backend como contenedor Docker en una EC2 (imagen publicada en GHCR por GitHub Actions) y el frontend en Vercel, que hace de proxy HTTPS hacia el backend.
+
+La guía completa, junto con el `docker-compose.yml` y el workflow de CI/CD, está en [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
+
+## Repositorios relacionados
+
+- Trego-Web — frontend web (React/Vite).
+- Trego-android — aplicación móvil.
 
 ## Notas
 
-Las claves y credenciales incluidas en la plantilla de configuración corresponden a entornos de prueba. No deben utilizarse credenciales reales ni dejarse activadas las trazas de logging de depuración (`logging.level...=TRACE`) en la entrega final.
+Las credenciales de la plantilla corresponden a entornos de prueba. Antes de una entrega o de exponer un demo público, rotar las credenciales reales y revisar que no queden trazas de logging de depuración activas.

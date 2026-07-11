@@ -25,6 +25,7 @@ public class GeoController {
 
     @GetMapping("/reverse")
     @Operation(summary = "Reverse geocoding", description = "Convierte lat/lon en calle y etiqueta usando Geoapify del servidor")
+    // 404 si Geoapify no devuelve calle ni tag utilizables.
     public ResponseEntity<DTODireccion> reverse(
             @RequestParam double lat,
             @RequestParam double lon) {
