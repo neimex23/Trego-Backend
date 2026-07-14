@@ -166,6 +166,23 @@ La guía completa, junto con el `docker-compose.yml` y el workflow de CI/CD, est
 - Trego-Web — frontend web (React/Vite).
 - Trego-android — aplicación móvil.
 
-## ✍️ Notas
+# 👨‍💻 Autores
 
-Las credenciales de la plantilla corresponden a entornos de prueba. Antes de una entrega o de exponer un demo público, rotar las credenciales reales y revisar que no queden trazas de logging de depuración activas.
+Proyecto desarrollado por el **Grupo 6** como trabajo final de la carrera **Tecnólogo en Informática**.
+
+- Alexis La Cruz
+- Ezequiel Medina
+- Maikol Brion
+- Dámaso Tor
+- Horacio Duarte
+- Nicolás Fernández
+- Cristian González
+- Mateo Sparano
+
+---
+
+# 📄 Licencia
+
+Este proyecto fue desarrollado con fines exclusivamente académicos como trabajo final de la carrera **Tecnólogo en Informática**.
+
+No se autoriza su utilización comercial sin el consentimiento expreso de sus autores.
