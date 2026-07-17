@@ -1,10 +1,9 @@
-# Trego — Backend
+# TREGO Backend
 
-API REST de Trego, una plataforma de pedidos a locales de comida con reparto a domicilio. Este repositorio contiene únicamente el backend; el frontend web (Trego-Web) y la aplicación Android (Trego-android) se desarrollan en repositorios separados.
+>API REST de **TREGO**, una plataforma de pedidos a locales de comida con reparto a domicilio. Este repositorio contiene únicamente el backend; el frontend web (Trego-Web) y la aplicación Android (Trego-android) se desarrollan en repositorios separados.
+>Proyecto final de la asignatura Proyecto, carrera **Tecnólogo en Informática (CETP-UTU / UdelaR)**.
 
-Proyecto final de la asignatura Proyecto, carrera Tecnólogo en Informática (CETP-UTU / UdelaR).
-
-## Índice
+## ✏️ Índice
 
 - [Descripción](#descripción)
 - [Stack tecnológico](#stack-tecnológico)
@@ -16,7 +15,7 @@ Proyecto final de la asignatura Proyecto, carrera Tecnólogo en Informática (CE
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Despliegue](#despliegue)
 
-## Descripción
+## 🚀 Descripción
 
 El backend expone una API REST que da soporte a tres perfiles de usuario: cliente, local (restaurante) y administrador. Centraliza la gestión de usuarios y locales, el catálogo de productos y ofertas, el ciclo de vida de los pedidos, los pagos, los reclamos y las notificaciones.
 
@@ -34,7 +33,7 @@ Responsabilidades principales:
 - Imágenes de productos y locales en Cloudinary.
 - Apertura y cierre programado de locales mediante schedulers.
 
-## Stack tecnológico
+## 📱 Stack tecnológico
 
 | Componente | Tecnología |
 |---|---|
@@ -49,7 +48,7 @@ Responsabilidades principales:
 | PDF | OpenPDF |
 | Documentación | springdoc-openapi (Swagger UI) |
 
-## Requisitos previos
+## 💻 Requisitos previos
 
 - JDK 21 en el `PATH`.
 - MySQL 8 en ejecución (local o remoto).
@@ -60,7 +59,7 @@ Responsabilidades principales:
 
 No es necesario instalar Maven: el repositorio incluye el wrapper.
 
-## Configuración
+## ⚙️ Configuración
 
 La configuración sensible queda fuera del control de versiones. El repositorio incluye la plantilla `src/main/resources/application.properties.example`.
 
@@ -90,7 +89,7 @@ La configuración sensible queda fuera del control de versiones. El repositorio 
 
 `application.properties` y `firebase-service-account.json` contienen información sensible y no deben commitearse (ya están en `.gitignore`).
 
-## Compilación y ejecución
+## 🚀 Compilación y ejecución
 
 Desde la raíz del repositorio:
 
@@ -115,7 +114,7 @@ Para ejecutar los tests:
 ./mvnw test
 ```
 
-## Documentación de la API
+## 📝 Documentación de la API
 
 Con la aplicación en ejecución:
 
@@ -124,7 +123,7 @@ Con la aplicación en ejecución:
 | Swagger UI | `http://localhost:8080/swagger-ui.html` |
 | Especificación OpenAPI (JSON) | `http://localhost:8080/v3/api-docs` |
 
-## Autenticación
+## 🔐 Autenticación
 
 La API es stateless. El flujo general:
 
@@ -140,7 +139,7 @@ Un mismo usuario puede vincular sus proveedores de Firebase (SMS y Google) bajo 
 
 Son públicas las rutas de autenticación, el registro de restaurantes, el menú público de cada local, la geolocalización, el webhook de MercadoPago y la documentación de Swagger. El resto de los endpoints requiere token.
 
-## Estructura del proyecto
+## 🏛️ Estructura del proyecto
 
 Código fuente bajo el paquete `com.backend.trego`:
 
@@ -156,17 +155,34 @@ src/main/java/com/backend/trego
 └── repository   Repositorios Spring Data JPA
 ```
 
-## Despliegue
+## 🚀 Despliegue
 
 El despliegue de referencia usa el free tier de AWS: la base en RDS MySQL, el backend como contenedor Docker en una EC2 (imagen publicada en GHCR por GitHub Actions) y el frontend en Vercel, que hace de proxy HTTPS hacia el backend.
 
 La guía completa, junto con el `docker-compose.yml` y el workflow de CI/CD, está en [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
 
-## Repositorios relacionados
+## 🔗 Repositorios relacionados
 
 - Trego-Web — frontend web (React/Vite).
 - Trego-android — aplicación móvil.
 
-## Notas
+# 👨‍💻 Autores
 
-Las credenciales de la plantilla corresponden a entornos de prueba. Antes de una entrega o de exponer un demo público, rotar las credenciales reales y revisar que no queden trazas de logging de depuración activas.
+Proyecto desarrollado por el **Grupo 6** como trabajo final de la carrera **Tecnólogo en Informática**.
+
+- Alexis La Cruz
+- Ezequiel Medina
+- Maikol Brion
+- Dámaso Tor
+- Horacio Duarte
+- Nicolás Fernández
+- Cristian González
+- Mateo Sparano
+
+---
+
+# 📄 Licencia
+
+Este proyecto fue desarrollado con fines exclusivamente académicos como trabajo final de la carrera **Tecnólogo en Informática**.
+
+No se autoriza su utilización comercial sin el consentimiento expreso de sus autores.
