@@ -5,10 +5,15 @@ import com.backend.trego.entity.Enums.EnumRoles;
 import com.backend.trego.entity.Administrador;
 import com.backend.trego.entity.Cliente;
 import com.backend.trego.entity.Restaurante;
+import com.backend.trego.entity.Comentario;
+import com.backend.trego.entity.Pedido;
+import com.backend.trego.entity.DTOs.DTODireccion;
 import com.backend.trego.entity.DTOs.DTOLogin;
 import com.backend.trego.entity.DTOs.DTOLoginResponse;
-import com.backend.trego.entity.DTOs.DTOUsuario; 
+import com.backend.trego.entity.DTOs.DTOUsuario;
 
+import com.backend.trego.repository.ComentarioRepository;
+import com.backend.trego.repository.PedidoRepository;
 import com.backend.trego.repository.UsuarioRepository;
 import com.backend.trego.config.JWTUtil;
 
@@ -24,6 +29,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.FirebaseAuthException;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -35,17 +41,23 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
 	private final TokenBlacklistService tokenBlacklistService;
+    private final PedidoRepository pedidoRepository;
+    private final ComentarioRepository comentarioRepository;
 
     public AuthService(PasswordEncoder passwordEncoder,
                        JWTUtil jwtUtil,
                        UsuarioRepository usuarioRepository,
                        UsuarioService usuarioService,
-                       TokenBlacklistService tokenBlacklistService) {
+                       TokenBlacklistService tokenBlacklistService,
+                       PedidoRepository pedidoRepository,
+                       ComentarioRepository comentarioRepository) {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.usuarioRepository = usuarioRepository;
         this.usuarioService = usuarioService;
         this.tokenBlacklistService = tokenBlacklistService;
+        this.pedidoRepository = pedidoRepository;
+        this.comentarioRepository = comentarioRepository;
     }
 
     // Login de admin / restaurante con email y contraseña.
@@ -92,6 +104,12 @@ public class AuthService {
             String telefono = (String) decodedToken.getClaims().get("phone_number");
 
             Optional<Cliente> usuarioOpt = usuarioRepository.findByUidCliente(uid);
+            if (usuarioOpt.isEmpty() && !esVacio(email)) {
+                usuarioOpt = usuarioRepository.findClienteByEmail(email);
+            }
+            if (usuarioOpt.isEmpty() && !esVacio(telefono)) {
+                usuarioOpt = usuarioRepository.findClienteByTelefono(telefono);
+            }
             Cliente cliente;
 
             if (usuarioOpt.isEmpty()) {
@@ -138,6 +156,12 @@ public class AuthService {
             String fotoPerfil = decodedToken.getPicture();
 
             Optional<Cliente> usuarioOpt = usuarioRepository.findByUidCliente(uid);
+            if (usuarioOpt.isEmpty() && !esVacio(telefono)) {
+                usuarioOpt = usuarioRepository.findClienteByTelefono(telefono);
+            }
+            if (usuarioOpt.isEmpty() && !esVacio(email)) {
+                usuarioOpt = usuarioRepository.findClienteByEmail(email);
+            }
             Cliente cliente;
 
             if (usuarioOpt.isEmpty()) {
@@ -178,7 +202,9 @@ public class AuthService {
                                           String nombre, String fotoPerfil, String telefono) {
         boolean cambio = false;
 
-        if (esVacio(cliente.getUidCliente()) && !esVacio(uid)) {
+        // El UID se actualiza al del token actual cuando difiere: si el cliente se resolvió por
+        // email/teléfono con otra cuenta de Firebase, se converge al UID con el que se ingresó.
+        if (!esVacio(uid) && !uid.equals(cliente.getUidCliente())) {
             cliente.setUidCliente(uid);
             cambio = true;
         }
@@ -237,15 +263,10 @@ public class AuthService {
         String fotoPerfil = decodedToken.getPicture();
         String telefono = (String) decodedToken.getClaims().get("phone_number");
 
-        // El token debe pertenecer a la misma cuenta Firebase (linkWithCredential mantiene el UID).
-        if (!esVacio(cliente.getUidCliente()) && !esVacio(uid)
-                && !cliente.getUidCliente().equals(uid)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "El token pertenece a otra cuenta de Firebase. Vinculá los proveedores en la app antes de sincronizar.");
-        }
-
-        // Evitar colisiones con otra cuenta distinta que ya use ese uid/telefono/email.
-        verificarNoPerteneceAOtroCliente(idUsuario, uid, email, telefono);
+        // Si el uid/teléfono/email del token ya pertenece a OTRA cuenta, se trata de un duplicado
+        // del mismo usuario (que presenta un token válido de ese proveedor): se fusiona en la
+        // cuenta actual en lugar de rechazar. Así "vincular" nunca deja dos perfiles separados.
+        absorberDuplicados(cliente, uid, email, telefono);
 
         sincronizarCamposCliente(cliente, uid, email, nombre, fotoPerfil, telefono);
 
@@ -260,33 +281,76 @@ public class AuthService {
                 cliente.getRol());
     }
 
-    // Si el uid/telefono/email entrante ya pertenece a OTRO cliente, se aborta para no
-    // duplicar identidades entre cuentas distintas.
-    private void verificarNoPerteneceAOtroCliente(Integer idActual, String uid, String email, String telefono) {
+    // Busca cuentas de cliente que ya usen ese uid/teléfono/email (distintas del destino) y las
+    // fusiona en el destino. Son duplicados del mismo usuario que se generaron cuando entró por
+    // un proveedor antes de vincularlo.
+    private void absorberDuplicados(Cliente destino, String uid, String email, String telefono) {
         if (!esVacio(uid)) {
             usuarioRepository.findByUidCliente(uid)
-                    .filter(c -> !c.getIdUsuario().equals(idActual))
-                    .ifPresent(c -> {
-                        throw new ResponseStatusException(HttpStatus.CONFLICT,
-                                "Ese proveedor ya está vinculado a otra cuenta");
-                    });
+                    .filter(c -> !c.getIdUsuario().equals(destino.getIdUsuario()))
+                    .ifPresent(dup -> fusionarClientes(destino, dup));
         }
         if (!esVacio(telefono)) {
             usuarioRepository.findClienteByTelefono(telefono)
-                    .filter(c -> !c.getIdUsuario().equals(idActual))
-                    .ifPresent(c -> {
-                        throw new ResponseStatusException(HttpStatus.CONFLICT,
-                                "Ese teléfono ya está vinculado a otra cuenta");
-                    });
+                    .filter(c -> !c.getIdUsuario().equals(destino.getIdUsuario()))
+                    .ifPresent(dup -> fusionarClientes(destino, dup));
         }
         if (!esVacio(email)) {
             usuarioRepository.findClienteByEmail(email)
-                    .filter(c -> !c.getIdUsuario().equals(idActual))
-                    .ifPresent(c -> {
-                        throw new ResponseStatusException(HttpStatus.CONFLICT,
-                                "Ese email ya está vinculado a otra cuenta");
-                    });
+                    .filter(c -> !c.getIdUsuario().equals(destino.getIdUsuario()))
+                    .ifPresent(dup -> fusionarClientes(destino, dup));
         }
+    }
+
+    // Unifica el cliente 'duplicado' dentro de 'destino': reasigna sus pedidos, comentarios y
+    // direcciones, completa los campos que le falten al destino y elimina el duplicado
+    private void fusionarClientes(Cliente destino, Cliente duplicado) {
+        if (duplicado == null || destino.getIdUsuario().equals(duplicado.getIdUsuario())) {
+            return;
+        }
+
+        List<Pedido> pedidos = pedidoRepository.findByClienteIdUsuario(duplicado.getIdUsuario());
+        for (Pedido p : pedidos) {
+            p.setCliente(destino);
+        }
+        pedidoRepository.saveAll(pedidos);
+
+        List<Comentario> comentarios = comentarioRepository.findByClienteIdUsuario(duplicado.getIdUsuario());
+        for (Comentario c : comentarios) {
+            c.setCliente(destino);
+        }
+        comentarioRepository.saveAll(comentarios);
+
+        if (duplicado.getDirecciones() != null) {
+            for (DTODireccion d : duplicado.getDirecciones()) {
+                if (!destino.getDirecciones().contains(d)) {
+                    destino.addDireccion(d);
+                }
+            }
+            duplicado.getDirecciones().clear();
+        }
+
+        // Completa solo los campos vacíos del destino con los del duplicado (sin pisar su identidad).
+        if (esVacio(destino.getEmail()) && !esVacio(duplicado.getEmail())) {
+            destino.setEmail(duplicado.getEmail());
+        }
+        if (esVacio(destino.getTelefono()) && !esVacio(duplicado.getTelefono())) {
+            destino.setTelefono(duplicado.getTelefono());
+        }
+        if (esVacio(destino.getFotoPerfil()) && !esVacio(duplicado.getFotoPerfil())) {
+            destino.setFotoPerfil(duplicado.getFotoPerfil());
+        }
+        if (esVacio(destino.getUidCliente()) && !esVacio(duplicado.getUidCliente())) {
+            destino.setUidCliente(duplicado.getUidCliente());
+        }
+        if ((esVacio(destino.getNombre()) || "Nuevo Cliente SMS".equals(destino.getNombre()))
+                && !esVacio(duplicado.getNombre())) {
+            destino.setNombre(duplicado.getNombre());
+        }
+
+        usuarioRepository.save(destino);
+        usuarioRepository.delete(duplicado);
+        usuarioRepository.flush();
     }
 
     // Sesión JWT tras confirmar el registro de un restaurante (sin volver a loguearse).
